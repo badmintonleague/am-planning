@@ -1,29 +1,2573 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="utf-8">
-<title>Abbi &amp; Musi · Wedding Planner</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Abbi &amp; Musi · Wedding Planner</title>
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#F7F4EE">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Abbi &amp; Musi">
+<meta name="apple-mobile-web-app-title" content="A&amp;M">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  html, body { margin: 0; padding: 0; height: 100%; background: #F7F4EE; overflow: hidden; }
-  iframe {
-    position: fixed; inset: 0;
-    width: 100vw; height: 100vh; height: 100dvh;
-    border: 0; display: block; background: #F7F4EE;
+  :root{
+    --bg:#F7F4EE; --surface:#FFFFFF; --ink:#141414; --ink2:#55524C; --muted:#8C877E;
+    --line:#E9E4DA; --soft:#EFEBE3; --gold:#B8923A; --gold-soft:#F3EAD4;
+    --bride:#B4536E; --bride-soft:#F6E4E9; --groom:#3D5A80; --groom-soft:#E3EAF3;
+    --ok:#2F7A52; --ok-soft:#E2F1E8; --no:#B3261E; --no-soft:#FBE7E5; --maybe:#A8701A; --maybe-soft:#FBF0DC;
+    --serif:"Fraunces",Georgia,"Times New Roman",serif;
+    --sans:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);
+    -webkit-font-smoothing:antialiased;font-size:15px}
+  button{font-family:inherit;color:inherit}
+  .wrap{max-width:620px;margin:0 auto;padding:0 20px}
+
+  /* ---------- Intro splash ---------- */
+  #splash{position:fixed;inset:0;z-index:50;background:var(--bg);display:flex;align-items:center;
+    justify-content:center;flex-direction:column;text-align:center;transition:opacity .6s ease, visibility .6s}
+  #splash.hide{opacity:0;visibility:hidden}
+  .ring{width:118px;height:118px;margin-bottom:28px}
+  .ring circle{fill:none;stroke:var(--gold);stroke-width:1.2;stroke-dasharray:340;stroke-dashoffset:340;
+    animation:draw 2.2s cubic-bezier(.65,0,.35,1) .2s forwards}
+  .ring circle.inner{stroke-width:.6;opacity:.55;animation-delay:.6s}
+  .ring text{font-family:var(--serif);font-size:30px;font-weight:300;fill:var(--ink);opacity:0;
+    animation:fade 1.1s ease 1.2s forwards}
+  .s-names{font-family:var(--serif);font-weight:300;font-size:40px;letter-spacing:-.5px;margin:0;
+    opacity:0;transform:translateY(8px);animation:rise 1.2s ease 1.5s forwards}
+  .s-names i{font-style:italic;color:var(--gold);font-weight:300;padding:0 4px}
+  .s-rule{width:0;height:1px;background:var(--gold);margin:18px auto;animation:grow 1.2s ease 2.2s forwards}
+  .s-date{font-size:12px;letter-spacing:3.5px;text-transform:uppercase;color:var(--ink2);margin:0;
+    opacity:0;animation:fade 1.2s ease 2.6s forwards}
+  .s-dots{display:flex;gap:6px;margin-top:40px;opacity:0;animation:fade .8s ease 3.4s forwards}
+  .s-dots span{width:5px;height:5px;border-radius:50%;background:var(--muted);animation:pulse 1.2s ease-in-out infinite}
+  .s-dots span:nth-child(2){animation-delay:.15s}.s-dots span:nth-child(3){animation-delay:.3s}
+  .s-slow{margin-top:26px;opacity:0;visibility:hidden;transition:opacity .4s;text-align:center}
+  .s-slow.show{opacity:1;visibility:visible}
+  .s-slow p{margin:0 0 12px;font-size:13.5px;color:var(--ink2)}
+  .s-slow button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:10px 20px;font-size:14px;cursor:pointer;color:var(--ink)}
+  @keyframes draw{to{stroke-dashoffset:0}}
+  @keyframes fade{to{opacity:1}}
+  @keyframes rise{to{opacity:1;transform:none}}
+  @keyframes grow{to{width:64px}}
+  @keyframes pulse{0%,100%{opacity:.25}50%{opacity:1}}
+
+  /* ---------- Top bar ---------- */
+  .top{position:sticky;top:0;z-index:5;background:rgba(247,244,238,.88);
+    backdrop-filter:saturate(1.4) blur(14px);-webkit-backdrop-filter:saturate(1.4) blur(14px)}
+  .top .wrap{display:flex;align-items:center;justify-content:space-between;height:60px}
+  .mono{font-family:var(--serif);font-size:19px;font-weight:400;letter-spacing:-.2px}
+  .mono i{color:var(--gold);font-style:italic}
+  .ghost-icon{width:40px;height:40px;border-radius:50%;border:0;background:transparent;cursor:pointer;
+    display:grid;place-items:center;color:var(--ink2)}
+  .ghost-icon:active{background:var(--soft)}
+  .ghost-icon svg{width:20px;height:20px}
+  .ghost-icon.spinning svg{animation:rot .8s linear infinite}
+  @keyframes rot{to{transform:rotate(360deg)}}
+
+  /* ---------- Hero ---------- */
+  .hero{padding:14px 0 8px}
+  .eyebrow{font-size:13px;color:var(--ink2);margin:0 0 6px}
+  .big{font-family:var(--serif);font-weight:300;font-size:64px;line-height:1;letter-spacing:-2px;margin:0}
+  .big small{font-family:var(--sans);font-size:15px;letter-spacing:0;color:var(--ink2);font-weight:400;margin-left:6px}
+  .toggle{display:inline-flex;background:var(--soft);border-radius:999px;padding:3px;margin-top:18px}
+  .toggle button{border:0;background:transparent;padding:8px 16px;border-radius:999px;font-size:13.5px;
+    font-weight:500;color:var(--ink2);cursor:pointer;transition:all .2s}
+  .toggle button.on{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+  .split{margin-top:22px}
+  .splitbar{display:flex;height:6px;border-radius:999px;overflow:hidden;background:var(--soft)}
+  .splitbar div{transition:width .5s cubic-bezier(.2,.8,.2,1)}
+  .splitlegend{display:flex;justify-content:space-between;margin-top:10px;font-size:13px;color:var(--ink2)}
+  .splitlegend b{color:var(--ink);font-weight:600;margin-left:4px}
+  .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:1px}
+
+  .kpis{display:grid;grid-template-columns:repeat(3,1fr);margin:26px 0 6px;background:var(--surface);
+    border-radius:18px;overflow:hidden}
+  .kpi{padding:16px 14px}
+  .kpi+.kpi{border-left:1px solid var(--line)}
+  .kpi b{display:block;font-family:var(--serif);font-weight:400;font-size:24px;letter-spacing:-.5px}
+  .kpi span{font-size:12px;color:var(--muted)}
+
+  /* Relationship breakdown */
+  .rel{background:var(--surface);border-radius:18px;padding:16px 16px 10px;margin-top:14px}
+  .rel-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+  .rel-h span{font-size:13px;color:var(--ink2);font-weight:500}
+  .rel-clear{border:0;background:none;font-size:12.5px;color:var(--gold);cursor:pointer;padding:4px}
+  .rel-row{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) 34px;align-items:center;gap:10px;width:100%;
+    border:0;background:transparent;padding:8px 6px;border-radius:10px;cursor:pointer;text-align:left;font-size:13.5px;color:var(--ink)}
+  .rel-row:hover{background:#FAF8F4}
+  .rel-row.on{background:var(--ink);color:#fff}
+  .rel-row.zero{color:var(--muted)}
+  .rel-row.unset .rel-name{font-style:italic;color:var(--muted)}
+  .rel-row.on .rel-name{color:#fff}
+  .rel-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .rel-bar{height:5px;background:var(--soft);border-radius:999px;overflow:hidden}
+  .rel-bar i{display:block;height:100%;background:var(--gold);border-radius:999px}
+  .rel-row.on .rel-bar{background:rgba(255,255,255,.2)}
+  .rel-row.on .rel-bar i{background:#fff}
+  .rel-num{text-align:right;font-family:var(--serif);font-size:16px}
+  .rel-chip{display:inline-flex;align-items:center;gap:8px;margin-top:10px;background:var(--gold-soft);color:#6E5418;
+    border-radius:999px;padding:6px 8px 6px 14px;font-size:13px}
+  .rel-chip button{border:0;background:rgba(0,0,0,.07);width:22px;height:22px;border-radius:50%;cursor:pointer;font-size:15px;line-height:1;color:inherit}
+
+  /* Filter bar + panel */
+  .filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px}
+  .fchip{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface);
+    border-radius:999px;padding:9px 14px;font-size:14px;color:var(--ink);cursor:pointer;transition:all .15s;max-width:100%}
+  .fchip svg{opacity:.55;transition:transform .2s}
+  .fchip.open svg{transform:rotate(180deg)}
+  .fchip.on{background:var(--ink);border-color:var(--ink);color:#fff}
+  .fchip.on svg{opacity:.9}
+  .fclear{border:0;background:none;color:var(--gold);font-size:13.5px;cursor:pointer;padding:8px 6px}
+  #fback{position:fixed;inset:0;z-index:30;background:rgba(20,20,20,.28);opacity:0;visibility:hidden;transition:opacity .2s,visibility .2s}
+  #fback.open{opacity:1;visibility:visible}
+  #fpanel{position:fixed;left:0;right:0;bottom:0;z-index:31;background:var(--bg);border-radius:24px 24px 0 0;
+    padding:20px 20px calc(18px + env(safe-area-inset-bottom));max-height:75vh;overflow:auto;
+    transform:translateY(100%);transition:transform .3s cubic-bezier(.2,.8,.2,1);visibility:hidden}
+  #fpanel.open{transform:none;visibility:visible}
+  .fp-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+  .fp-head h4{margin:0;font-family:var(--serif);font-weight:400;font-size:22px;letter-spacing:-.3px}
+  .fp-clear{border:0;background:none;color:var(--gold);font-size:14px;cursor:pointer;padding:6px}
+  .fp-list{background:var(--surface);border-radius:16px;overflow:hidden}
+  .fopt{display:grid;grid-template-columns:22px 1fr auto;align-items:center;gap:12px;width:100%;border:0;background:transparent;
+    padding:14px 16px;font-size:15px;color:var(--ink);cursor:pointer;text-align:left}
+  .fopt+.fopt{border-top:1px solid var(--line)}
+  .fopt:hover{background:#FAF8F4}
+  .fopt.zero .flabel,.fopt.zero .fcount{color:var(--muted)}
+  .fcheck{width:22px;height:22px;border-radius:7px;border:1.5px solid #CFC8BA;display:grid;place-items:center;transition:all .15s}
+  .fopt.on .fcheck{background:var(--ink);border-color:var(--ink)}
+  .fopt.on .fcheck::after{content:"";width:6px;height:11px;border:solid #fff;border-width:0 2px 2px 0;transform:translateY(-1px) rotate(45deg)}
+  .fcount{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+  .fp-done{margin-top:14px;position:sticky;bottom:0;box-shadow:0 -10px 20px var(--bg)}
+  @media (min-width:960px){
+    #fback{display:none}
+    #fpanel{position:absolute;left:auto;right:auto;bottom:auto;width:300px;max-height:420px;border-radius:16px;padding:14px;
+      background:var(--surface);box-shadow:0 18px 50px rgba(20,20,20,.16),0 2px 6px rgba(20,20,20,.06);
+      transform:translateY(-6px);opacity:0;transition:opacity .15s,transform .15s,visibility .15s}
+    #fpanel.open{transform:none;opacity:1}
+    .fp-head{padding:2px 4px}
+    .fp-head h4{font-family:var(--sans);font-size:13px;font-weight:500;color:var(--ink2);letter-spacing:0}
+    .fp-list{border-radius:10px}
+    .fopt{padding:10px 8px;font-size:14px;border-radius:8px}
+    .fopt+.fopt{border-top:0}
+    #fpanel .fp-done{display:none}
+  }
+
+  /* ---------- People ---------- */
+  .ppl-empty{background:var(--surface);border-radius:18px;padding:16px;margin-bottom:14px;font-size:14px;color:var(--ink2)}
+  .ppl-empty p{margin:0 0 12px}
+  .ppl-actions{display:flex;gap:8px;flex-wrap:wrap}
+  .btn-soft{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:9px 14px;font-size:14px;cursor:pointer;color:var(--ink)}
+  .btn-soft:hover{border-color:var(--ink)}
+  .btn-soft.dark{background:var(--ink);border-color:var(--ink);color:#fff}
+  .person{padding:12px 16px 14px}
+  .prow{display:flex;align-items:center;gap:10px}
+  .prow input{flex:1;border:0;background:transparent;font-size:16px;font-weight:500;font-family:var(--sans);color:var(--ink);outline:none;padding:4px 0;min-width:0}
+  .prow input::placeholder{color:var(--muted);font-weight:400}
+  .p-del{border:0;background:var(--soft);width:30px;height:30px;border-radius:50%;cursor:pointer;color:var(--ink2);font-size:17px;line-height:1;flex:0 0 auto}
+  .p-del:hover{background:var(--no-soft);color:var(--no)}
+  .pseg{margin:8px 0 10px}
+  .pseg button{padding:6px 12px;font-size:13px}
+  .pgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px 12px}
+  .pgrid label{display:flex;flex-direction:column;gap:4px;font-size:11.5px;color:var(--muted);margin:0;font-weight:500}
+  .pgrid select,.pgrid input{width:100%;border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:14px;
+    font-family:var(--sans);color:var(--ink);background:#fff;outline:none;-webkit-appearance:none;appearance:none}
+  .pgrid select:focus,.pgrid input:focus{border-color:var(--ink)}
+  .pgrid select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238C877E' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 10px center;padding-right:28px}
+  .pgrid .wide{grid-column:1/-1}
+  .ppl-foot{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:2px 0 16px;flex-wrap:wrap}
+  .linkbtn{border:0;background:none;color:var(--muted);font-size:13px;cursor:pointer;padding:6px 2px;text-decoration:underline}
+  .drow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 0}
+  .drow+.drow{border-top:1px solid var(--line)}
+  .drow b{font-size:14px;font-weight:500}
+  .drow span{font-size:14px;color:var(--ink2);text-align:right}
+  .drow .tag{margin-left:6px}
+  .pplbadge{display:inline-flex;align-items:center;gap:3px;margin-left:8px;font-size:12px;color:var(--muted);flex:0 0 auto}
+  .pplbadge svg{width:13px;height:13px}
+
+  /* ---------- Background save indicator ---------- */
+  .sync{font-size:12.5px;color:var(--muted);opacity:0;transition:opacity .25s;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+  .sync.show{opacity:1}
+  .sync i{width:7px;height:7px;border-radius:50%;background:var(--gold);animation:pulse 1s ease-in-out infinite}
+  .sync.done{color:var(--ok)}
+  .sync.err{color:var(--no)}
+  .item.pending{opacity:.6}
+  .item.pending .avatar,.item.pending .datechip{animation:pulse 1.2s ease-in-out infinite}
+
+  /* ---------- Navigation drawer ---------- */
+  .top-left{display:flex;align-items:center;gap:6px;min-width:0}
+  .menu-btn{margin-left:-8px}
+  #navBack{position:fixed;inset:0;z-index:40;background:rgba(20,20,20,.3);opacity:0;visibility:hidden;transition:opacity .25s,visibility .25s}
+  #navBack.open{opacity:1;visibility:visible}
+  #nav{position:fixed;top:0;left:0;bottom:0;z-index:41;width:min(320px,86vw);background:var(--bg);
+    padding:calc(22px + env(safe-area-inset-top)) 16px 22px;display:flex;flex-direction:column;gap:4px;
+    transform:translateX(-102%);transition:transform .3s cubic-bezier(.2,.8,.2,1);box-shadow:8px 0 40px rgba(20,20,20,.12)}
+  #nav.open{transform:none}
+  .nav-head{padding:4px 12px 22px}
+  .nav-head .mono{font-size:24px}
+  .nav-head p{margin:6px 0 0;font-size:11.5px;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted)}
+  .nav-item{display:flex;align-items:center;gap:14px;width:100%;border:0;background:transparent;border-radius:14px;
+    padding:12px;text-align:left;cursor:pointer;color:var(--ink)}
+  .nav-item svg{width:24px;height:24px;flex:0 0 auto;color:var(--ink2)}
+  .nav-item span{display:flex;flex-direction:column}
+  .nav-item b{font-weight:500;font-size:15.5px}
+  .nav-item small{font-size:12.5px;color:var(--muted);margin-top:2px}
+  .nav-item:hover{background:var(--soft)}
+  .nav-item.on{background:var(--surface);box-shadow:0 1px 3px rgba(0,0,0,.06)}
+  .nav-item.on svg{color:var(--gold)}
+  .nav-item.disabled{opacity:.45;cursor:default}
+  .nav-item.disabled:hover{background:transparent}
+  .nav-link{margin-top:auto;padding:12px;font-size:13.5px;color:var(--ink2);text-decoration:none;border-top:1px solid var(--line)}
+  .nav-link:hover{color:var(--ink)}
+  .nav-foot{margin-top:auto;border-top:1px solid var(--line);padding-top:8px;display:flex;flex-direction:column}
+  .nav-act{display:flex;align-items:center;gap:12px;width:100%;border:0;background:transparent;border-radius:12px;
+    padding:11px 12px;font-size:14px;color:var(--ink2);text-align:left;cursor:pointer}
+  .nav-act:hover{background:var(--soft);color:var(--ink)}
+  .nav-act svg{width:20px;height:20px;flex:0 0 auto}
+  .nav-who{padding:10px 12px 2px;font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+  /* ---------- Sign-in gate ---------- */
+  #gate{position:fixed;inset:0;z-index:60;background:var(--bg);display:flex;align-items:center;justify-content:center;
+    flex-direction:column;text-align:center;padding:24px;transition:opacity .4s ease, visibility .4s}
+  #gate.hide{opacity:0;visibility:hidden}
+  #gate .g-box{display:none;flex-direction:column;align-items:center}
+  #gate[data-state="signin"] .g-signin, #gate[data-state="denied"] .g-denied,
+  #gate[data-state="error"] .g-error, #gate[data-state="checking"] .g-checking{display:flex}
+  #gate h1{font-family:var(--serif);font-weight:300;font-size:38px;letter-spacing:-.5px;margin:0}
+  #gate h1 i{font-style:italic;color:var(--gold);padding:0 4px}
+  #gate p{color:var(--ink2);font-size:14.5px;line-height:1.5;max-width:300px;margin:14px 0 26px}
+  #gate .g-date{font-size:11.5px;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);margin:10px 0 0}
+  .g-btn{display:inline-flex;align-items:center;gap:10px;border:1px solid var(--line);background:var(--surface);
+    border-radius:999px;padding:13px 22px;font-size:15px;font-weight:500;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+  .g-btn:disabled{opacity:.6;cursor:default}
+  .g-btn svg{width:18px;height:18px}
+  .g-link{margin-top:14px;border:0;background:none;color:var(--muted);font-size:13px;text-decoration:underline;cursor:pointer}
+  .g-dots{display:flex;gap:6px;margin-top:22px}
+  .g-dots span{width:6px;height:6px;border-radius:50%;background:var(--gold);opacity:.3;animation:gpulse 1.2s infinite}
+  .g-dots span:nth-child(2){animation-delay:.2s}.g-dots span:nth-child(3){animation-delay:.4s}
+  @keyframes gpulse{50%{opacity:1}}
+  #gErr{color:var(--no);font-size:13px;min-height:18px;margin-top:12px}
+
+  /* ---------- Budget ---------- */
+  .view[hidden]{display:none!important}
+  .tabs{display:flex;background:var(--soft);border-radius:999px;padding:3px;gap:2px}
+  .tabs button{flex:1;border:0;background:transparent;border-radius:999px;padding:9px 10px;font-size:14px;font-weight:500;
+    color:var(--ink2);cursor:pointer;transition:all .2s;white-space:nowrap}
+  .tabs button span{font-weight:400;color:var(--muted);margin-left:2px}
+  .tabs button.on{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+  .sumrow{display:flex;justify-content:space-between;align-items:baseline;padding:8px 6px;font-size:14px;color:var(--ink2)}
+  .sumrow b{font-family:var(--serif);font-weight:400;font-size:17px;color:var(--ink)}
+  .sumrow.total{border-top:1px solid var(--line);margin-top:4px;padding-top:12px;color:var(--ink);font-weight:500}
+  .sumrow.total b{font-size:20px}
+  .meta .n:has(.nm){display:flex;align-items:center;min-width:0}
+  .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+  .flag{display:inline-flex;align-items:center;margin-left:8px;flex:0 0 auto}
+  .flag img{width:20px;height:14px;object-fit:cover;border-radius:3px;box-shadow:0 0 0 1px rgba(0,0,0,.08)}
+  .flag .globe{font-size:14px;line-height:1}
+  .flag .code{font-size:10px;font-weight:600;letter-spacing:.5px;color:var(--ink2);background:var(--soft);border-radius:4px;padding:2px 5px}
+  .avatar.Venue{background:var(--gold-soft);color:#8A6A22}
+  .avatar.Vendor{background:#EEF0EC;color:#56614F}
+  .avatar.exp{background:#F1ECF4;color:#6D5580}
+  .datechip{width:42px;height:46px;border-radius:12px;background:var(--soft);display:flex;flex-direction:column;
+    align-items:center;justify-content:center;flex:0 0 auto;line-height:1}
+  .datechip b{font-family:var(--serif);font-weight:400;font-size:19px}
+  .datechip span{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-top:3px}
+  .datechip.none b{font-size:15px;color:var(--muted)}
+  .datechip.over{background:var(--no-soft)} .datechip.over b,.datechip.over span{color:var(--no)}
+  .datechip.done{background:var(--ok-soft)} .datechip.done b,.datechip.done span{color:var(--ok)}
+  .quick{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 12px;font-size:12.5px;
+    cursor:pointer;color:var(--ink);margin-top:4px;white-space:nowrap}
+  .quick:hover{border-color:var(--ink)}
+  .tag.ok{background:var(--ok-soft);color:var(--ok)}
+  .tag.warn{background:var(--maybe-soft);color:var(--maybe)}
+  .tag.bad{background:var(--no-soft);color:var(--no)}
+  .tag.neutral{background:var(--soft);color:var(--ink2)}
+  .bcol{display:none}
+  .money-in{display:flex;align-items:center;gap:4px}
+  .money-in span{color:var(--muted);font-size:16px}
+  .field input[type=date]{min-height:24px}
+
+  /* ---------- Controls ---------- */
+  .section-h{display:flex;align-items:baseline;justify-content:space-between;margin:30px 0 12px}
+  .section-h h2{font-family:var(--serif);font-weight:400;font-size:24px;letter-spacing:-.4px;margin:0}
+  .section-h span{font-size:13px;color:var(--muted)}
+  .search{position:relative}
+  .search svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:var(--muted)}
+  .search input{width:100%;border:0;background:var(--surface);border-radius:14px;padding:14px 14px 14px 42px;
+    font-size:16px;font-family:var(--sans);color:var(--ink)}
+  .search input::placeholder{color:var(--muted)}
+  .search input:focus{outline:1.5px solid var(--ink)}
+  .pills{display:flex;gap:8px;overflow-x:auto;padding:12px 0 2px;scrollbar-width:none}
+  .pills::-webkit-scrollbar{display:none}
+  .pill{flex:0 0 auto;border:1px solid var(--line);background:transparent;border-radius:999px;
+    padding:8px 14px;font-size:13.5px;color:var(--ink2);cursor:pointer;transition:all .15s}
+  .pill.on{background:var(--ink);border-color:var(--ink);color:#fff}
+
+  /* ---------- List ---------- */
+  .list{background:var(--surface);border-radius:18px;margin:14px 0 130px;overflow:hidden}
+  .item{display:flex;align-items:center;gap:14px;padding:14px 16px;cursor:pointer;transition:background .15s}
+  .item+.item{border-top:1px solid var(--line)}
+  .item:active{background:#FAF8F4}
+  .avatar{width:42px;height:42px;border-radius:50%;flex:0 0 auto;display:grid;place-items:center;
+    font-weight:600;font-size:14px;background:var(--soft);color:var(--ink2)}
+  .avatar.Bride{background:var(--bride-soft);color:var(--bride)}
+  .avatar.Groom{background:var(--groom-soft);color:var(--groom)}
+  .who{display:flex;align-items:center;gap:14px;flex:1;min-width:0}
+  .meta{flex:1;min-width:0}
+  .meta .n{font-weight:500;font-size:15.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .meta .s{font-size:13px;color:var(--muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tag{display:inline-block;font-size:11.5px;font-weight:500;padding:2px 8px;border-radius:999px;margin-right:4px}
+  .tag.Confirmed{background:var(--ok-soft);color:var(--ok)}
+  .tag.Declined{background:var(--no-soft);color:var(--no)}
+  .tag.Maybe{background:var(--maybe-soft);color:var(--maybe)}
+  .tag.Invited,.tag.sent{background:var(--gold-soft);color:#8A6A22}
+  .amt{text-align:right;flex:0 0 auto}
+  .amt b{display:block;font-family:var(--serif);font-weight:400;font-size:20px;letter-spacing:-.3px}
+  .amt span{font-size:11.5px;color:var(--muted)}
+  .empty{padding:48px 20px;text-align:center;color:var(--muted)}
+  .empty b{display:block;font-family:var(--serif);font-weight:400;font-size:20px;color:var(--ink);margin-bottom:6px}
+  .skel{height:70px;border-top:1px solid var(--line);background:linear-gradient(90deg,#fff 0,#F6F3EE 50%,#fff 100%);
+    background-size:200% 100%;animation:sh 1.3s linear infinite}
+  @keyframes sh{to{background-position:-200% 0}}
+
+  .fab{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(22px + env(safe-area-inset-bottom));z-index:6;
+    border:0;background:var(--ink);color:#fff;border-radius:999px;padding:16px 26px;font-size:15px;font-weight:500;
+    box-shadow:0 10px 30px rgba(20,20,20,.22);cursor:pointer;display:flex;align-items:center;gap:8px}
+  .fab:active{transform:translateX(-50%) scale(.97)}
+
+  /* ---------- Edit sheet ---------- */
+  .overlay{position:fixed;inset:0;z-index:20;background:rgba(20,20,20,.32);opacity:0;visibility:hidden;
+    transition:opacity .25s,visibility .25s}
+  .overlay.open{opacity:1;visibility:visible}
+  .sheet{position:fixed;left:0;right:0;bottom:0;z-index:21;background:var(--bg);border-radius:26px 26px 0 0;
+    max-height:94vh;overflow:auto;transform:translateY(100%);transition:transform .35s cubic-bezier(.2,.8,.2,1);
+    padding-bottom:env(safe-area-inset-bottom)}
+  .sheet.open{transform:none}
+  @media(min-width:700px) and (max-width:959px){.sheet{left:50%;right:auto;width:560px;margin-left:-280px}}
+  .grab{width:38px;height:4px;border-radius:4px;background:#D8D2C6;margin:10px auto 0}
+  .sheet-in{padding:10px 22px 26px}
+  .sheet-top{display:flex;justify-content:space-between;align-items:center}
+  .sheet h3{font-family:var(--serif);font-weight:400;font-size:28px;letter-spacing:-.6px;margin:14px 0 4px}
+  .sheet .sub{font-size:13px;color:var(--muted);margin:0 0 18px}
+  .group{background:var(--surface);border-radius:18px;padding:4px 16px;margin-bottom:14px}
+  .field{padding:12px 0}
+  .field+.field{border-top:1px solid var(--line)}
+  .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+  .field input,.field textarea,.field select{width:100%;border:0;background:transparent;padding:2px 0;
+    font-size:16px;font-family:var(--sans);color:var(--ink);outline:none}
+  .field textarea{min-height:56px;resize:vertical}
+  .field select{-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238C877E' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 2px center;padding-right:20px}
+  .seg{display:flex;gap:6px;flex-wrap:wrap}
+  .seg button{border:1px solid var(--line);background:transparent;border-radius:999px;padding:8px 14px;
+    font-size:14px;cursor:pointer;color:var(--ink2)}
+  .seg button.on{background:var(--ink);border-color:var(--ink);color:#fff}
+  .counts{display:grid;grid-template-columns:1fr 1fr}
+  .group-title{font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin:4px 4px 8px}
+  .hint{color:#B5AFA4;font-weight:400;margin-left:4px}
+  .hero-split{margin:8px 0 0;font-size:14px;color:var(--ink2)}
+  .hero-split b{color:var(--ink);font-weight:600}
+  .kidnote{display:block;font-family:var(--sans);font-size:11.5px;color:var(--muted);margin-top:1px}
+  .counts .field{border-top:0}
+  .counts .field+.field{border-left:1px solid var(--line);padding-left:16px}
+  .step{display:flex;align-items:center;justify-content:space-between}
+  .step button{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--surface);
+    font-size:18px;line-height:1;cursor:pointer;color:var(--ink)}
+  .step input{width:50px;text-align:center;font-family:var(--serif);font-size:26px;font-weight:400;padding:0}
+  .err{color:var(--no);font-size:13.5px;min-height:18px;margin:4px 2px 8px}
+  .btn{display:block;width:100%;border:0;border-radius:999px;padding:16px;font-size:15.5px;font-weight:500;cursor:pointer}
+  .btn.primary{background:var(--ink);color:#fff}
+  .btn.primary:disabled{opacity:.5}
+  .btn.text{background:transparent;color:var(--no);margin-top:6px}
+  .confirm{display:none;background:var(--surface);border-radius:18px;padding:18px;margin-top:10px;text-align:center}
+  .confirm.show{display:block}
+  .confirm p{margin:0 0 14px;font-size:14.5px;color:var(--ink2)}
+  .confirm .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .btn.soft{background:var(--soft);color:var(--ink)}
+  .btn.danger{background:var(--no);color:#fff}
+  .idline{text-align:center;font-size:11.5px;color:var(--muted);margin-top:14px}
+
+  .toast{position:fixed;left:50%;top:calc(14px + env(safe-area-inset-top));transform:translate(-50%,-20px);
+    background:var(--ink);color:#fff;padding:11px 18px;border-radius:999px;font-size:14px;z-index:40;
+    opacity:0;pointer-events:none;transition:all .25s}
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+
+  /* ---------- Top bar extras ---------- */
+  .top-actions{display:flex;align-items:center;gap:8px}
+  .mono-date{display:none;font-family:var(--sans);font-size:12px;letter-spacing:2px;text-transform:uppercase;
+    color:var(--muted);margin-left:14px;vertical-align:3px}
+  .top-add{display:none;border:0;background:var(--ink);color:#fff;border-radius:999px;padding:10px 18px;
+    font-size:14px;font-weight:500;cursor:pointer;align-items:center;gap:6px}
+  .top-add span{font-size:18px;line-height:0}
+  .top-add:hover{background:#2A2A2A}
+
+  /* Desktop-only list pieces (hidden on phones) */
+  .list-head,.col-rel,.col-status,.col-num{display:none}
+
+  /* ---------- Tablet / desktop ---------- */
+  @media (min-width: 960px){
+    .wrap{max-width:1240px;padding:0 40px}
+    .top .wrap{height:72px}
+    .mono{font-size:22px}
+    .mono-date{display:inline}
+    .top-add{display:inline-flex}
+    .fab{display:none}
+
+    .layout{display:grid;grid-template-columns:340px minmax(0,1fr);gap:48px;align-items:start}
+    .side{position:sticky;top:96px}
+    .hero{padding-top:24px}
+    .big{font-size:76px}
+    .kpis{grid-template-columns:1fr;margin-top:28px}
+    .kpi{display:flex;align-items:baseline;justify-content:space-between;padding:16px 20px}
+    .kpi+.kpi{border-left:0;border-top:1px solid var(--line)}
+    .kpi b{font-size:22px;order:2}
+    .kpi span{font-size:13.5px;color:var(--ink2)}
+
+    .main .section-h{margin-top:24px}
+    .main .section-h h2{font-size:30px}
+    .main-tools{display:flex;gap:12px;align-items:center}
+    .list{margin-bottom:60px}
+
+    .list-head,.item{display:grid;grid-template-columns:minmax(0,2.4fr) minmax(0,1.4fr) minmax(0,1.3fr) 80px;
+      align-items:center;gap:16px;padding:14px 22px}
+    .list-head{font-size:11.5px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);
+      border-bottom:1px solid var(--line);padding-top:16px;padding-bottom:12px}
+    .list-head .r,.col-num{text-align:right}
+    .item{cursor:pointer}
+    .item:hover{background:#FBF9F5}
+    .item+.item{border-top:1px solid var(--line)}
+    .who{display:flex;align-items:center;gap:14px;min-width:0}
+    .item .meta .s{display:none}
+    .item .amt{display:none}
+    .col-rel,.col-status{display:block;font-size:14px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .col-num{display:block;font-family:var(--serif);font-size:20px}
+    .col-num.dim{color:var(--muted)}
+    .col-status .tag{margin-right:0}
+
+    /* Budget tables on desktop */
+    .bcol{display:block;font-size:14px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .bnum{text-align:right;font-family:var(--serif);font-size:18px;color:var(--ink)}
+    .bnum.dim{color:var(--muted)}
+    #bList .item .amt,#bList .item .meta .s{display:none}
+    #bList.t-vendors .list-head,#bList.t-vendors .item{grid-template-columns:minmax(0,2.3fr) minmax(0,1.2fr) 110px 110px 110px}
+    #bList.t-payments .list-head,#bList.t-payments .item{grid-template-columns:minmax(0,2.3fr) minmax(0,1fr) 120px 110px 110px}
+    #bList.t-expenses .list-head,#bList.t-expenses .item{grid-template-columns:minmax(0,2.3fr) minmax(0,1fr) 110px 110px 110px}
+    .tabs{max-width:420px}
+    /* Edit panel becomes a right-hand drawer */
+    .sheet{left:auto;right:0;top:0;bottom:0;width:480px;margin:0;max-height:none;height:100%;
+      border-radius:26px 0 0 26px;transform:translateX(100%)}
+    .sheet.open{transform:none}
+    .grab{display:none}
+    .sheet-in{padding:22px 32px 32px}
+    .toast{top:auto;bottom:28px;transform:translate(-50%,20px)}
+    .toast.show{transform:translate(-50%,0)}
+  }
+  @media (min-width: 960px) and (max-width: 1100px){
+    .layout{grid-template-columns:300px minmax(0,1fr);gap:32px}
+    .list-head,.item{grid-template-columns:minmax(0,2.2fr) minmax(0,1.2fr) minmax(0,1.2fr) 70px}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *,*::before,*::after{animation-duration:.01ms!important;animation-delay:0s!important;transition-duration:.01ms!important}
+    .ring circle{stroke-dashoffset:0}
   }
 </style>
 </head>
 <body>
-  <iframe
-    src="https://script.google.com/macros/s/AKfycbyH_wO2GczlnxH8T3MGybEwUFoK3dbYGpCzV-Bd08KC-zSQvlKuNdByMoxcMy9rYD00/exec"
-    title="Abbi & Musi Wedding Planner"
-    allow="clipboard-write"
-    referrerpolicy="no-referrer-when-downgrade"></iframe>
+<div id="gate" data-state="checking" aria-live="polite">
+  <h1>Abbi <i>&amp;</i> Musi</h1>
+  <p class="g-date">September 5 – 6, 2027</p>
+  <div class="g-box g-checking"><div class="g-dots"><span></span><span></span><span></span></div></div>
+  <div class="g-box g-signin">
+    <p>Our private wedding planner. Sign in with your Google account to continue.</p>
+    <button type="button" class="g-btn" id="gSignIn"><svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.6 5.4 2.6 13.2l7.9 6.2C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.7 6c4.5-4.2 6.9-10.3 6.9-17.7z"/><path fill="#FBBC05" d="M10.5 28.6c-.5-1.4-.8-3-.8-4.6s.3-3.2.8-4.6l-7.9-6.2C.9 16.5 0 20.1 0 24s.9 7.5 2.6 10.8l7.9-6.2z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.7-6c-2.1 1.4-4.9 2.3-8.2 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.9 6.2C6.6 42.6 14.6 48 24 48z"/></svg><span>Sign in with Google</span></button>
+    <div id="gErr"></div>
+  </div>
+  <div class="g-box g-denied">
+    <p><b id="gWho"></b> doesn’t have access to this planner.</p>
+    <button type="button" class="g-btn" id="gSwitch"><svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.6 5.4 2.6 13.2l7.9 6.2C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.7 6c4.5-4.2 6.9-10.3 6.9-17.7z"/><path fill="#FBBC05" d="M10.5 28.6c-.5-1.4-.8-3-.8-4.6s.3-3.2.8-4.6l-7.9-6.2C.9 16.5 0 20.1 0 24s.9 7.5 2.6 10.8l7.9-6.2z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.7-6c-2.1 1.4-4.9 2.3-8.2 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.9 6.2C6.6 42.6 14.6 48 24 48z"/></svg><span>Use a different account</span></button>
+  </div>
+  <div class="g-box g-error">
+    <p id="gErrMsg">Something went wrong loading the app.</p>
+    <button type="button" class="g-btn" onclick="location.reload()"><span>Try again</span></button>
+  </div>
+</div>
+
+<!-- Intro -->
+<div id="splash" aria-label="Abbi and Musi's wedding, September 5 to 6, 2027">
+  <svg class="ring" viewBox="0 0 120 120" aria-hidden="true">
+    <circle cx="60" cy="60" r="54"/>
+    <circle class="inner" cx="60" cy="60" r="47"/>
+    <text x="60" y="70" text-anchor="middle">A&amp;M</text>
+  </svg>
+  <h1 class="s-names">Abbi <i>&amp;</i> Musi</h1>
+  <div class="s-rule"></div>
+  <p class="s-date">September 5 – 6, 2027</p>
+  <div class="s-dots"><span></span><span></span><span></span></div>
+  <div class="s-slow" id="splashSlow">
+    <p id="splashMsg">Taking longer than usual…</p>
+    <button type="button" onclick="location.reload()">Try again</button>
+  </div>
+</div>
+
+<div class="top">
+  <div class="wrap">
+    <div class="top-left">
+      <button class="ghost-icon menu-btn" id="menuBtn" aria-label="Open menu" aria-controls="nav" aria-expanded="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
+      </button>
+      <div class="mono">Abbi <i>&amp;</i> Musi <span class="mono-date">September 5 – 6, 2027</span></div>
+    </div>
+    <div class="top-actions">
+      <span id="sync" class="sync" aria-live="polite"></span>
+      <button class="ghost-icon" id="refresh" aria-label="Refresh">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v4h-4"/></svg>
+      </button>
+      <button class="top-add" id="addBtnTop"><span>+</span> Add guest</button>
+    </div>
+  </div>
+</div>
+
+<div class="wrap layout view" id="viewGuests">
+  <aside class="side">
+  <section class="hero">
+    <p class="eyebrow" id="heroLabel">Guests at the wedding</p>
+    <p class="big" id="heroNum">–</p>
+    <p class="hero-split" id="heroSplit"></p>
+    <div class="toggle" id="eventToggle">
+      <button class="on" data-ev="wedding">Wedding</button>
+      <button data-ev="reception">Reception</button>
+    </div>
+    <div class="split">
+      <div class="splitbar"><div id="barBride" style="width:50%;background:var(--bride)"></div><div id="barGroom" style="width:50%;background:var(--groom)"></div></div>
+      <div class="splitlegend">
+        <span><span class="dot" style="background:var(--bride)"></span>Bride’s side<b id="lgBride">–</b></span>
+        <span><span class="dot" style="background:var(--groom)"></span>Groom’s side<b id="lgGroom">–</b></span>
+      </div>
+    </div>
+    <div class="kpis">
+      <div class="kpi"><b id="kHouse">–</b><span>Households</span></div>
+      <div class="kpi"><b id="kSent">–</b><span>Invites sent</span></div>
+      <div class="kpi"><b id="kConf">–</b><span>Confirmed</span></div>
+    </div>
+    <div class="rel">
+      <div class="rel-h"><span>By relationship</span><button type="button" id="relClear" class="rel-clear">Show all</button></div>
+      <div id="relBreak"></div>
+    </div>
+  </section>
+  </aside>
+
+  <section class="main">
+  <div class="section-h"><h2>Guest list</h2><span id="countLine"></span></div>
+  <div class="search">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+    <input id="q" type="search" placeholder="Search guests" autocomplete="off">
+  </div>
+  <div class="filters" id="filters">
+    <button type="button" class="fchip" data-f="side"></button>
+    <button type="button" class="fchip" data-f="rsvp"></button>
+    <button type="button" class="fchip" data-f="rel"></button>
+    <button type="button" class="fchip" data-f="kids"></button>
+    <button type="button" class="fchip" data-f="from"></button>
+    <button type="button" class="fclear" id="clearAll">Clear filters</button>
+  </div>
+
+  <div class="list" id="list">
+    <div class="skel" style="border-top:0"></div><div class="skel"></div><div class="skel"></div><div class="skel"></div>
+  </div>
+  </section>
+</div>
+
+
+<!-- ================= BUDGET VIEW ================= -->
+<div class="wrap layout view" id="viewBudget" hidden>
+  <aside class="side">
+  <section class="hero">
+    <p class="eyebrow">Vendors &amp; venues quoted</p>
+    <p class="big" id="bTotal">–</p>
+    <p class="hero-split" id="bSplit"></p>
+    <div class="split">
+      <div class="splitbar"><div id="bBar" style="width:0;background:var(--ok)"></div></div>
+      <div class="splitlegend"><span>Paid <b id="bPct">–</b></span><span>Quotes in <b id="bQuotes">–</b></span></div>
+    </div>
+    <div class="kpis">
+      <div class="kpi"><b id="bkBooked">–</b><span>Booked</span></div>
+      <div class="kpi"><b id="bkNeed">–</b><span>Need a quote</span></div>
+      <div class="kpi"><b id="bkDue">–</b><span>Scheduled to pay</span></div>
+    </div>
+    <div class="rel">
+      <div class="rel-h"><span>All-in estimate</span></div>
+      <div class="sumrow"><span>Vendors &amp; venues</span><b id="sVend">–</b></div>
+      <div class="sumrow"><span>Personal expenses</span><b id="sPers">–</b></div>
+      <div class="sumrow total"><span>Total</span><b id="sAll">–</b></div>
+    </div>
+  </section>
+  </aside>
+
+  <section class="main">
+    <div class="section-h"><h2>Budget</h2><span id="bCount"></span></div>
+    <div class="tabs" id="bTabs" role="tablist">
+      <button class="on" data-t="vendors" role="tab">Vendors <span id="tcV"></span></button>
+      <button data-t="payments" role="tab">Payments <span id="tcP"></span></button>
+      <button data-t="expenses" role="tab">Personal <span id="tcE"></span></button>
+    </div>
+    <div class="search" style="margin-top:12px">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+      <input id="bq" type="search" placeholder="Search" autocomplete="off">
+    </div>
+    <div class="list" id="bList">
+      <div class="skel" style="border-top:0"></div><div class="skel"></div><div class="skel"></div>
+    </div>
+  </section>
+</div>
+
+<!-- ================= NAV DRAWER ================= -->
+<div id="navBack"></div>
+<nav id="nav" aria-label="Sections" aria-hidden="true">
+  <div class="nav-head">
+    <div class="mono">Abbi <i>&amp;</i> Musi</div>
+    <p>September 5 – 6, 2027</p>
+  </div>
+  <button type="button" class="nav-item on" data-view="guests">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5"/><circle cx="17" cy="9" r="2.4"/><path d="M15.5 14.2c2.4.2 4.2 1.8 4.8 4.8"/></svg>
+    <span><b>Guest list</b><small id="navGuests">–</small></span>
+  </button>
+  <button type="button" class="nav-item" data-view="budget">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10h18"/><path d="M16 14.5h2"/></svg>
+    <span><b>Budget</b><small id="navBudget">–</small></span>
+  </button>
+  <div class="nav-item disabled" aria-disabled="true">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg>
+    <span><b>Checklist</b><small>Coming soon</small></span>
+  </div>
+  <a id="navSheet" href="#" hidden></a>
+  <div class="nav-foot">
+    <button type="button" class="nav-act" id="navExport">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="M7.5 10.5L12 15l4.5-4.5"/><path d="M5 19h14"/></svg>
+      <span>Export to Excel / Google Sheets</span></button>
+    <button type="button" class="nav-act" id="navImport">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4"/><path d="M7.5 8.5L12 4l4.5 4.5"/><path d="M5 19h14"/></svg>
+      <span>Import from spreadsheet</span></button>
+    <button type="button" class="nav-act" id="navSignOut">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4"/><path d="M10 16l-4-4 4-4"/><path d="M6 12h10"/></svg>
+      <span>Sign out</span></button>
+    <div class="nav-who" id="navWho"></div>
+    <input type="file" id="importFile" accept=".xlsx,.xls,.csv" hidden>
+  </div>
+</nav>
+
+<!-- ================= BUDGET EDIT SHEET ================= -->
+<div class="overlay" id="boverlay"></div>
+<div class="sheet" id="bsheet" role="dialog" aria-modal="true" aria-labelledby="bTitle">
+  <div class="grab"></div>
+  <div class="sheet-in">
+    <div class="sheet-top"><span></span>
+      <button class="ghost-icon" id="bClose" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <h3 id="bTitle"></h3>
+    <p class="sub" id="bSub"></p>
+    <form id="bform" autocomplete="off">
+      <div id="bFields"></div>
+      <datalist id="vendorNames"></datalist>
+      <div class="err" id="bErr"></div>
+      <button type="submit" class="btn primary" id="bSave">Save</button>
+      <button type="button" class="btn text" id="bDel">Remove</button>
+      <div class="confirm" id="bConfirm">
+        <p>Remove <b id="bConfirmName"></b>? This clears the row in the sheet.</p>
+        <div class="row">
+          <button type="button" class="btn soft" id="bNo">Keep</button>
+          <button type="button" class="btn danger" id="bYes">Remove</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<button class="fab" id="addBtn"><span style="font-size:20px;line-height:0">+</span> Add guest</button>
+
+<!-- Edit sheet -->
+<div class="overlay" id="overlay"></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="formTitle">
+  <div class="grab"></div>
+  <div class="sheet-in">
+    <div class="sheet-top">
+      <span></span>
+      <button class="ghost-icon" id="closeBtn" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <h3 id="formTitle">Edit guest</h3>
+    <p class="sub" id="formSub"></p>
+
+    <form id="form" autocomplete="off">
+      <div class="group">
+        <div class="field"><label for="f_household">Family / household</label>
+          <input id="f_household" required maxlength="200" placeholder="e.g. Theepan Family"></div>
+        <div class="field"><label>Side</label><div class="seg" id="f_side"></div></div>
+        <div class="field"><label for="f_relationship">Relationship</label>
+          <select id="f_relationship"></select></div>
+        <div class="field"><label for="f_country">Country</label>
+          <select id="f_country"></select></div>
+      </div>
+
+      <div id="countsWrap">
+      <div class="group-title">Wedding</div>
+      <div class="group counts">
+        <div class="field"><label>Adults</label>
+          <div class="step"><button type="button" data-step="weddingAdults" data-d="-1" aria-label="Fewer adults">−</button>
+            <input id="f_weddingAdults" inputmode="numeric" pattern="[0-9]*"><button type="button" data-step="weddingAdults" data-d="1" aria-label="More adults">+</button></div></div>
+        <div class="field"><label>Kids <span class="hint">under 12</span></label>
+          <div class="step"><button type="button" data-step="weddingKids" data-d="-1" aria-label="Fewer kids">−</button>
+            <input id="f_weddingKids" inputmode="numeric" pattern="[0-9]*"><button type="button" data-step="weddingKids" data-d="1" aria-label="More kids">+</button></div></div>
+      </div>
+      <div class="group-title">Reception</div>
+      <div class="group counts">
+        <div class="field"><label>Adults</label>
+          <div class="step"><button type="button" data-step="receptionAdults" data-d="-1" aria-label="Fewer adults">−</button>
+            <input id="f_receptionAdults" inputmode="numeric" pattern="[0-9]*"><button type="button" data-step="receptionAdults" data-d="1" aria-label="More adults">+</button></div></div>
+        <div class="field"><label>Kids <span class="hint">under 12</span></label>
+          <div class="step"><button type="button" data-step="receptionKids" data-d="-1" aria-label="Fewer kids">−</button>
+            <input id="f_receptionKids" inputmode="numeric" pattern="[0-9]*"><button type="button" data-step="receptionKids" data-d="1" aria-label="More kids">+</button></div></div>
+      </div>
+
+      <div class="group">
+        <div class="field"><label for="f_weddingRsvp">Wedding RSVP</label><select id="f_weddingRsvp"></select></div>
+        <div class="field"><label for="f_receptionRsvp">Reception RSVP</label><select id="f_receptionRsvp"></select></div>
+      </div>
+      </div>
+
+      <div id="derivedWrap" hidden>
+        <div class="group-title">Headcount <span class="hint">worked out from the people below</span></div>
+        <div class="group" id="derived"></div>
+      </div>
+
+      <div class="group-title">People <span class="hint" id="pplHint"></span></div>
+      <div id="pplWrap"></div>
+
+      <div class="group">
+        <div class="field"><label for="f_contact">Contact person</label><input id="f_contact" maxlength="200" placeholder="Optional"></div>
+        <div class="field"><label for="f_phoneEmail">Phone or email</label><input id="f_phoneEmail" maxlength="200" placeholder="Optional"></div>
+        <div class="field"><label for="f_notes">Notes</label><textarea id="f_notes" maxlength="500" placeholder="Optional"></textarea></div>
+      </div>
+
+      <div class="err" id="formErr"></div>
+      <button type="submit" class="btn primary" id="saveBtn">Save</button>
+      <button type="button" class="btn text" id="delBtn">Remove from guest list</button>
+
+      <div class="confirm" id="confirmBox">
+        <p>Remove <b id="confirmName"></b>? This also deletes the row in the sheet.</p>
+        <div class="row">
+          <button type="button" class="btn soft" id="confirmNo">Keep</button>
+          <button type="button" class="btn danger" id="confirmYes">Remove</button>
+        </div>
+      </div>
+      <div class="idline" id="idLine"></div>
+    </form>
+  </div>
+</div>
+
+<div id="fback"></div>
+<div id="fpanel" role="dialog" aria-modal="true" aria-labelledby="fTitle">
+  <div class="fp-head"><h4 id="fTitle"></h4><button type="button" class="fp-clear" id="fpClear">Clear</button></div>
+  <div class="fp-list" id="fpList"></div>
+  <button type="button" class="btn primary fp-done" id="fpDone">Show results</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  var SPLASH_MIN_MS = 4800;
+  var state = { view: 'guests', guests: [], people: [], options: {}, f: { side: [], rsvp: [], rel: [], kids: [], from: [] }, openFacet: null, q: '', ev: 'wedding',
+                editing: null, busy: false, loadedAt: 0 };
+  var bootAt = Date.now();
+
+  var $ = function (id) { return document.getElementById(id); };
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function num(v) { var n = Number(v); return isFinite(n) ? n : 0; }
+  // An RSVP of "Not invited yet" (or the old "Not asked" / blank) means no invite has gone out.
+  function isNotInvited(v) { v = String(v || '').trim(); return v === '' || v === 'Not invited yet' || v === 'Not asked'; }
+  var REL_DEFAULT = ['Immediate Family', 'Close Relatives', 'Extended Relatives', "Parents' Friends",
+                     "Siblings' Friends", 'Our Friends', 'Work', 'Community'];
+  function relOptions() { var o = state.options.relationship; return (o && o.length ? o : REL_DEFAULT).slice(); }
+  // A household is part of an event when its guest count for that event is above 0.
+  function adultsOf(g, ev) { return num(g[(ev || state.ev) + 'Adults']); }
+  function kidsOf(g, ev) { return num(g[(ev || state.ev) + 'Kids']); }
+  function countOf(g, ev) { return adultsOf(g, ev) + kidsOf(g, ev); }
+  function inEvent(g) { return countOf(g) > 0; }
+  function summary(g, ev) { var a = adultsOf(g, ev), k = kidsOf(g, ev); return k ? a + ' + ' + k + (k === 1 ? ' kid' : ' kids') : String(a); }
+  function isSent(g) { return !isNotInvited(g.weddingRsvp) || !isNotInvited(g.receptionRsvp); }
+  function initials(name) {
+    var w = String(name).replace(/\(.*?\)/g, '').replace(/\b(family|mama|athe|periyamma)\b/ig, '').trim().split(/\s+/).filter(Boolean);
+    if (!w.length) w = String(name).trim().split(/\s+/);
+    return ((w[0] || '')[0] || '').toUpperCase() + ((w[1] || '')[0] || '').toUpperCase();
+  }
+  function toast(msg, ms) {
+    var t = $('toast'); t.textContent = msg; t.classList.add('show');
+    clearTimeout(toast._t); toast._t = setTimeout(function () { t.classList.remove('show'); }, ms || 2000);
+  }
+  function hideSplash() {
+    var wait = Math.max(0, SPLASH_MIN_MS - (Date.now() - bootAt));
+    setTimeout(function () { $('splash').classList.add('hide'); }, wait);
+  }
+
+  /* ---------- Data ---------- */
+  /**
+   * Calls a read-only server function, giving up on a stalled request after `timeout` ms
+   * and retrying (Apps Script sometimes hangs on a cold start). Late replies are ignored.
+   */
+  function callRead(name, ok, fail, opts) {
+    opts = opts || {};
+    var timeout = opts.timeout || 20000, retries = opts.retries === undefined ? 1 : opts.retries;
+    var attempt = 0, done = false;
+    function go() {
+      attempt++;
+      var mine = attempt;
+      var timer = setTimeout(function () {
+        if (done || mine !== attempt) return;
+        if (attempt <= retries) { if (opts.onRetry) opts.onRetry(attempt); go(); }
+        else { done = true; fail(new Error('The connection to Google is slow right now.')); }
+      }, timeout);
+      google.script.run
+        .withSuccessHandler(function (res) { if (done) return; done = true; clearTimeout(timer); ok(res); })
+        .withFailureHandler(function (e) {
+          if (done || mine !== attempt) return;
+          clearTimeout(timer);
+          if (attempt <= retries) { if (opts.onRetry) opts.onRetry(attempt); setTimeout(go, 800); }
+          else { done = true; fail(e); }
+        })[name]();
+    }
+    go();
+  }
+
+  /* ---------- Saved copy on this device (opens instantly, then refreshes) ---------- */
+  var CACHE_KEY = 'am.cache.fb1';
+  function readCache() { try { return JSON.parse(localStorage.getItem(CACHE_KEY) || 'null'); } catch (e) { return null; } }
+  function writeCache() {
+    try {
+      var c = readCache() || {};
+      if (state.loadedAt) c.guests = { guests: state.guests.filter(function (g) { return !g._pending; }), people: state.people, options: state.options, at: Date.now() };
+      if (bud.loaded) c.budget = { vendors: bud.vendors, payments: bud.payments, expenses: bud.expenses, options: bud.options, url: $('navSheet').href, at: Date.now() };
+      c.user = window.__email || '';
+      localStorage.setItem(CACHE_KEY, JSON.stringify(c));
+    } catch (e) {}
+  }
+
+  var showedCache = false;
+  function load(quiet) {
+    if (quiet) $('refresh').classList.add('spinning');
+    var slowTimer = quiet || showedCache ? null : setTimeout(function () { $('splashSlow').classList.add('show'); }, 9000);
+    callRead('getData', function (data) {
+      clearTimeout(slowTimer); $('refresh').classList.remove('spinning'); $('splashSlow').classList.remove('show');
+      if (pendingSaves) { setTimeout(function () { load(true); }, 1500); return; }   // don't overwrite a save in progress
+      applyData(data); hideSplash();
+      if (quiet) toast('Up to date');
+      if (!bud.loaded || bud.fromCache) loadBudget(false);   // budget waits until guests are in
+    }, function (e) {
+      clearTimeout(slowTimer); $('refresh').classList.remove('spinning');
+      if (showedCache || state.loadedAt) {
+        toast('Couldn’t refresh — showing your last saved copy', 4000);
+      } else {
+        $('splashSlow').classList.add('show');
+        $('splashMsg').textContent = 'Couldn’t load your planner. Check your connection and try again.';
+      }
+    }, { onRetry: function () { if (!quiet && !showedCache) $('splashMsg').textContent = 'Still connecting…'; } });
+  }
+  function applyData(data, fromCache) {
+    state.guests = data.guests || [];
+    state.people = data.people || [];
+    state.options = data.options || {};
+    state.loadedAt = Date.now();
+    render();
+    if (!fromCache) writeCache();
+  }
+
+  /* ---------- Render ---------- */
+  /* ---------- Filters ---------- */
+  var FACETS = {
+    side: { name: 'Side', title: 'Filter by side',
+      options: function () { return state.options.side || []; },
+      value: function (g) { return g.side || ''; },
+      label: function (v) { return v === 'Bride' ? 'Bride’s side' : v === 'Groom' ? 'Groom’s side' : v; } },
+    rsvp: { name: 'Status', title: 'Filter by RSVP status',
+      options: function () { return (state.ev === 'wedding' ? state.options.weddingRsvp : state.options.receptionRsvp) || []; },
+      value: function (g) { var v = g[state.ev === 'wedding' ? 'weddingRsvp' : 'receptionRsvp']; return isNotInvited(v) ? 'Not invited yet' : v; },
+      label: function (v) { return v; } },
+    from: { name: 'Location', title: 'Filter by where guests live',
+      options: function () { return ['Local', 'International']; },
+      value: function (g) { return g.country ? 'International' : 'Local'; },
+      label: function (v) { return v === 'Local' ? 'Local (Canada)' : 'International'; } },
+    kids: { name: 'Kids', title: 'Filter by kids',
+      options: function () { return ['Has kids', 'Adults only']; },
+      value: function (g) { return kidsOf(g) > 0 ? 'Has kids' : 'Adults only'; },
+      label: function (v) { return v; } },
+    rel: { name: 'Relationship', title: 'Filter by relationship',
+      options: function () { return relOptions().concat(['Not set']); },
+      value: function (g) { return g.relationship || 'Not set'; },
+      label: function (v) { return v; } }
+  };
+
+  function passes(g, skip) {
+    if (!inEvent(g)) return false;
+    for (var k in FACETS) {
+      if (k === skip || !state.f[k].length) continue;
+      if (state.f[k].indexOf(FACETS[k].value(g)) === -1) return false;
+    }
+    if (state.q) {
+      var hay = [g.household, g.relationship, g.contact, g.phoneEmail, g.notes, g.country].concat(peopleOf(g.id).map(function (p) { return p.name; })).join(' ').toLowerCase();
+      if (hay.indexOf(state.q) === -1) return false;
+    }
+    return true;
+  }
+  function matches(g) { return passes(g, null); }
+
+  /* ---------- Countries & flags ---------- */
+  var COUNTRY_ISO = { 'Sri Lanka': 'lk', 'India': 'in', 'United Kingdom': 'gb', 'UK': 'gb', 'England': 'gb-eng', 'Scotland': 'gb-sct',
+    'United States': 'us', 'USA': 'us', 'Australia': 'au', 'New Zealand': 'nz', 'Germany': 'de', 'France': 'fr', 'Switzerland': 'ch',
+    'Netherlands': 'nl', 'Norway': 'no', 'Denmark': 'dk', 'Sweden': 'se', 'Italy': 'it', 'Malaysia': 'my', 'Singapore': 'sg',
+    'United Arab Emirates': 'ae', 'UAE': 'ae', 'Qatar': 'qa', 'Saudi Arabia': 'sa', 'Kuwait': 'kw', 'Oman': 'om', 'Bahrain': 'bh',
+    'Belgium': 'be', 'Austria': 'at', 'Finland': 'fi', 'Ireland': 'ie', 'Spain': 'es', 'Portugal': 'pt', 'Japan': 'jp',
+    'South Africa': 'za', 'Mauritius': 'mu', 'Maldives': 'mv', 'Canada': 'ca' };
+  var DEFAULT_COUNTRIES = ['Australia', 'England', 'USA', 'Germany', 'Sri Lanka'];
+  function flagHtml(country) {
+    if (!country) return '';
+    var iso = COUNTRY_ISO[country] || COUNTRY_ISO[String(country).trim()];
+    var code = iso ? iso.slice(0, 2).toUpperCase() : '';
+    var inner = iso ? '<img src="https://flagcdn.com/' + iso + '.svg" alt="' + code + '" loading="lazy" onerror="this.outerHTML=\'<span class=&quot;code&quot;>' + code + '</span>\'">'
+      : '<span class="globe">🌍</span>';
+    return '<span class="flag" title="Travelling from ' + esc(country) + '" aria-label="International guest from ' + esc(country) + '">' + inner + '</span>';
+  }
+
+  function renderChips() {
+    var any = false;
+    document.querySelectorAll('.fchip').forEach(function (c) {
+      var k = c.dataset.f, F = FACETS[k], sel = state.f[k];
+      // drop selections that no longer exist (e.g. after switching event)
+      var opts = F.options();
+      state.f[k] = sel = sel.filter(function (v) { return opts.indexOf(v) !== -1; });
+      var text = !sel.length ? F.name : sel.length === 1 ? F.label(sel[0]) : F.name + ' · ' + sel.length;
+      c.innerHTML = esc(text) + '<svg viewBox="0 0 12 8" width="10" height="7" aria-hidden="true"><path d="M1 1l5 5 5-5" stroke="currentColor" stroke-width="1.6" fill="none"/></svg>';
+      c.classList.toggle('on', sel.length > 0);
+      c.classList.toggle('open', state.openFacet === k);
+      c.setAttribute('aria-expanded', state.openFacet === k ? 'true' : 'false');
+      if (sel.length) any = true;
+    });
+    $('clearAll').style.display = any ? '' : 'none';
+  }
+
+  function renderPanel() {
+    var k = state.openFacet; if (!k) return;
+    var F = FACETS[k], sel = state.f[k];
+    var counts = {};
+    state.guests.forEach(function (g) { if (passes(g, k)) { var v = F.value(g); counts[v] = (counts[v] || 0) + 1; } });
+    $('fTitle').textContent = F.title;
+    $('fpClear').style.visibility = sel.length ? 'visible' : 'hidden';
+    $('fpList').innerHTML = F.options().map(function (v) {
+      var on = sel.indexOf(v) !== -1, n = counts[v] || 0;
+      return '<button type="button" class="fopt' + (on ? ' on' : '') + (n || on ? '' : ' zero') + '" data-v="' + esc(v) + '" role="checkbox" aria-checked="' + on + '">' +
+        '<span class="fcheck"></span><span class="flabel">' + esc(F.label(v)) + '</span><span class="fcount">' + n + '</span></button>';
+    }).join('');
+  }
+
+  function openFacet(k, chip) {
+    if (state.openFacet === k) { closeFacet(); return; }
+    state.openFacet = k; renderPanel(); renderChips();
+    var p = $('fpanel');
+    if (window.innerWidth >= 960) {
+      var r = chip.getBoundingClientRect();
+      p.style.top = (r.bottom + 8 + window.scrollY) + 'px';
+      p.style.left = Math.min(r.left, window.innerWidth - 316) + 'px';
+    } else { p.style.top = ''; p.style.left = ''; }
+    p.classList.add('open'); $('fback').classList.add('open');
+  }
+  function closeFacet() {
+    state.openFacet = null;
+    $('fpanel').classList.remove('open'); $('fback').classList.remove('open');
+    renderChips();
+  }
+  function toggleValue(k, v) {
+    var a = state.f[k], i = a.indexOf(v);
+    if (i === -1) a.push(v); else a.splice(i, 1);
+    render(); renderPanel();
+  }
+
+  function render() {
+    renderChips();
+    var all = state.guests;
+    var rk = state.ev === 'wedding' ? 'weddingRsvp' : 'receptionRsvp';
+    var total = 0, bride = 0, groom = 0, sent = 0, conf = 0, houses = 0, kidsTotal = 0;
+    all.forEach(function (g) {
+      if (!inEvent(g)) return;
+      var c = countOf(g); total += c; houses++; kidsTotal += kidsOf(g);
+      if (g.side === 'Bride') bride += c; else if (g.side === 'Groom') groom += c;
+      if (!isNotInvited(g[rk])) sent++;
+      if (g[rk] === 'Confirmed') conf += c;
+    });
+    $('heroLabel').textContent = state.ev === 'wedding' ? 'Guests at the wedding' : 'Guests at the reception';
+    $('heroNum').innerHTML = total + '<small>guests</small>';
+    $('heroSplit').innerHTML = '<b>' + (total - kidsTotal) + '</b> adults · <b>' + kidsTotal + '</b> kids';
+    var denom = bride + groom || 1;
+    $('barBride').style.width = (bride / denom * 100) + '%';
+    $('barGroom').style.width = (groom / denom * 100) + '%';
+    $('lgBride').textContent = bride; $('lgGroom').textContent = groom;
+    $('kHouse').textContent = houses;
+    $('kSent').textContent = sent + '/' + houses;
+    $('kConf').textContent = conf;
+    var wedTotal = 0; all.forEach(function (g) { wedTotal += countOf(g, 'wedding'); });
+    $('navGuests').textContent = wedTotal + ' at the wedding · ' + all.length + ' households';
+    renderRel();
+
+    var shown = all.filter(matches).slice().sort(function (a, b) {
+      return a.household.localeCompare(b.household, undefined, { sensitivity: 'base' });
+    });
+    var shownCount = 0; shown.forEach(function (g) { shownCount += countOf(g); });
+    $('countLine').textContent = shown.length + ' households · ' + shownCount + ' guests';
+
+    if (!shown.length) {
+      $('list').innerHTML = '<div class="empty"><b>No guests found</b>' + (houses ? 'Try a different search or filter.' :
+        'Nobody is invited to the ' + state.ev + ' yet.') + '</div>';
+      return;
+    }
+    var head = '<div class="list-head"><span>Household</span><span>Relationship</span><span>' +
+      (state.ev === 'wedding' ? 'Wedding RSVP' : 'Reception RSVP') + '</span><span class="r">Guests</span></div>';
+    $('list').innerHTML = head + shown.map(function (g) {
+      var rsvp = g[rk];
+      var tags = '';
+      if (!isNotInvited(rsvp)) tags += '<span class="tag ' + esc(rsvp) + '">' + esc(rsvp) + '</span>';
+      var sub = [g.relationship, g.contact].filter(Boolean).join(' · ');
+      if (!sub) sub = g.side === 'Bride' ? 'Bride’s side' : g.side === 'Groom' ? 'Groom’s side' : (g.side || '');
+      var c = countOf(g), k = kidsOf(g);
+      var sideLabel = g.side === 'Bride' ? 'Bride’s side' : g.side === 'Groom' ? 'Groom’s side' : (g.side || '');
+      var status = !isNotInvited(rsvp) ? '<span class="tag ' + esc(rsvp) + '">' + esc(rsvp) + '</span>'
+        : '<span style="color:var(--muted)">' + esc(rsvp || 'Not invited yet') + '</span>';
+      return '<div class="item' + (g._pending ? ' pending' : '') + '" data-id="' + esc(g.id) + '">' +
+        '<div class="who"><div class="avatar ' + esc(g.side) + '">' + esc(initials(g.household)) + '</div>' +
+        '<div class="meta"><div class="n"><span class="nm">' + esc(g.household) + '</span>' + flagHtml(g.country) + pplBadge(g.id) + '</div><div class="s">' + tags + esc(sub) + '</div></div></div>' +
+        '<div class="col-rel">' + (g.relationship ? esc(g.relationship) : '<span style="color:var(--muted)">' + esc(sideLabel) + '</span>') + '</div>' +
+        '<div class="col-status">' + status + '</div>' +
+        '<div class="col-num">' + c + (k ? '<span class="kidnote">' + k + (k === 1 ? ' kid' : ' kids') + '</span>' : '') + '</div>' +
+        '<div class="amt"><b>' + c + '</b><span>' + (k ? 'incl. ' + k + (k === 1 ? ' kid' : ' kids') : (c === 1 ? 'guest' : 'guests')) + '</span></div>' +
+        '</div>';
+    }).join('');
+  }
+
+
+  function renderRel() {
+    var groups = relOptions(), totals = {}, houses = {}, max = 0;
+    groups.concat(['Not set']).forEach(function (r) { totals[r] = 0; houses[r] = 0; });
+    state.guests.forEach(function (g) {
+      if (!inEvent(g)) return;
+      var r = g.relationship || 'Not set';
+      if (!(r in totals)) { totals[r] = 0; houses[r] = 0; groups.push(r); }
+      totals[r] += countOf(g); houses[r]++;
+    });
+    var rows = groups.concat(['Not set']).filter(function (r) { return r !== 'Not set' || totals[r] > 0; });
+    rows.forEach(function (r) { max = Math.max(max, totals[r]); });
+    $('relBreak').innerHTML = rows.map(function (r) {
+      var on = state.f.rel.indexOf(r) !== -1, w = max ? Math.round(totals[r] / max * 100) : 0;
+      return '<button type="button" class="rel-row' + (on ? ' on' : '') + (totals[r] ? '' : ' zero') + (r === 'Not set' ? ' unset' : '') +
+        '" data-rel="' + esc(r) + '"><span class="rel-name">' + esc(r) + '</span>' +
+        '<span class="rel-bar"><i style="width:' + w + '%"></i></span>' +
+        '<span class="rel-num">' + totals[r] + '</span></button>';
+    }).join('');
+    $('relClear').style.visibility = state.f.rel.length ? 'visible' : 'hidden';
+  }
+
+  /* ---------- Form ---------- */
+  function fillSelect(el, list, value) {
+    var opts = (list || []).slice(); if (value && opts.indexOf(value) === -1) opts.push(value);
+    el.innerHTML = opts.map(function (o) { return '<option' + (o === value ? ' selected' : '') + '>' + esc(o) + '</option>'; }).join('');
+  }
+  function fillSeg(el, list, value) {
+    el.innerHTML = (list || []).map(function (o) {
+      return '<button type="button" class="' + (o === value ? 'on' : '') + '" data-v="' + esc(o) + '">' + esc(o) + '</button>';
+    }).join('');
+    el.dataset.value = value || '';
+  }
+  function segValue(el) { return el.dataset.value || ''; }
+
+  function openForm(g) {
+    var isNew = !g, o = state.options;
+    g = g || { side: state.f.side.length === 1 ? state.f.side[0] : (o.side || [''])[0], household: '', relationship: '',
+      weddingAdults: 2, weddingKids: '', receptionAdults: 2, receptionKids: '', country: '', weddingRsvp: (o.weddingRsvp || [''])[0], receptionRsvp: (o.receptionRsvp || [''])[0],
+      contact: '', phoneEmail: '', notes: '', id: '' };
+    state.editing = g;
+    $('formTitle').textContent = isNew ? 'Add a guest' : g.household;
+    $('formSub').textContent = isNew ? 'Saved straight to your shared sheet.' :
+      (summary(g, 'wedding') + ' at the wedding · ' + summary(g, 'reception') + ' at the reception');
+    $('f_household').value = g.household;
+    fillSeg($('f_side'), o.side, g.side);
+    var cOpts = (state.options.country && state.options.country.length ? state.options.country : DEFAULT_COUNTRIES).slice();
+    if (g.country && cOpts.indexOf(g.country) === -1) cOpts.push(g.country);
+    $('f_country').innerHTML = '<option value="">Local (Canada)</option>' + cOpts.map(function (c) {
+      return '<option' + (c === g.country ? ' selected' : '') + '>' + esc(c) + '</option>';
+    }).join('');
+    var relOpts = relOptions();
+    if (g.relationship && relOpts.indexOf(g.relationship) === -1) relOpts = relOpts.concat([g.relationship]);
+    $('f_relationship').innerHTML = '<option value="">Not set</option>' + relOpts.map(function (r) {
+      return '<option' + (r === g.relationship ? ' selected' : '') + '>' + esc(r) + '</option>';
+    }).join('');
+    ['weddingAdults', 'weddingKids', 'receptionAdults', 'receptionKids'].forEach(function (k) { $('f_' + k).value = g[k] === '' ? 0 : g[k]; });
+    fillSelect($('f_weddingRsvp'), o.weddingRsvp, g.weddingRsvp);
+    fillSelect($('f_receptionRsvp'), o.receptionRsvp, g.receptionRsvp);
+    $('f_contact').value = g.contact; $('f_phoneEmail').value = g.phoneEmail; $('f_notes').value = g.notes;
+    $('formErr').textContent = ''; save._warned = false;
+    $('delBtn').style.display = isNew ? 'none' : '';
+    $('confirmBox').classList.remove('show');
+    $('idLine').textContent = isNew ? '' : 'Guest ID ' + g.id;
+    var existingPeople = isNew ? [] : peopleOf(g.id);
+    ed.people = existingPeople.length ? JSON.parse(JSON.stringify(existingPeople)) : null;
+    ed.clear = false;
+    renderPeopleEditor();
+    $('sheet').scrollTop = 0;
+    $('overlay').classList.add('open'); $('sheet').classList.add('open');
+    if (isNew) setTimeout(function () { $('f_household').focus(); }, 350);
+  }
+  function closeForm() {
+    if (state.busy) return;
+    $('overlay').classList.remove('open'); $('sheet').classList.remove('open'); state.editing = null;
+  }
+  function collect() {
+    return {
+      id: state.editing ? state.editing.id : '',
+      household: $('f_household').value.trim(), side: segValue($('f_side')),
+      relationship: $('f_relationship').value,
+      country: $('f_country').value,
+      weddingAdults: $('f_weddingAdults').value.trim(), weddingKids: $('f_weddingKids').value.trim(),
+      receptionAdults: $('f_receptionAdults').value.trim(), receptionKids: $('f_receptionKids').value.trim(),
+      weddingRsvp: $('f_weddingRsvp').value, receptionRsvp: $('f_receptionRsvp').value,
+      contact: $('f_contact').value.trim(),
+      phoneEmail: $('f_phoneEmail').value.trim(), notes: $('f_notes').value.trim()
+    };
+  }
+  function setBusy(b, label) {
+    state.busy = b;
+    $('saveBtn').disabled = b; $('delBtn').disabled = b; $('confirmYes').disabled = b;
+    $('saveBtn').textContent = b && label ? label : 'Save';
+  }
+  function save(e) {
+    e.preventDefault(); if (state.busy) return;
+    var g = collect();
+    if (!g.household) { $('formErr').textContent = 'Add a family or household name.'; return; }
+    for (var k of ['weddingAdults', 'weddingKids', 'receptionAdults', 'receptionKids']) {
+      if (g[k] !== '' && !/^\d{1,3}$/.test(g[k])) { $('formErr').textContent = 'Guest counts must be whole numbers.'; return; }
+    }
+    var dupe = state.guests.some(function (x) { return x.id !== g.id && x.household.trim().toLowerCase() === g.household.toLowerCase(); });
+    if (dupe && !save._warned) {
+      $('formErr').textContent = '“' + g.household + '” is already on the list. Tap Save again to add anyway.';
+      save._warned = true; return;
+    }
+    // People: the full list (people mode), [] to remove them all, or null to leave them alone
+    var people = null;
+    if (ed.people !== null) {
+      if (ed.people.some(function (p) { return !String(p.name).trim(); })) { $('formErr').textContent = 'Give every person a name (or remove the empty one).'; return; }
+      people = ed.people.map(function (p) {
+        return { pid: p.pid || '', name: String(p.name).trim(), age: p.age, wedding: p.wedding, reception: p.reception, dietary: p.dietary, notes: String(p.notes || '').trim() };
+      });
+      if (!people.length) people = (state.editing && peopleOf(state.editing.id).length) ? [] : null;
+    } else if (ed.clear) people = [];
+    save._warned = false;
+    var isNew = !g.id;
+    // Show the change straight away, then save in the background.
+    var local = JSON.parse(JSON.stringify(g)), prev = null, idx = -1, prevPeople = state.people.slice();
+    NUM_KEYS.forEach(function (k) { local[k] = local[k] === '' ? '' : Number(local[k]); });
+    if (people && people.length) { var dv = deriveFromPeople(people); delete dv._declined; Object.assign(local, dv); }
+    local._pending = true;
+    if (isNew) { local.id = 'tmp-' + Date.now(); state.guests.push(local); }
+    else {
+      idx = indexById(g.id); prev = state.guests[idx];
+      state.guests[idx] = local;
+    }
+    if (people !== null) {
+      state.people = state.people.filter(function (p) { return p.guestId !== local.id; })
+        .concat(people.map(function (p) { return Object.assign({}, p, { guestId: local.id }); }));
+    }
+    closeForm(); render();
+    syncStart();
+    runSave('saveHousehold', [g, people], function (res) {
+        var i = indexById(local.id);
+        if (i !== -1) state.guests[i] = res.guest;
+        if (res.people) {
+          state.people = state.people.filter(function (p) { return p.guestId !== local.id && p.guestId !== res.guest.id; }).concat(res.people);
+        }
+        syncEnd(true); render();
+      }, function (err) {
+        var i = indexById(local.id);
+        if (i !== -1) { if (isNew) state.guests.splice(i, 1); else state.guests[i] = prev; }
+        state.people = prevPeople;
+        syncEnd(false); render();
+        toast('Couldn’t save “' + g.household + '”: ' + err.message, 5000);
+      });
+  }
+  function doDelete() {
+    if (!state.editing) return;
+    var g = state.editing, i = indexById(g.id);
+    if (i === -1) return;
+    var removed = state.guests.splice(i, 1)[0], prevPeople = state.people.slice();
+    state.people = state.people.filter(function (p) { return p.guestId !== removed.id; });
+    closeForm(); render();
+    syncStart();
+    runSave('deleteGuest', [g.id], function () { syncEnd(true); }, function (err) {
+        state.guests.splice(Math.min(i, state.guests.length), 0, removed);
+        state.people = prevPeople;
+        syncEnd(false); render();
+        toast('Couldn’t remove “' + removed.household + '”: ' + err.message, 5000);
+      });
+  }
+  var NUM_KEYS = ['weddingAdults', 'weddingKids', 'receptionAdults', 'receptionKids'];
+  function indexById(id) { for (var i = 0; i < state.guests.length; i++) if (state.guests[i].id === id) return i; return -1; }
+
+  /* ---------- save queue: one save at a time, retry when Google is busy ---------- */
+  var saveQueue = [], saveRunning = false;
+  // Errors where we know nothing was written, so it's safe to try again.
+  var RETRYABLE = /BUSY|Lock timeout|too many simultaneous|invoked too many times in a short time|try again later/i;
+  function runSave(name, args, ok, fail) {
+    saveQueue.push({ name: name, args: args, ok: ok, fail: fail, tries: 0 });
+    pumpSaves();
+  }
+  function pumpSaves() {
+    if (saveRunning || !saveQueue.length) return;
+    saveRunning = true;
+    var job = saveQueue[0];
+    job.tries++;
+    var r = google.script.run
+      .withSuccessHandler(function (res) { saveQueue.shift(); saveRunning = false; job.ok(res); pumpSaves(); })
+      .withFailureHandler(function (err) {
+        saveRunning = false;
+        var msg = String(err && err.message || err);
+        if (RETRYABLE.test(msg) && job.tries < 4) { setTimeout(pumpSaves, 1200 * job.tries); return; }
+        saveQueue.shift();
+        job.fail(new Error(msg.replace(/^BUSY:\s*/, '')));
+        pumpSaves();
+      });
+    r[job.name].apply(r, job.args);
+  }
+
+  /* ---------- background save indicator ---------- */
+  var pendingSaves = 0, syncTimer = null, syncFailed = false;
+  function syncStart() {
+    pendingSaves++; clearTimeout(syncTimer);
+    var el = $('sync'); el.className = 'sync show'; el.innerHTML = '<i></i>Saving…';
+  }
+  function syncEnd(ok) {
+    pendingSaves = Math.max(0, pendingSaves - 1);
+    if (!ok) syncFailed = true;
+    if (pendingSaves) return;
+    writeCache();
+    var el = $('sync');
+    if (syncFailed) { el.className = 'sync show err'; el.textContent = 'Not saved'; }
+    else { el.className = 'sync show done'; el.textContent = 'Saved'; }
+    syncFailed = false;
+    syncTimer = setTimeout(function () { el.className = 'sync'; }, 1600);
+  }
+  window.addEventListener('beforeunload', function (e) { if (pendingSaves) { e.preventDefault(); e.returnValue = ''; } });
+
+
+
+  /* ================= PEOPLE ================= */
+  var DIETARY_DEFAULT = ['Non-veg', 'Vegetarian', 'Vegan', 'Other (see notes)'];
+  var RSVP_ORDER = ['Not invited yet', 'Invited', 'Maybe', 'Confirmed'];
+  function peopleOf(id) { return state.people.filter(function (p) { return p.guestId === id; }); }
+  function householdRsvp(list) {
+    if (!list.length) return 'Not invited yet';
+    var live = list.filter(function (s) { return s !== 'Declined'; });
+    if (!live.length) return 'Declined';
+    var low = RSVP_ORDER.length - 1;
+    live.forEach(function (s) { var i = RSVP_ORDER.indexOf(s); if (i !== -1 && i < low) low = i; });
+    return RSVP_ORDER[low];
+  }
+  /** Same rules as the server: declined people don't count; household RSVP shows what's outstanding. */
+  function deriveFromPeople(list) {
+    var out = { weddingAdults: 0, weddingKids: 0, receptionAdults: 0, receptionKids: 0 }, declined = { wedding: 0, reception: 0 };
+    ['wedding', 'reception'].forEach(function (ev) {
+      var st = [];
+      list.forEach(function (p) {
+        var v = p[ev]; if (!v) return; st.push(v);
+        if (v === 'Declined') { declined[ev]++; return; }
+        if (p.age === 'Kid') out[ev + 'Kids']++; else out[ev + 'Adults']++;
+      });
+      out[ev + 'Rsvp'] = householdRsvp(st);
+    });
+    NUM_KEYS.forEach(function (k) { if (out[k] === 0) out[k] = ''; });
+    out._declined = declined;
+    return out;
+  }
+  function pplBadge(id) {
+    var n = peopleOf(id).length;
+    return n ? '<span class="pplbadge" title="' + n + ' people listed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c.8-3.6 3.6-5.5 7-5.5s6.2 1.9 7 5.5"/></svg>' + n + '</span>' : '';
+  }
+
+  // Editor state: people = null means headcount mode; an array means people mode
+  var ed = { people: null, clear: false };
+  function rsvpSelect(k, v, blankLabel) {
+    var opts = ['Not invited yet', 'Invited', 'Confirmed', 'Declined', 'Maybe'];
+    return '<select data-k="' + k + '"><option value="">' + blankLabel + '</option>' + opts.map(function (o) {
+      return '<option' + (o === v ? ' selected' : '') + '>' + o + '</option>'; }).join('') + '</select>';
+  }
+  function renderPeopleEditor() {
+    var wrap = $('pplWrap');
+    var peopleMode = ed.people !== null;
+    $('countsWrap').hidden = peopleMode;
+    $('derivedWrap').hidden = !peopleMode;
+    if (!peopleMode) {
+      $('pplHint').textContent = '';
+      wrap.innerHTML = '<div class="ppl-empty"><p>This household is tracked as a headcount. List people to track each person’s RSVP and dietary needs.</p>' +
+        '<div class="ppl-actions"><button type="button" class="btn-soft dark" data-act="list">List people</button>' +
+        '<button type="button" class="btn-soft" data-act="add">+ Add one person</button></div></div>';
+      return;
+    }
+    var diet = (state.options.dietary && state.options.dietary.length ? state.options.dietary : DIETARY_DEFAULT);
+    $('pplHint').textContent = ed.people.length + (ed.people.length === 1 ? ' person' : ' people');
+    wrap.innerHTML = ed.people.map(function (p, i) {
+      var dOpts = diet.slice(); if (p.dietary && dOpts.indexOf(p.dietary) === -1) dOpts.push(p.dietary);
+      return '<div class="group person" data-i="' + i + '">' +
+        '<div class="prow"><input data-k="name" placeholder="Name" maxlength="120" value="' + esc(p.name) + '" aria-label="Name">' +
+        '<button type="button" class="p-del" data-act="del" aria-label="Remove ' + esc(p.name || 'person') + '">×</button></div>' +
+        '<div class="seg pseg" data-k="age">' + ['Adult', 'Kid'].map(function (a) {
+          return '<button type="button" class="' + (p.age === a ? 'on' : '') + '" data-v="' + a + '">' + (a === 'Kid' ? 'Kid (under 12)' : a) + '</button>'; }).join('') + '</div>' +
+        '<div class="pgrid">' +
+          '<label>Wedding' + rsvpSelect('wedding', p.wedding, 'Not coming to this') + '</label>' +
+          '<label>Reception' + rsvpSelect('reception', p.reception, 'Not coming to this') + '</label>' +
+          '<label class="wide">Dietary<select data-k="dietary"><option value="">Not set</option>' + dOpts.map(function (o) {
+            return '<option' + (o === p.dietary ? ' selected' : '') + '>' + esc(o) + '</option>'; }).join('') + '</select></label>' +
+          '<label class="wide">Notes<input data-k="notes" maxlength="500" placeholder="Optional" value="' + esc(p.notes) + '"></label>' +
+        '</div></div>';
+    }).join('') +
+      '<div class="ppl-foot"><button type="button" class="btn-soft" data-act="add">+ Add person</button>' +
+      '<button type="button" class="linkbtn" data-act="headcount">Switch back to a headcount</button></div>';
+    updateDerived();
+  }
+  function updateDerived() {
+    if (ed.people === null) return;
+    var d = deriveFromPeople(ed.people);
+    $('derived').innerHTML = ['wedding', 'reception'].map(function (ev) {
+      var a = num(d[ev + 'Adults']), k = num(d[ev + 'Kids']), st = d[ev + 'Rsvp'], dec = d._declined[ev];
+      var invitedAny = ed.people.some(function (p) { return p[ev]; });
+      var txt = !invitedAny ? 'Not invited' : (a + (a === 1 ? ' adult' : ' adults') + (k ? ' + ' + k + (k === 1 ? ' kid' : ' kids') : '')) + (dec ? ' · ' + dec + ' declined' : '');
+      var tone = st === 'Confirmed' ? 'ok' : st === 'Declined' ? 'bad' : st === 'Maybe' ? 'warn' : 'neutral';
+      return '<div class="drow"><b>' + (ev === 'wedding' ? 'Wedding' : 'Reception') + '</b><span>' + txt +
+        (invitedAny ? '<span class="tag ' + tone + '">' + esc(st) + '</span>' : '') + '</span></div>';
+    }).join('');
+  }
+  function newPerson(age, wedding, reception, name) {
+    return { pid: '', name: name || '', age: age || 'Adult', wedding: wedding || '', reception: reception || '', dietary: '', notes: '' };
+  }
+  /** Turns the current headcounts into named slots to fill in. */
+  function placeholdersFromCounts() {
+    var c = {}; NUM_KEYS.forEach(function (k) { c[k] = num($('f_' + k).value); });
+    var wr = $('f_weddingRsvp').value || 'Not invited yet', rr = $('f_receptionRsvp').value || 'Not invited yet';
+    var out = [];
+    ['Adult', 'Kid'].forEach(function (age) {
+      var wN = age === 'Adult' ? c.weddingAdults : c.weddingKids, rN = age === 'Adult' ? c.receptionAdults : c.receptionKids;
+      for (var i = 0; i < Math.max(wN, rN); i++) out.push(newPerson(age, i < wN ? wr : '', i < rN ? rr : '', age + ' ' + (i + 1)));
+    });
+    if (!out.length) out.push(newPerson('Adult', wr, rr));
+    return out;
+  }
+  function onPeopleClick(e) {
+    var segBtn = e.target.closest('.pseg [data-v]');
+    if (segBtn) {
+      var card = segBtn.closest('.person');
+      ed.people[Number(card.dataset.i)].age = segBtn.dataset.v;
+      Array.prototype.forEach.call(segBtn.parentNode.children, function (x) { x.classList.toggle('on', x === segBtn); });
+      updateDerived(); return;
+    }
+    var b = e.target.closest('[data-act]');
+    if (!b) return;
+    var act = b.dataset.act;
+    if (act === 'list') { ed.people = placeholdersFromCounts(); ed.clear = false; renderPeopleEditor(); focusPerson(0); }
+    else if (act === 'add') {
+      if (ed.people === null) ed.people = [];
+      ed.people.push(newPerson('Adult', $('f_weddingRsvp').value || 'Not invited yet', ''));
+      renderPeopleEditor(); focusPerson(ed.people.length - 1);
+    } else if (act === 'del') {
+      ed.people.splice(Number(b.closest('.person').dataset.i), 1);
+      renderPeopleEditor();
+    } else if (act === 'headcount') {
+      // Keep the current totals as the household's headcount
+      var d = deriveFromPeople(ed.people);
+      NUM_KEYS.forEach(function (k) { $('f_' + k).value = d[k] === '' ? 0 : d[k]; });
+      $('f_weddingRsvp').value = d.weddingRsvp; $('f_receptionRsvp').value = d.receptionRsvp;
+      ed.clear = !!(state.editing && peopleOf(state.editing.id).length);
+      ed.people = null; renderPeopleEditor();
+    }
+  }
+  function onPeopleInput(e) {
+    var el = e.target, k = el.dataset.k, card = el.closest('.person');
+    if (!k || !card || ed.people === null) return;
+    ed.people[Number(card.dataset.i)][k] = el.value;
+    if (k !== 'name' && k !== 'notes') updateDerived();
+  }
+  function focusPerson(i) {
+    setTimeout(function () { var el = $('pplWrap').querySelector('.person[data-i="' + i + '"] [data-k="name"]'); if (el) { el.focus(); el.select(); } }, 30);
+  }
+
+  /* ================= NAVIGATION ================= */
+  var VIEW_KEY = 'am.view';
+  function setView(v, quiet) {
+    state.view = v;
+    $('viewGuests').hidden = v !== 'guests';
+    $('viewBudget').hidden = v !== 'budget';
+    document.querySelectorAll('.nav-item[data-view]').forEach(function (b) { b.classList.toggle('on', b.dataset.view === v); });
+    updateAddLabels();
+    try { localStorage.setItem(VIEW_KEY, v); } catch (e) {}
+    if (v === 'budget' && !bud.loaded && state.loadedAt) loadBudget(false);
+    if (!quiet) window.scrollTo(0, 0);
+  }
+  function openNav() { $('nav').classList.add('open'); $('navBack').classList.add('open'); $('nav').setAttribute('aria-hidden', 'false'); $('menuBtn').setAttribute('aria-expanded', 'true'); }
+  function closeNav() { $('nav').classList.remove('open'); $('navBack').classList.remove('open'); $('nav').setAttribute('aria-hidden', 'true'); $('menuBtn').setAttribute('aria-expanded', 'false'); }
+  function updateAddLabels() {
+    var label = state.view === 'budget' ? BFORM[bud.tab].addShort : 'Add guest';
+    $('addBtnTop').innerHTML = '<span>+</span> ' + label;
+    $('addBtn').innerHTML = '<span style="font-size:20px;line-height:0">+</span> ' + label;
+  }
+  function shortMoney(n) { return n >= 1000 ? '$' + (Math.round(n / 100) / 10) + 'k' : money(n); }
+
+  /* ================= BUDGET ================= */
+  var bud = { vendors: [], payments: [], expenses: [], options: {}, loaded: false, tab: 'vendors', q: '', editing: null, busy: false, loadedAt: 0 };
+  var BOOKED = ['Booked', 'Deposit paid', 'In progress', 'Paid in full'];
+
+  var BFORM = {
+    vendors: { noun: 'vendor', addShort: 'Add vendor', addTitle: 'Add a vendor', key: 'name',
+      defaults: function () { return { type: 'Vendor', status: (bud.options.vendors.status || [''])[0] }; },
+      groups: [
+        [{ k: 'name', l: 'Vendor or venue', t: 'text', ph: 'e.g. Nantha Catering' }, { k: 'type', l: 'Type', t: 'seg', o: 'type' }, { k: 'service', l: 'Service / package', t: 'text', ph: 'Optional' }],
+        [{ k: 'quoted', l: 'Quoted', t: 'money', half: 1 }, { k: 'paid', l: 'Paid so far', t: 'money', half: 1 }],
+        [{ k: 'status', l: 'Status', t: 'select', o: 'status' }, { k: 'nextDue', l: 'Next payment due', t: 'date' }],
+        [{ k: 'contact', l: 'Contact name', t: 'text', ph: 'Optional' }, { k: 'phone', l: 'Phone', t: 'tel', ph: 'Optional' }, { k: 'email', l: 'Email', t: 'email', ph: 'Optional' }, { k: 'notes', l: 'Notes', t: 'area', ph: 'Optional' }]
+      ] },
+    payments: { noun: 'payment', addShort: 'Add payment', addTitle: 'Add a payment', key: 'vendor',
+      defaults: function () { return { paid: 'No' }; },
+      groups: [
+        [{ k: 'vendor', l: 'Vendor or venue', t: 'vendor', ph: 'Who is this payment for?' }, { k: 'stage', l: 'Payment stage', t: 'text', ph: 'e.g. Deposit, Final balance' }],
+        [{ k: 'amount', l: 'Amount', t: 'money', half: 1 }, { k: 'due', l: 'Due date', t: 'date', half: 1 }],
+        [{ k: 'paid', l: 'Paid?', t: 'seg', o: 'paid' }, { k: 'paidDate', l: 'Paid on', t: 'date' }, { k: 'method', l: 'Method / reference', t: 'text', ph: 'Optional' }],
+        [{ k: 'notes', l: 'Notes', t: 'area', ph: 'Optional' }]
+      ] },
+    expenses: { noun: 'expense', addShort: 'Add expense', addTitle: 'Add an expense', key: 'item',
+      defaults: function () { return { paid: 'No' }; },
+      groups: [
+        [{ k: 'item', l: 'Item', t: 'text', ph: 'e.g. Manavarai saree' }, { k: 'owner', l: 'Who’s paying', t: 'text', ph: 'Optional' }],
+        [{ k: 'estimated', l: 'Estimated', t: 'money', half: 1 }, { k: 'actual', l: 'Actual', t: 'money', half: 1 }],
+        [{ k: 'paid', l: 'Paid?', t: 'seg', o: 'paid' }, { k: 'due', l: 'Due date', t: 'date' }],
+        [{ k: 'notes', l: 'Notes', t: 'area', ph: 'Optional' }]
+      ] }
+  };
+
+  function money(n) {
+    if (n === '' || n === null || n === undefined || !isFinite(Number(n))) return '–';
+    n = Number(n);
+    return '$' + n.toLocaleString('en-CA', { minimumFractionDigits: n % 1 ? 2 : 0, maximumFractionDigits: 2 });
+  }
+  var MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  function parseIso(d) { var m = String(d || '').match(/^(\d{4})-(\d{2})-(\d{2})$/); return m ? { y: +m[1], m: +m[2], d: +m[3] } : null; }
+  function fmtDate(d) { var p = parseIso(d); return p ? MONTHS[p.m - 1] + ' ' + p.d + ', ' + p.y : (d || ''); }
+  function todayIso() { var t = new Date(); return t.getFullYear() + '-' + ('0' + (t.getMonth() + 1)).slice(-2) + '-' + ('0' + t.getDate()).slice(-2); }
+  function isPaid(v) { return String(v).toLowerCase() === 'yes'; }
+  function statusTone(s) {
+    if (BOOKED.indexOf(s) !== -1) return 'ok';
+    if (s === 'Unavailable') return 'bad';
+    if (!s) return 'neutral';
+    return 'warn';
+  }
+
+  var budgetLoading = false;
+  function loadBudget(quiet) {
+    if (budgetLoading) return;
+    budgetLoading = true;
+    if (quiet) $('refresh').classList.add('spinning');
+    callRead('getBudget', function (data) {
+      budgetLoading = false; $('refresh').classList.remove('spinning');
+      if (pendingSaves) { setTimeout(function () { loadBudget(true); }, 1500); return; }
+      applyBudget(data); if (quiet) toast('Up to date');
+    }, function (e) {
+      budgetLoading = false; $('refresh').classList.remove('spinning');
+      if (bud.loaded) toast('Couldn’t refresh the budget — showing your last saved copy', 4000);
+      else $('bList').innerHTML = '<div class="empty"><b>Couldn’t load the budget</b>' + esc(e.message) +
+        '<div style="margin-top:12px"><button type="button" class="btn-soft" onclick="loadBudget(true)">Try again</button></div></div>';
+    });
+  }
+  function applyBudget(data, fromCache) {
+    bud.vendors = data.vendors || []; bud.payments = data.payments || []; bud.expenses = data.expenses || [];
+    bud.options = data.options || {}; bud.loaded = true; bud.loadedAt = Date.now(); bud.fromCache = !!fromCache;
+    if (data.url) $('navSheet').href = data.url;
+    renderBudget();
+    if (!fromCache) writeCache();
+  }
+
+  function renderBudget() {
+    var quoted = 0, paid = 0, withQuote = 0, booked = 0, scheduled = 0, personal = 0;
+    bud.vendors.forEach(function (v) {
+      if (v.quoted !== '') { quoted += num(v.quoted); withQuote++; }
+      paid += num(v.paid);
+      if (BOOKED.indexOf(v.status) !== -1) booked++;
+    });
+    bud.payments.forEach(function (p) { if (!isPaid(p.paid)) scheduled += num(p.amount); });
+    bud.expenses.forEach(function (e) { personal += e.actual !== '' ? num(e.actual) : num(e.estimated); });
+    var nV = bud.vendors.length;
+    $('bTotal').textContent = money(quoted);
+    $('bSplit').innerHTML = '<b>' + money(paid) + '</b> paid · <b>' + money(Math.max(0, quoted - paid)) + '</b> to go';
+    var pct = quoted ? Math.min(100, paid / quoted * 100) : 0;
+    $('bBar').style.width = pct + '%';
+    $('bPct').textContent = (pct < 1 && pct > 0 ? '<1' : Math.round(pct)) + '%';
+    $('bQuotes').textContent = withQuote + ' of ' + nV;
+    $('bkBooked').textContent = booked + '/' + nV;
+    $('bkNeed').textContent = nV - withQuote;
+    $('bkDue').textContent = money(scheduled);
+    $('sVend').textContent = money(quoted); $('sPers').textContent = money(personal); $('sAll').textContent = money(quoted + personal);
+    $('navBudget').textContent = shortMoney(quoted) + ' quoted';
+    $('tcV').textContent = nV; $('tcP').textContent = bud.payments.length; $('tcE').textContent = bud.expenses.length;
+    document.querySelectorAll('#bTabs button').forEach(function (b) { b.classList.toggle('on', b.dataset.t === bud.tab); });
+    renderBudgetList();
+  }
+
+  function bMatches(row) {
+    if (!bud.q) return true;
+    return Object.keys(row).some(function (k) { return k !== 'row' && String(row[k]).toLowerCase().indexOf(bud.q) !== -1; });
+  }
+
+  function renderBudgetList() {
+    var t = bud.tab, list = $('bList');
+    list.className = 'list t-' + t;
+    var rows = bud[t].filter(bMatches).slice();
+    var html = '';
+    if (t === 'vendors') {
+      rows.sort(function (a, b) {
+        var qa = a.quoted === '' ? -1 : num(a.quoted), qb = b.quoted === '' ? -1 : num(b.quoted);
+        return qb - qa || a.name.localeCompare(b.name);
+      });
+      var tq = 0; rows.forEach(function (v) { tq += num(v.quoted); });
+      $('bCount').textContent = rows.length + ' vendors · ' + money(tq);
+      html = '<div class="list-head"><span>Vendor</span><span>Status</span><span class="r">Quoted</span><span class="r">Paid</span><span class="r">Remaining</span></div>' +
+        rows.map(function (v) {
+          var hasQ = v.quoted !== '', rem = hasQ ? num(v.quoted) - num(v.paid) : '';
+          var tag = v.status ? '<span class="tag ' + statusTone(v.status) + '">' + esc(v.status) + '</span>' : '';
+          return '<div class="item' + (v._pending ? ' pending' : '') + '" data-t="vendors" data-row="' + v.row + '">' +
+            '<div class="who"><div class="avatar ' + esc(v.type || 'Vendor') + '">' + esc(initials(v.name)) + '</div>' +
+            '<div class="meta"><div class="n">' + esc(v.name) + '</div><div class="s">' + tag + esc(v.service || v.type || '') + '</div></div></div>' +
+            '<div class="bcol">' + (tag || '<span style="color:var(--muted)">–</span>') + '</div>' +
+            '<div class="bcol bnum' + (hasQ ? '' : ' dim') + '">' + (hasQ ? money(v.quoted) : 'Quote needed') + '</div>' +
+            '<div class="bcol bnum' + (num(v.paid) ? '' : ' dim') + '">' + (num(v.paid) ? money(v.paid) : '–') + '</div>' +
+            '<div class="bcol bnum">' + (hasQ ? money(rem) : '–') + '</div>' +
+            '<div class="amt"><b>' + (hasQ ? money(v.quoted) : '–') + '</b><span>' + (hasQ ? (num(v.paid) ? money(v.paid) + ' paid' : 'nothing paid') : 'quote needed') + '</span></div>' +
+            '</div>';
+        }).join('');
+    } else if (t === 'payments') {
+      var today = todayIso();
+      rows.sort(function (a, b) {
+        var pa = isPaid(a.paid) ? 1 : 0, pb = isPaid(b.paid) ? 1 : 0;
+        if (pa !== pb) return pa - pb;
+        return (a.due || '9999') < (b.due || '9999') ? -1 : (a.due || '9999') > (b.due || '9999') ? 1 : 0;
+      });
+      var due = 0; rows.forEach(function (p) { if (!isPaid(p.paid)) due += num(p.amount); });
+      $('bCount').textContent = rows.length + ' payments · ' + money(due) + ' to pay';
+      html = '<div class="list-head"><span>Payment</span><span>Due</span><span>Status</span><span class="r">Amount</span><span></span></div>' +
+        rows.map(function (p) {
+          var d = parseIso(p.due), paidNow = isPaid(p.paid), over = !paidNow && p.due && p.due < today;
+          var chip = '<div class="datechip' + (paidNow ? ' done' : over ? ' over' : '') + (d ? '' : ' none') + '">' +
+            (d ? '<b>' + d.d + '</b><span>' + MONTHS[d.m - 1] + '</span>' : '<b>–</b>') + '</div>';
+          var tag = paidNow ? '<span class="tag ok">Paid' + (p.paidDate ? ' ' + esc(fmtDate(p.paidDate).replace(/, \d{4}$/, '')) : '') + '</span>'
+            : over ? '<span class="tag bad">Overdue</span>'
+            : String(p.paid).toLowerCase() === 'partially' ? '<span class="tag warn">Partially paid</span>'
+            : '<span class="tag neutral">Upcoming</span>';
+          var btn = paidNow ? '' : '<button type="button" class="quick" data-quick="' + p.row + '">Mark paid</button>';
+          return '<div class="item' + (p._pending ? ' pending' : '') + '" data-t="payments" data-row="' + p.row + '">' +
+            '<div class="who">' + chip + '<div class="meta"><div class="n">' + esc(p.vendor) + '</div><div class="s">' + tag + esc(p.stage || '') +
+            (p.due ? ' · due ' + esc(fmtDate(p.due)) : '') + '</div></div></div>' +
+            '<div class="bcol">' + (p.due ? esc(fmtDate(p.due)) : '<span style="color:var(--muted)">No date</span>') + '</div>' +
+            '<div class="bcol">' + tag + '</div>' +
+            '<div class="bcol bnum">' + money(p.amount) + '</div>' +
+            '<div class="bcol" style="text-align:right">' + btn + '</div>' +
+            '<div class="amt"><b>' + money(p.amount) + '</b>' + (btn ? btn : '<span>' + esc(p.stage || '') + '</span>') + '</div>' +
+            '</div>';
+        }).join('');
+    } else {
+      var te = 0; rows.forEach(function (e) { te += e.actual !== '' ? num(e.actual) : num(e.estimated); });
+      $('bCount').textContent = rows.length + ' items · ' + money(te);
+      html = '<div class="list-head"><span>Item</span><span>Who’s paying</span><span>Status</span><span class="r">Estimated</span><span class="r">Actual</span></div>' +
+        rows.map(function (e) {
+          var p = String(e.paid || 'No'), tone = p === 'Yes' ? 'ok' : p === 'Partially' ? 'warn' : 'neutral';
+          var tag = '<span class="tag ' + tone + '">' + (p === 'Yes' ? 'Paid' : p === 'Partially' ? 'Partially paid' : 'Not paid') + '</span>';
+          var showActual = e.actual !== '';
+          return '<div class="item' + (e._pending ? ' pending' : '') + '" data-t="expenses" data-row="' + e.row + '">' +
+            '<div class="who"><div class="avatar exp">' + esc(initials(e.item)) + '</div>' +
+            '<div class="meta"><div class="n">' + esc(e.item) + '</div><div class="s">' + tag + esc([e.owner, e.due ? 'due ' + fmtDate(e.due) : ''].filter(Boolean).join(' · ')) + '</div></div></div>' +
+            '<div class="bcol">' + (e.owner ? esc(e.owner) : '<span style="color:var(--muted)">–</span>') + '</div>' +
+            '<div class="bcol">' + tag + '</div>' +
+            '<div class="bcol bnum' + (e.estimated === '' ? ' dim' : '') + '">' + money(e.estimated) + '</div>' +
+            '<div class="bcol bnum' + (showActual ? '' : ' dim') + '">' + money(e.actual) + '</div>' +
+            '<div class="amt"><b>' + (showActual ? money(e.actual) : money(e.estimated)) + '</b><span>' + (showActual ? 'actual' : e.estimated !== '' ? 'estimated' : 'no estimate') + '</span></div>' +
+            '</div>';
+        }).join('');
+    }
+    if (!rows.length) {
+      html = '<div class="empty"><b>' + (bud.q ? 'No matches' : 'Nothing here yet') + '</b>' +
+        (bud.q ? 'Try a different search.' : 'Tap “' + BFORM[t].addShort + '” to add one.') + '</div>';
+    }
+    list.innerHTML = html;
+  }
+
+  /* ---- budget edit panel ---- */
+  function bField(f, v) {
+    var o = (bud.options[bud.tab] || {})[f.o] || [];
+    var id = 'b_' + f.k, val = v === undefined || v === null ? '' : v;
+    var label = '<label for="' + id + '">' + esc(f.l) + '</label>';
+    if (f.t === 'seg') {
+      var opts = o.slice(); if (val && opts.indexOf(val) === -1) opts.push(val);
+      return '<div class="field"><label>' + esc(f.l) + '</label><div class="seg" id="' + id + '" data-value="' + esc(val) + '">' +
+        opts.map(function (x) { return '<button type="button" class="' + (x === val ? 'on' : '') + '" data-v="' + esc(x) + '">' + esc(x) + '</button>'; }).join('') + '</div></div>';
+    }
+    if (f.t === 'select') {
+      var so = o.slice(); if (val && so.indexOf(val) === -1) so.push(val);
+      return '<div class="field">' + label + '<select id="' + id + '"><option value="">Not set</option>' +
+        so.map(function (x) { return '<option' + (x === val ? ' selected' : '') + '>' + esc(x) + '</option>'; }).join('') + '</select></div>';
+    }
+    if (f.t === 'money') {
+      return '<div class="field">' + label + '<div class="money-in"><span>$</span><input id="' + id + '" inputmode="decimal" placeholder="0" value="' +
+        esc(val === '' ? '' : String(val)) + '"></div></div>';
+    }
+    if (f.t === 'date') return '<div class="field">' + label + '<input id="' + id + '" type="date" value="' + esc(val) + '"></div>';
+    if (f.t === 'area') return '<div class="field">' + label + '<textarea id="' + id + '" maxlength="1000" placeholder="' + esc(f.ph || '') + '">' + esc(val) + '</textarea></div>';
+    var type = f.t === 'vendor' ? 'text' : f.t;
+    return '<div class="field">' + label + '<input id="' + id + '" type="' + type + '" maxlength="300" placeholder="' + esc(f.ph || '') + '" value="' + esc(val) + '"' +
+      (f.t === 'vendor' ? ' list="vendorNames"' : '') + '></div>';
+  }
+
+  function openBudgetForm(row) {
+    var t = bud.tab, F = BFORM[t], isNew = !row;
+    var data = row ? JSON.parse(JSON.stringify(row)) : F.defaults();
+    bud.editing = { table: t, row: row ? row.row : null, original: row ? row[F.key] : '' };
+    $('bTitle').textContent = isNew ? F.addTitle : (row[F.key] || 'Edit');
+    var sub = '';
+    if (!isNew && t === 'vendors') sub = row.quoted !== '' ? money(row.quoted) + ' quoted · ' + money(num(row.quoted) - num(row.paid)) + ' remaining' : 'No quote yet';
+    if (!isNew && t === 'payments') sub = money(row.amount) + (row.due ? ' · due ' + fmtDate(row.due) : '');
+    if (!isNew && t === 'expenses') sub = row.estimated !== '' ? money(row.estimated) + ' estimated' : 'No estimate yet';
+    $('bSub').textContent = isNew ? 'Saved straight to the Budget tab of your sheet.' : sub;
+    $('bFields').innerHTML = F.groups.map(function (g) {
+      var half = g.every(function (f) { return f.half; });
+      return '<div class="group' + (half ? ' counts' : '') + '">' + g.map(function (f) { return bField(f, data[f.k]); }).join('') + '</div>';
+    }).join('');
+    $('vendorNames').innerHTML = bud.vendors.map(function (v) { return '<option value="' + esc(v.name) + '">'; }).join('');
+    $('bErr').textContent = '';
+    $('bDel').style.display = isNew ? 'none' : '';
+    $('bConfirm').classList.remove('show');
+    $('bsheet').scrollTop = 0;
+    $('boverlay').classList.add('open'); $('bsheet').classList.add('open');
+    if (isNew) setTimeout(function () { var first = $('bFields').querySelector('input'); if (first) first.focus(); }, 350);
+  }
+  function closeBudgetForm() {
+    if (bud.busy) return;
+    $('boverlay').classList.remove('open'); $('bsheet').classList.remove('open'); bud.editing = null;
+  }
+  function collectBudget() {
+    var t = bud.editing.table, out = { row: bud.editing.row, original: bud.editing.original };
+    BFORM[t].groups.forEach(function (g) { g.forEach(function (f) {
+      var el = $('b_' + f.k);
+      out[f.k] = f.t === 'seg' ? (el.dataset.value || '') : el.value.trim();
+    }); });
+    return out;
+  }
+  function setBBusy(b, label) {
+    bud.busy = b; $('bSave').disabled = b; $('bDel').disabled = b; $('bYes').disabled = b;
+    $('bSave').textContent = b && label ? label : 'Save';
+  }
+  function saveBudget(e) {
+    e.preventDefault(); if (bud.busy || !bud.editing) return;
+    var t = bud.editing.table, F = BFORM[t], d = collectBudget();
+    if (!d[F.key]) { $('bErr').textContent = 'Add a name first.'; return; }
+    var bad = F.groups.some(function (g) { return g.some(function (f) {
+      return f.t === 'money' && d[f.k] !== '' && !/^\$?\s*[\d,]+(\.\d{1,2})?$/.test(d[f.k]);
+    }); });
+    if (bad) { $('bErr').textContent = 'Amounts should look like 1500 or 1500.50.'; return; }
+    if (t === 'payments' && isPaid(d.paid) && !d.paidDate) d.paidDate = todayIso();
+    var isNew = !d.row;
+    var local = budgetLocal(t, d), prev = null, i = -1;
+    if (isNew) { local._tmp = 'tmp-' + Date.now(); bud[t].push(local); }
+    else { i = budgetIndex(t, d.row); prev = bud[t][i]; bud[t][i] = local; }
+    closeBudgetForm(); renderBudget();
+    sendBudgetSave(t, d, local, function () {
+      var j = local._tmp ? budgetIndexTmp(t, local._tmp) : budgetIndex(t, local.row);
+      if (j !== -1) { if (isNew) bud[t].splice(j, 1); else bud[t][j] = prev; }
+    });
+  }
+  /** Saves in the background; on success swaps in the server's copy, on failure runs undo(). */
+  function sendBudgetSave(t, d, local, undo) {
+    syncStart();
+    runSave('saveBudgetRow', [t, d], function (res) {
+        var j = local._tmp ? budgetIndexTmp(t, local._tmp) : budgetIndex(t, local.row);
+        if (j !== -1) bud[t][j] = res.item;
+        syncEnd(true);
+        if (res.inserted) loadBudget(false);   // a row was added inside a full table; refresh positions
+        else renderBudget();
+      }, function (err) {
+        undo(); syncEnd(false); renderBudget();
+        toast('Couldn’t save: ' + err.message, 5000);
+      });
+  }
+  function budgetLocal(t, d) {
+    var cfgMoney = { vendors: ['quoted', 'paid'], payments: ['amount'], expenses: ['estimated', 'actual'] }[t];
+    var o = JSON.parse(JSON.stringify(d)); delete o.original;
+    cfgMoney.forEach(function (k) {
+      var v = String(o[k] || '').replace(/[$,\s]/g, '');
+      o[k] = v === '' ? '' : Number(v);
+    });
+    o._pending = true;
+    return o;
+  }
+  function budgetIndex(t, row) { for (var i = 0; i < bud[t].length; i++) if (bud[t][i].row === row && !bud[t][i]._tmp) return i; return -1; }
+  function budgetIndexTmp(t, tmp) { for (var i = 0; i < bud[t].length; i++) if (bud[t][i]._tmp === tmp) return i; return -1; }
+  function deleteBudget() {
+    if (bud.busy || !bud.editing) return;
+    var ed = bud.editing, i = budgetIndex(ed.table, ed.row);
+    if (i === -1) return;
+    var removed = bud[ed.table].splice(i, 1)[0];
+    closeBudgetForm(); renderBudget();
+    syncStart();
+    runSave('deleteBudgetRow', [ed.table, ed.row, ed.original], function () { syncEnd(true); }, function (err) {
+        bud[ed.table].splice(Math.min(i, bud[ed.table].length), 0, removed);
+        syncEnd(false); renderBudget();
+        toast('Couldn’t remove: ' + err.message, 5000);
+      });
+  }
+  function quickPay(rowNum, btn) {
+    var p = bud.payments.filter(function (x) { return x.row === rowNum; })[0]; if (!p) return;
+    var d = JSON.parse(JSON.stringify(p)); d.original = p.vendor; d.paid = 'Yes'; d.paidDate = d.paidDate || todayIso();
+    var i = budgetIndex('payments', rowNum), prev = bud.payments[i];
+    var local = budgetLocal('payments', d); bud.payments[i] = local;
+    renderBudget();
+    sendBudgetSave('payments', d, local, function () {
+      var j = budgetIndex('payments', rowNum); if (j !== -1) bud.payments[j] = prev;
+    });
+  }
+
+  /* ---------- Events ---------- */
+  $('q').addEventListener('input', function (e) { state.q = e.target.value.trim().toLowerCase(); render(); });
+  $('filters').addEventListener('click', function (e) {
+    var c = e.target.closest('.fchip'); if (c) openFacet(c.dataset.f, c);
+  });
+  $('clearAll').addEventListener('click', function () { state.f = { side: [], rsvp: [], rel: [], kids: [], from: [] }; closeFacet(); render(); });
+  $('fpList').addEventListener('click', function (e) {
+    var b = e.target.closest('.fopt'); if (b && state.openFacet) toggleValue(state.openFacet, b.dataset.v);
+  });
+  $('fpClear').addEventListener('click', function () { if (state.openFacet) { state.f[state.openFacet] = []; render(); renderPanel(); } });
+  $('fpDone').addEventListener('click', closeFacet);
+  $('fback').addEventListener('click', closeFacet);
+  // Desktop: click anywhere outside the panel or the filter chips to close it
+  document.addEventListener('click', function (e) {
+    if (!state.openFacet || window.innerWidth < 960) return;
+    if (!document.contains(e.target) || e.target.closest('#fpanel') || e.target.closest('.fchip')) return;
+    closeFacet();
+  });
+  window.addEventListener('resize', function () { if (state.openFacet) closeFacet(); });
+  $('relBreak').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-rel]'); if (!b) return;
+    var a = state.f.rel, i = a.indexOf(b.dataset.rel);
+    if (i === -1) a.push(b.dataset.rel); else a.splice(i, 1); render();
+  });
+  $('relClear').addEventListener('click', function () { state.f.rel = []; render(); });
+  $('eventToggle').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-ev]'); if (!b) return; state.ev = b.dataset.ev;
+    Array.prototype.forEach.call(this.children, function (x) { x.classList.toggle('on', x === b); }); render();
+  });
+  $('list').addEventListener('click', function (e) {
+    var c = e.target.closest('.item'); if (!c) return;
+    var g = state.guests.filter(function (x) { return x.id === c.dataset.id; })[0];
+    if (g && g._pending) { toast('Still saving — one sec'); return; }
+    if (g) openForm(JSON.parse(JSON.stringify(g)));
+  });
+  ['f_side'].forEach(function (id) {
+    $(id).addEventListener('click', function (e) {
+      var b = e.target.closest('[data-v]'); if (!b) return; this.dataset.value = b.dataset.v;
+      Array.prototype.forEach.call(this.children, function (x) { x.classList.toggle('on', x === b); });
+    });
+  });
+  document.querySelectorAll('[data-step]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var input = $('f_' + b.dataset.step);
+      input.value = Math.max(0, Math.min(100, num(input.value) + Number(b.dataset.d)));
+    });
+  });
+  $('form').addEventListener('submit', save);
+  $('pplWrap').addEventListener('click', onPeopleClick);
+  $('pplWrap').addEventListener('input', onPeopleInput);
+  $('pplWrap').addEventListener('change', onPeopleInput);
+  $('f_household').addEventListener('input', function () { save._warned = false; $('formErr').textContent = ''; });
+  function onAdd() { if (state.view === 'budget') { if (bud.loaded) openBudgetForm(null); } else openForm(null); }
+  $('addBtn').addEventListener('click', onAdd);
+  $('addBtnTop').addEventListener('click', onAdd);
+
+  // Navigation
+  $('menuBtn').addEventListener('click', openNav);
+  $('navBack').addEventListener('click', closeNav);
+  document.querySelectorAll('.nav-item[data-view]').forEach(function (b) {
+    b.addEventListener('click', function () { setView(b.dataset.view); closeNav(); });
+  });
+
+  // Budget
+  $('bTabs').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-t]'); if (!b) return; bud.tab = b.dataset.t; updateAddLabels(); renderBudget();
+  });
+  $('bq').addEventListener('input', function (e) { bud.q = e.target.value.trim().toLowerCase(); renderBudgetList(); });
+  $('bList').addEventListener('click', function (e) {
+    var q = e.target.closest('[data-quick]');
+    if (q) { e.stopPropagation(); quickPay(Number(q.dataset.quick), q); return; }
+    var it = e.target.closest('.item'); if (!it) return;
+    var row = bud[it.dataset.t].filter(function (x) { return String(x.row) === it.dataset.row; })[0];
+    if (row && row._pending) { toast('Still saving — one sec'); return; }
+    if (row) openBudgetForm(row);
+  });
+  $('bFields').addEventListener('click', function (e) {
+    var b = e.target.closest('.seg [data-v]'); if (!b) return;
+    var seg = b.parentNode; seg.dataset.value = b.dataset.v;
+    Array.prototype.forEach.call(seg.children, function (x) { x.classList.toggle('on', x === b); });
+  });
+  $('bform').addEventListener('submit', saveBudget);
+  $('bClose').addEventListener('click', closeBudgetForm);
+  $('boverlay').addEventListener('click', closeBudgetForm);
+  $('bDel').addEventListener('click', function () {
+    $('bConfirmName').textContent = bud.editing ? bud.editing.original : '';
+    $('bConfirm').classList.add('show');
+    setTimeout(function () { $('bConfirm').scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 50);
+  });
+  $('bNo').addEventListener('click', function () { $('bConfirm').classList.remove('show'); });
+  $('bYes').addEventListener('click', deleteBudget);
+  $('closeBtn').addEventListener('click', closeForm);
+  $('overlay').addEventListener('click', closeForm);
+  $('delBtn').addEventListener('click', function () {
+    $('confirmName').textContent = state.editing ? state.editing.household : '';
+    $('confirmBox').classList.add('show');
+    setTimeout(function () { $('confirmBox').scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 50);
+  });
+  $('confirmNo').addEventListener('click', function () { $('confirmBox').classList.remove('show'); });
+  $('confirmYes').addEventListener('click', doDelete);
+  $('refresh').addEventListener('click', function () {
+    if (pendingSaves) { toast('Finishing your last save…'); return; }
+    if (state.view === 'budget') loadBudget(true); else load(true);
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return;
+    if ($('nav').classList.contains('open')) closeNav();
+    else if (state.openFacet) closeFacet();
+    else if ($('bsheet').classList.contains('open')) closeBudgetForm();
+    else closeForm();
+  });
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState !== 'visible' || pendingSaves || $('sheet').classList.contains('open') || $('bsheet').classList.contains('open')) return;
+    if (state.view === 'budget') { if (Date.now() - bud.loadedAt > 30000) loadBudget(true); }
+    else if (Date.now() - state.loadedAt > 30000) load(true);
+  });
+
+  var savedView = 'guests';
+  try { savedView = localStorage.getItem(VIEW_KEY) || 'guests'; } catch (e) {}
+  setView(savedView === 'budget' ? 'budget' : 'guests', true);
+  /* ---------- Start (called once you're signed in) ---------- */
+  window.__boot = function (email) {
+    $('navWho').textContent = 'Signed in as ' + email;
+    var cached = readCache();
+    if (cached && cached.guests && cached.user === email) {
+      showedCache = true;
+      applyData(cached.guests, true);
+      if (cached.budget) applyBudget(cached.budget, true);
+      hideSplash();                       // open on the saved copy, refresh in the background
+    }
+    load(false);
+  };
+
+  /* ---------- Live updates: when the other person saves, refresh quietly ---------- */
+  var remoteTimer = null;
+  window.__remote = function () { clearTimeout(remoteTimer); remoteTimer = setTimeout(applyRemote, 350); };
+  function applyRemote() {
+    if (!state.loadedAt) return;
+    if (pendingSaves || $('sheet').classList.contains('open') || $('bsheet').classList.contains('open')) {
+      remoteTimer = setTimeout(applyRemote, 1500); return;
+    }
+    google.script.run.withSuccessHandler(function (d) { applyData(d); }).getData();
+    if (bud.loaded) google.script.run.withSuccessHandler(function (d) { applyBudget(d); }).getBudget();
+  }
+
+  /* ---------- Excel import / export ---------- */
+  var XLSX_URL = 'https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js';
+  function loadXlsx() {
+    if (window.XLSX) return Promise.resolve(window.XLSX);
+    return new Promise(function (res, rej) {
+      var s = document.createElement('script'); s.src = XLSX_URL;
+      s.onload = function () { res(window.XLSX); };
+      s.onerror = function () { rej(new Error('Couldn’t load the spreadsheet tools. Check your connection.')); };
+      document.head.appendChild(s);
+    });
+  }
+  function serialToIso(n) {
+    var d = XLSX.SSF.parse_date_code(n);
+    return d ? d.y + '-' + ('0' + d.m).slice(-2) + '-' + ('0' + d.d).slice(-2) : '';
+  }
+  function todayStamp() { var d = new Date(); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+
+  $('navExport').addEventListener('click', function () {
+    closeNav(); toast('Preparing your file…', 3000);
+    Promise.all([loadXlsx(), window.__api.exportAll()]).then(function (r) {
+      var wb = XLSX.utils.book_new();
+      AMData.exportSheets(r[1]).forEach(function (s) {
+        var rows = s.rows.map(function (row, i) {
+          if (!i || !s.dateCols) return row;
+          return row.map(function (v, c) {
+            if (s.dateCols.indexOf(c) === -1 || !v) return v;
+            var m = String(v).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+            return m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])) : v;
+          });
+        });
+        var ws = XLSX.utils.aoa_to_sheet(rows, { cellDates: true, dateNF: 'mmm d, yyyy' });
+        ws['!cols'] = rows[0].map(function (h) { return { wch: Math.max(10, Math.min(36, String(h).length + 4)) }; });
+        XLSX.utils.book_append_sheet(wb, ws, s.name);
+      });
+      XLSX.writeFile(wb, 'AM-Wedding-' + todayStamp() + '.xlsx');
+    }).catch(function (e) { toast('Couldn’t export: ' + e.message, 5000); });
+  });
+
+  $('navImport').addEventListener('click', function () { closeNav(); $('importFile').value = ''; $('importFile').click(); });
+  $('importFile').addEventListener('change', function () {
+    var file = this.files && this.files[0]; if (!file) return;
+    toast('Reading ' + file.name + '…', 4000);
+    loadXlsx().then(function () { return file.arrayBuffer(); }).then(function (buf) {
+      var wb = XLSX.read(buf, { type: 'array' });
+      var sheets = wb.SheetNames.map(function (n) {
+        return { name: n, rows: XLSX.utils.sheet_to_json(wb.Sheets[n], { header: 1, raw: true, defval: '' }) };
+      });
+      var data = AMData.parseWorkbook(sheets, serialToIso);
+      var msg = 'Replace everything in the app with this file?\n\n' +
+        data.guests.length + ' households, ' + data.people.length + ' people, ' +
+        data.vendors.length + ' vendors, ' + data.payments.length + ' payments, ' + data.expenses.length + ' expenses.' +
+        (data.warnings.length ? '\n\nHeads up:\n• ' + data.warnings.slice(0, 6).join('\n• ') : '') +
+        '\n\nWhat’s in the app now will be overwritten.';
+      if (!window.confirm(msg)) return;
+      syncStart();
+      return window.__api.importAll(data, function (done, total) {
+        $('sync').innerHTML = '<i></i>Importing ' + Math.round(100 * done / total) + '%';
+      }).then(function (n) {
+        syncEnd(true);
+        google.script.run.withSuccessHandler(function (d) { applyData(d); }).getData();
+        google.script.run.withSuccessHandler(function (d) { applyBudget(d); }).getBudget();
+        toast('Imported ' + n.households + ' households and ' + n.people + ' people', 4000);
+      }, function (e) { syncEnd(false); throw e; });
+    }).catch(function (e) { toast('Couldn’t import: ' + e.message, 6000); });
+  });
+
+  $('navSignOut').addEventListener('click', function () {
+    if (pendingSaves && !window.confirm('A change is still saving. Sign out anyway?')) return;
+    try { localStorage.removeItem(CACHE_KEY); } catch (e) {}
+    window.__signOut();
+  });
+</script>
+
+<script>
+/* =====================================================================
+ * Data layer on Firebase (Firestore).
+ * Replaces the old Apps Script server. It exposes the same functions the
+ * app already used (getData, saveHousehold, deleteGuest, getBudget,
+ * saveBudgetRow, deleteBudgetRow) through a google.script.run look-alike,
+ * so the screens didn't need rewriting.
+ * ===================================================================== */
+(function (root) {
+  var RSVP_OPTIONS = ['Not invited yet', 'Invited', 'Confirmed', 'Declined', 'Maybe'];
+  var RSVP_ORDER = ['Not invited yet', 'Invited', 'Maybe', 'Confirmed'];
+  var DEFAULT_OPTIONS = {
+    side: ['Bride', 'Groom', 'Both', 'Other'],
+    relationship: ['Immediate Family', 'Close Relatives', 'Extended Relatives', "Parents' Friends",
+                   "Siblings' Friends", 'Our Friends', 'Work', 'Community'],
+    country: ['Australia', 'England', 'USA', 'Germany', 'Sri Lanka'],
+    weddingRsvp: RSVP_OPTIONS,
+    receptionRsvp: RSVP_OPTIONS,
+    dietary: ['Non-veg', 'Vegetarian', 'Vegan', 'Other (see notes)'],
+    budget: {
+      vendors: { type: ['Vendor', 'Venue', 'Other'],
+        status: ['To confirm', 'Planned — confirm', 'Booked', 'Deposit paid', 'In progress',
+                 'Paid in full', 'Researching', 'Unavailable', 'Pending'] },
+      payments: { paid: ['No', 'Yes', 'Partially'] },
+      expenses: { paid: ['No', 'Yes', 'Partially'] }
+    }
+  };
+
+  var GUEST_FIELDS = ['side', 'household', 'relationship', 'weddingAdults', 'weddingKids', 'receptionAdults',
+                      'receptionKids', 'weddingRsvp', 'receptionRsvp', 'country', 'contact', 'phoneEmail', 'notes'];
+  var NUM_FIELDS = ['weddingAdults', 'weddingKids', 'receptionAdults', 'receptionKids'];
+  var GUEST_HEADERS = { side: 'Side', household: 'Family / Household', relationship: 'Relationship / Group',
+    weddingAdults: 'Wedding Adults', weddingKids: 'Wedding Kids', receptionAdults: 'Reception Adults',
+    receptionKids: 'Reception Kids', weddingRsvp: 'Wedding RSVP', receptionRsvp: 'Reception RSVP',
+    country: 'Country', contact: 'Contact Person', phoneEmail: 'Phone / Email', notes: 'Notes', id: 'Guest ID' };
+  var PERSON_FIELDS = ['guestId', 'name', 'age', 'wedding', 'reception', 'dietary', 'notes'];
+  var PERSON_HEADERS = { pid: 'Person ID', guestId: 'Guest ID', name: 'Name', age: 'Adult / Kid',
+    wedding: 'Wedding RSVP', reception: 'Reception RSVP', dietary: 'Dietary', notes: 'Notes' };
+
+  var BUDGET = {
+    vendors: { key: 'name', match: ['Type', 'Vendor / Venue'],
+      fields: { type: 'Type', name: 'Vendor / Venue', service: 'Service / Package', quoted: 'Quoted Cost (CAD)',
+        paid: 'Paid to Date (CAD)', remaining: 'Remaining (CAD)', nextDue: 'Next Payment Due', status: 'Status',
+        contact: 'Contact Name', phone: 'Phone', email: 'Email', notes: 'Notes' },
+      readOnly: ['remaining'], money: ['quoted', 'paid', 'remaining'], dates: ['nextDue'] },
+    payments: { key: 'vendor', match: ['Vendor / Venue', 'Payment Stage'],
+      fields: { vendor: 'Vendor / Venue', stage: 'Payment Stage', amount: 'Amount (CAD)', due: 'Due Date',
+        paidDate: 'Paid Date', paid: 'Paid?', method: 'Payment Method / Ref', notes: 'Notes' },
+      readOnly: [], money: ['amount'], dates: ['due', 'paidDate'] },
+    expenses: { key: 'item', match: ['Expense Item'],
+      fields: { item: 'Expense Item', owner: 'Owner', estimated: 'Estimated Cost (CAD)', actual: 'Actual Cost (CAD)',
+        paid: 'Paid?', due: 'Due Date', notes: 'Notes' },
+      readOnly: [], money: ['estimated', 'actual'], dates: ['due'] }
+  };
+  var COLLECTIONS = ['households', 'people', 'vendors', 'payments', 'expenses'];
+
+  /* ---------------- shared helpers ---------------- */
+  function str(v, max) { return String(v === undefined || v === null ? '' : v).trim().slice(0, max || 1000); }
+  function pad3(n) { return ('000' + n).slice(-3); }
+  function maxNum(ids, prefix) {
+    var max = 0, re = new RegExp('^' + prefix + '(\\d+)$');
+    ids.forEach(function (id) { var m = String(id).match(re); if (m) max = Math.max(max, Number(m[1])); });
+    return max;
+  }
+  function householdRsvp(statuses) {
+    if (!statuses.length) return 'Not invited yet';
+    var live = statuses.filter(function (s) { return s !== 'Declined'; });
+    if (!live.length) return 'Declined';
+    var low = RSVP_ORDER.length - 1;
+    live.forEach(function (s) { var i = RSVP_ORDER.indexOf(s); if (i !== -1 && i < low) low = i; });
+    return RSVP_ORDER[low];
+  }
+  /** Household counts + RSVPs worked out from its people. Declined people don't count. */
+  function deriveFromPeople(list) {
+    var out = { weddingAdults: 0, weddingKids: 0, receptionAdults: 0, receptionKids: 0 };
+    ['wedding', 'reception'].forEach(function (ev) {
+      var statuses = [];
+      list.forEach(function (p) {
+        var v = p[ev]; if (!v) return;
+        statuses.push(v);
+        if (v === 'Declined') return;
+        if (p.age === 'Kid') out[ev + 'Kids']++; else out[ev + 'Adults']++;
+      });
+      out[ev + 'Rsvp'] = householdRsvp(statuses);
+    });
+    NUM_FIELDS.forEach(function (k) { if (out[k] === 0) out[k] = ''; });
+    return out;
+  }
+  function toNumberOrBlank(v, label, max, whole) {
+    if (v === undefined || v === null) return '';
+    v = String(v).replace(/[$,\s]/g, '');
+    if (v === '') return '';
+    var n = Number(v);
+    if (!isFinite(n) || n < 0 || n > max || (whole && Math.floor(n) !== n)) {
+      throw new Error(label + (whole ? ' must be a whole number from 0 to ' + max + '.' : ' must be an amount like 1500 or 1500.50.'));
+    }
+    return whole ? n : Math.round(n * 100) / 100;
+  }
+
+  function validateGuest(g) {
+    if (!g || typeof g !== 'object') throw new Error('No guest data received.');
+    var out = { id: str(g.id, 20) };
+    GUEST_FIELDS.forEach(function (k) {
+      out[k] = NUM_FIELDS.indexOf(k) !== -1 ? toNumberOrBlank(g[k], GUEST_HEADERS[k], 100, true) : str(g[k], 500);
+    });
+    if (!out.household) throw new Error('Family / Household name is required.');
+    return out;
+  }
+  function validatePerson(p) {
+    if (!p || typeof p !== 'object') throw new Error('Bad person data.');
+    var out = {
+      pid: str(p.pid, 20), guestId: '', name: str(p.name, 120), age: p.age === 'Kid' ? 'Kid' : 'Adult',
+      wedding: RSVP_OPTIONS.indexOf(p.wedding) !== -1 ? p.wedding : '',
+      reception: RSVP_OPTIONS.indexOf(p.reception) !== -1 ? p.reception : '',
+      dietary: str(p.dietary, 60), notes: str(p.notes, 500)
+    };
+    if (!out.name) throw new Error('Every person needs a name.');
+    if (!/^(P\d+)?$/.test(out.pid)) out.pid = '';
+    return out;
+  }
+  function validateBudget(cfg, d) {
+    if (!d || typeof d !== 'object') throw new Error('No data received.');
+    var out = {};
+    Object.keys(cfg.fields).forEach(function (k) {
+      if (cfg.readOnly.indexOf(k) !== -1) return;
+      var v = d[k];
+      if (cfg.money.indexOf(k) !== -1) out[k] = toNumberOrBlank(v, cfg.fields[k], 10000000, false);
+      else if (cfg.dates.indexOf(k) !== -1) {
+        v = str(v, 20);
+        if (v && !/^\d{4}-\d{2}-\d{2}$/.test(v)) throw new Error(cfg.fields[k] + ' must be a date.');
+        out[k] = v;
+      } else out[k] = str(v, 1000);
+    });
+    if (!out[cfg.key]) throw new Error(cfg.fields[cfg.key] + ' is required.');
+    return out;
+  }
+  function budgetItem(table, row, d) {
+    var cfg = BUDGET[table], out = { row: Number(row) };
+    Object.keys(cfg.fields).forEach(function (k) { out[k] = d[k] === undefined || d[k] === null ? '' : d[k]; });
+    if (table === 'vendors') out.remaining = out.quoted === '' ? '' : Math.round((Number(out.quoted) - Number(out.paid || 0)) * 100) / 100;
+    return out;
+  }
+  function mergeOptions(saved) {
+    var o = JSON.parse(JSON.stringify(DEFAULT_OPTIONS));
+    if (saved) Object.keys(saved).forEach(function (k) {
+      if (k === 'budget' && saved.budget) {
+        Object.keys(saved.budget).forEach(function (t) { o.budget[t] = Object.assign(o.budget[t] || {}, saved.budget[t]); });
+      } else if (Array.isArray(saved[k]) && saved[k].length) o[k] = saved[k];
+    });
+    return o;
+  }
+  function friendly(e) {
+    var code = e && e.code || '', msg = String(e && e.message || e);
+    if (/permission-denied|insufficient permissions/i.test(code + msg)) return new Error('This account doesn’t have access. Check the Firestore rules.');
+    if (/unavailable|network/i.test(code + msg)) return new Error('You seem to be offline. Try again in a moment.');
+    return e instanceof Error ? e : new Error(msg);
+  }
+
+  /* ---------------- backend ---------------- */
+  /**
+   * fs: small adapter around Firestore (see the module script):
+   *   onCollection(name, cb(docs[{id,data}], meta), onError)
+   *   onDoc(col, id, cb(data|null, meta), onError)
+   *   batch() -> { set(col, id, data), delete(col, id), commit() -> Promise }
+   * onRemoteChange(kind): called when the other person changes something.
+   */
+  function makeBackend(fs, user, onRemoteChange, opts) {
+    opts = opts || {};
+    var COMMIT_WAIT = opts.commitWait || 6000;
+    var data = { households: {}, people: {}, vendors: {}, payments: {}, expenses: {}, options: null };
+    var seen = {};
+    var ready = new Promise(function (resolve, reject) {
+      var need = COLLECTIONS.length + 1;
+      function arrived(k) { if (seen[k]) return false; seen[k] = true; if (--need === 0) resolve(); return true; }
+      COLLECTIONS.forEach(function (c) {
+        fs.onCollection(c, function (docs, meta) {
+          var m = {}; docs.forEach(function (d) { m[d.id] = d.data; });
+          data[c] = m;
+          if (!arrived(c) && !(meta && meta.hasPendingWrites) && onRemoteChange) onRemoteChange(c);
+        }, function (e) { reject(friendly(e)); });
+      });
+      fs.onDoc('meta', 'options', function (d, meta) {
+        data.options = d || null;
+        if (!arrived('options') && !(meta && meta.hasPendingWrites) && onRemoteChange) onRemoteChange('options');
+      }, function (e) { reject(friendly(e)); });
+    });
+
+    function stamp(o) { o.updatedBy = user || ''; o.updatedAt = new Date().toISOString(); return o; }
+    /** Waits for Google to confirm the write; if offline it's kept on the device and syncs later. */
+    function commit(b) {
+      return Promise.race([
+        b.commit().catch(function (e) { throw friendly(e); }),
+        new Promise(function (r) { setTimeout(function () { r('queued'); }, COMMIT_WAIT); })
+      ]);
+    }
+    function guestOut(id, d) {
+      var o = { id: id };
+      GUEST_FIELDS.forEach(function (k) { o[k] = d[k] === undefined || d[k] === null ? '' : d[k]; });
+      return o;
+    }
+    function personOut(pid, d) {
+      var o = { pid: pid };
+      PERSON_FIELDS.forEach(function (k) { o[k] = d[k] === undefined || d[k] === null ? '' : d[k]; });
+      if (o.age !== 'Kid') o.age = 'Adult';
+      return o;
+    }
+    function byId(a, b) { return a < b ? -1 : a > b ? 1 : 0; }
+
+    var api = {
+      getData: function () {
+        return ready.then(function () {
+          return {
+            guests: Object.keys(data.households).sort(byId).map(function (id) { return guestOut(id, data.households[id]); }),
+            people: Object.keys(data.people).sort(byId).map(function (id) { return personOut(id, data.people[id]); }),
+            options: mergeOptions(data.options),
+            user: user, updatedAt: new Date().toISOString()
+          };
+        });
+      },
+
+      saveGuest: function (g) { return api.saveHousehold(g, null); },
+
+      /** people = null: leave people alone; [] = remove them all; [...] = the full list. */
+      saveHousehold: function (guest, people) {
+        return ready.then(function () {
+          var clean = validateGuest(guest);
+          var list = Array.isArray(people) ? people.map(validatePerson) : null;
+          if (clean.id) {
+            if (!data.households[clean.id]) throw new Error('That guest was removed by someone else. Refresh and try again.');
+          } else {
+            clean.id = 'G' + pad3(maxNum(Object.keys(data.households), 'G') + 1);
+          }
+          var id = clean.id, b = fs.batch(), saved = null;
+          if (list) {
+            var mine = {}, next = maxNum(Object.keys(data.people), 'P') + 1, keep = {};
+            Object.keys(data.people).forEach(function (pid) { if (data.people[pid].guestId === id) mine[pid] = true; });
+            list.forEach(function (p) {
+              p.guestId = id;
+              if (!(p.pid && mine[p.pid])) { while (data.people['P' + pad3(next)]) next++; p.pid = 'P' + pad3(next++); }
+              keep[p.pid] = true;
+            });
+            if (list.length) Object.assign(clean, deriveFromPeople(list));
+            list.forEach(function (p) {
+              var d = {}; PERSON_FIELDS.forEach(function (k) { d[k] = p[k]; });
+              b.set('people', p.pid, stamp(d));
+            });
+            Object.keys(mine).forEach(function (pid) { if (!keep[pid]) b.delete('people', pid); });
+            saved = list.map(function (p) { return personOut(p.pid, p); });
+          }
+          var doc = {}; GUEST_FIELDS.forEach(function (k) { doc[k] = clean[k]; });
+          b.set('households', id, stamp(doc));
+          return commit(b).then(function () { return { guest: guestOut(id, clean), people: saved }; });
+        });
+      },
+
+      deleteGuest: function (id) {
+        return ready.then(function () {
+          id = str(id, 20);
+          if (!id) throw new Error('Missing guest id.');
+          var b = fs.batch();
+          b.delete('households', id);
+          Object.keys(data.people).forEach(function (pid) { if (data.people[pid].guestId === id) b.delete('people', pid); });
+          return commit(b).then(function () { return { id: id }; });
+        });
+      },
+
+      getBudget: function () {
+        return ready.then(function () {
+          var o = mergeOptions(data.options), out = { options: o.budget, url: '' };
+          Object.keys(BUDGET).forEach(function (t) {
+            out[t] = Object.keys(data[t]).map(function (id) { return budgetItem(t, data[t][id].row || id, data[t][id]); })
+              .sort(function (a, b) { return a.row - b.row; });
+          });
+          return out;
+        });
+      },
+
+      saveBudgetRow: function (table, d) {
+        return ready.then(function () {
+          var cfg = BUDGET[table];
+          if (!cfg) throw new Error('Unknown table.');
+          var clean = validateBudget(cfg, d), row;
+          if (d.row) {
+            row = Number(d.row);
+            if (!data[table][String(row)]) throw new Error('That entry was removed by someone else. Refresh and try again.');
+          } else {
+            row = 0;
+            Object.keys(data[table]).forEach(function (id) { row = Math.max(row, Number(data[table][id].row || id) || 0); });
+            row++;
+          }
+          clean.row = row;
+          var b = fs.batch();
+          b.set(table, String(row), stamp(Object.assign({}, clean)));
+          return commit(b).then(function () { return { row: row, item: budgetItem(table, row, clean), inserted: false }; });
+        });
+      },
+
+      deleteBudgetRow: function (table, row) {
+        return ready.then(function () {
+          if (!BUDGET[table]) throw new Error('Unknown table.');
+          var b = fs.batch();
+          b.delete(table, String(Number(row)));
+          return commit(b).then(function () { return { row: Number(row) }; });
+        });
+      },
+
+      /** Everything, for the Excel export. */
+      exportAll: function () {
+        return Promise.all([api.getData(), api.getBudget()]).then(function (r) { return { guests: r[0].guests, people: r[0].people, budget: r[1] }; });
+      },
+
+      /**
+       * Replaces everything with the imported data.
+       * payload = { guests:[{id,...}], people:[{pid,...}], vendors:[], payments:[], expenses:[] }
+       */
+      importAll: function (payload, progress) {
+        return ready.then(function () {
+          var ops = [];
+          COLLECTIONS.forEach(function (c) { Object.keys(data[c]).forEach(function (id) { ops.push(['delete', c, id]); }); });
+          payload.guests.forEach(function (g) {
+            var d = {}; GUEST_FIELDS.forEach(function (k) { d[k] = g[k]; }); ops.push(['set', 'households', g.id, stamp(d)]);
+          });
+          payload.people.forEach(function (p) {
+            var d = {}; PERSON_FIELDS.forEach(function (k) { d[k] = p[k]; }); ops.push(['set', 'people', p.pid, stamp(d)]);
+          });
+          Object.keys(BUDGET).forEach(function (t) {
+            (payload[t] || []).forEach(function (r) {
+              var d = {}; Object.keys(BUDGET[t].fields).forEach(function (k) { if (BUDGET[t].readOnly.indexOf(k) === -1) d[k] = r[k]; });
+              d.row = r.row; ops.push(['set', t, String(r.row), stamp(d)]);
+            });
+          });
+          ops.push(['set', 'meta', 'options', JSON.parse(JSON.stringify(DEFAULT_OPTIONS))]);
+          // A set after a delete of the same doc in one batch is fine; split into chunks Firestore accepts.
+          var chunks = [];
+          for (var i = 0; i < ops.length; i += 400) chunks.push(ops.slice(i, i + 400));
+          var done = 0;
+          return chunks.reduce(function (p, chunk) {
+            return p.then(function () {
+              var b = fs.batch();
+              chunk.forEach(function (op) { if (op[0] === 'delete') b.delete(op[1], op[2]); else b.set(op[1], op[2], op[3]); });
+              return b.commit().catch(function (e) { throw friendly(e); }).then(function () {
+                done += chunk.length; if (progress) progress(done, ops.length);
+              });
+            });
+          }, Promise.resolve()).then(function () {
+            return { households: payload.guests.length, people: payload.people.length,
+              vendors: (payload.vendors || []).length, payments: (payload.payments || []).length, expenses: (payload.expenses || []).length };
+          });
+        });
+      }
+    };
+    api._ready = ready;
+    return api;
+  }
+
+  /** A stand-in for google.script.run, so the existing screens keep working unchanged. */
+  function makeRunner(api) {
+    function R(ok, fail) { this._ok = ok; this._fail = fail; }
+    R.prototype.withSuccessHandler = function (f) { return new R(f, this._fail); };
+    R.prototype.withFailureHandler = function (f) { return new R(this._ok, f); };
+    Object.keys(api).forEach(function (name) {
+      if (name.charAt(0) === '_') return;
+      R.prototype[name] = function () {
+        var ok = this._ok, fail = this._fail, args = arguments;
+        Promise.resolve().then(function () { return api[name].apply(null, args); })
+          .then(function (r) { if (ok) ok(r); }, function (e) { if (fail) fail(friendly(e)); else console.error(e); });
+      };
+    });
+    return new R(null, null);
+  }
+
+  /* ---------------- reading the old spreadsheet (.xlsx) ---------------- */
+  /**
+   * sheets: [{ name, rows: [[cell, ...], ...] }] with raw values (dates as Excel serial numbers).
+   * serialToIso: converts an Excel date serial to 'YYYY-MM-DD'.
+   * Finds each table by its header row, like the old app did.
+   */
+  function parseWorkbook(sheets, serialToIso) {
+    function norm(v) { return String(v === undefined || v === null ? '' : v).trim(); }
+    function findHeader(match) {
+      for (var s = 0; s < sheets.length; s++) {
+        var rows = sheets[s].rows;
+        for (var r = 0; r < rows.length; r++) {
+          var cells = rows[r].map(norm);
+          if (match.every(function (m) { return cells.indexOf(m) !== -1; })) return { rows: rows, r: r, cells: cells };
+        }
+      }
+      return null;
+    }
+    function colsFor(h, headers) {
+      var cols = {};
+      Object.keys(headers).forEach(function (k) { cols[k] = h.cells.indexOf(headers[k]); });
+      return cols;
+    }
+    function get(row, i) { return i === -1 || i === undefined ? '' : row[i]; }
+    function dateVal(v) {
+      if (v === '' || v === null || v === undefined) return '';
+      if (typeof v === 'number') return serialToIso(v);
+      if (v instanceof Date) return v.getFullYear() + '-' + ('0' + (v.getMonth() + 1)).slice(-2) + '-' + ('0' + v.getDate()).slice(-2);
+      var s = norm(v);
+      if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+      var t = Date.parse(s);
+      if (isNaN(t)) return '';
+      var d = new Date(t);
+      return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+    }
+    function moneyVal(v) {
+      if (typeof v === 'number') return Math.round(v * 100) / 100;
+      var s = norm(v).replace(/[$,\s]/g, '');
+      if (s === '') return '';
+      var n = Number(s); return isFinite(n) ? Math.round(n * 100) / 100 : '';
+    }
+    function countVal(v) {
+      var s = norm(v); if (s === '') return '';
+      var n = Math.round(Number(s)); return isFinite(n) && n > 0 ? n : '';
+    }
+    var allHeaders = [['Family / Household', 'Guest ID'], ['Person ID', 'Name']].concat(Object.keys(BUDGET).map(function (t) { return BUDGET[t].match; }));
+    function isHeaderRow(cells) { return allHeaders.some(function (m) { return m.every(function (x) { return cells.indexOf(x) !== -1; }); }); }
+
+    var warnings = [];
+    // Households
+    var gh = findHeader(['Family / Household', 'Guest ID']);
+    if (!gh) throw new Error('Couldn’t find the Guest List tab (a header row with “Family / Household” and “Guest ID”).');
+    var gc = colsFor(gh, GUEST_HEADERS), guests = [];
+    for (var r = gh.r + 1; r < gh.rows.length; r++) {
+      var row = gh.rows[r];
+      var hh = norm(get(row, gc.household)); if (!hh) continue;
+      var g = { id: norm(get(row, gc.id)) };
+      GUEST_FIELDS.forEach(function (k) { g[k] = NUM_FIELDS.indexOf(k) !== -1 ? countVal(get(row, gc[k])) : norm(get(row, gc[k])).slice(0, 500); });
+      guests.push(g);
+    }
+    var used = {}, nextG = maxNum(guests.map(function (g) { return g.id; }), 'G') + 1;
+    guests.forEach(function (g) {
+      if (!/^G\d+$/.test(g.id) || used[g.id]) { if (g.id && used[g.id]) warnings.push('Duplicate Guest ID ' + g.id + ' — gave “' + g.household + '” a new one.'); g.id = 'G' + pad3(nextG++); }
+      used[g.id] = true;
+    });
+
+    // People (optional tab)
+    var people = [], ph = findHeader(['Person ID', 'Name']);
+    if (ph) {
+      var pc = colsFor(ph, PERSON_HEADERS);
+      for (var i = ph.r + 1; i < ph.rows.length; i++) {
+        var prow = ph.rows[i], name = norm(get(prow, pc.name));
+        if (!name) continue;
+        var w = norm(get(prow, pc.wedding)), rc = norm(get(prow, pc.reception));
+        people.push({ pid: norm(get(prow, pc.pid)), guestId: norm(get(prow, pc.guestId)), name: name.slice(0, 120),
+          age: norm(get(prow, pc.age)) === 'Kid' ? 'Kid' : 'Adult',
+          wedding: RSVP_OPTIONS.indexOf(w) !== -1 ? w : '', reception: RSVP_OPTIONS.indexOf(rc) !== -1 ? rc : '',
+          dietary: norm(get(prow, pc.dietary)).slice(0, 60), notes: norm(get(prow, pc.notes)).slice(0, 500) });
+      }
+      var pused = {}, nextP = maxNum(people.map(function (p) { return p.pid; }), 'P') + 1;
+      people.forEach(function (p) { if (!/^P\d+$/.test(p.pid) || pused[p.pid]) p.pid = 'P' + pad3(nextP++); pused[p.pid] = true; });
+      people = people.filter(function (p) {
+        if (used[p.guestId]) return true;
+        warnings.push('Skipped “' + p.name + '” — no household with Guest ID ' + (p.guestId || '(blank)') + '.');
+        return false;
+      });
+      // Households with people get their counts and RSVPs from them, like the old app did.
+      var byGuest = {};
+      people.forEach(function (p) { (byGuest[p.guestId] = byGuest[p.guestId] || []).push(p); });
+      guests.forEach(function (g) { if (byGuest[g.id]) Object.assign(g, deriveFromPeople(byGuest[g.id])); });
+    }
+
+    // Budget tables (optional)
+    var out = { guests: guests, people: people, warnings: warnings };
+    Object.keys(BUDGET).forEach(function (t) {
+      var cfg = BUDGET[t], h = findHeader(cfg.match), list = [];
+      if (h) {
+        var c = colsFor(h, cfg.fields);
+        for (var r2 = h.r + 1; r2 < h.rows.length; r2++) {
+          var brow = h.rows[r2], cells = brow.map(norm);
+          if (isHeaderRow(cells)) break;                 // reached the next table
+          var key = norm(get(brow, c[cfg.key]));
+          if (!key || key === 'Item') continue;          // blank or the template placeholder
+          var others = Object.keys(cfg.fields).some(function (k) { return k !== cfg.key && c[k] !== -1 && norm(get(brow, c[k])) !== ''; });
+          if (!others) continue;                         // a note/heading line, not an entry
+          var item = { row: list.length + 1 };
+          Object.keys(cfg.fields).forEach(function (k) {
+            if (cfg.readOnly.indexOf(k) !== -1) return;
+            var v = get(brow, c[k]);
+            item[k] = cfg.money.indexOf(k) !== -1 ? moneyVal(v) : cfg.dates.indexOf(k) !== -1 ? dateVal(v) : norm(v).slice(0, 1000);
+          });
+          list.push(item);
+        }
+      }
+      out[t] = list;
+    });
+    return out;
+  }
+
+  /** Rows for the Excel export, using the same headers so the file can be imported again. */
+  function exportSheets(all) {
+    var names = {}; all.guests.forEach(function (g) { names[g.id] = g.household; });
+    var gKeys = GUEST_FIELDS.concat(['id']);
+    var sheets = [{ name: 'Guest List', rows: [gKeys.map(function (k) { return GUEST_HEADERS[k]; })].concat(all.guests.map(function (g) {
+      return gKeys.map(function (k) { return g[k]; });
+    })) }];
+    var pKeys = ['pid', 'guestId', 'name', 'age', 'wedding', 'reception', 'dietary', 'notes'];
+    sheets.push({ name: 'People', rows: [pKeys.map(function (k) { return PERSON_HEADERS[k]; }).concat(['Household'])].concat(all.people.map(function (p) {
+      return pKeys.map(function (k) { return p[k]; }).concat([names[p.guestId] || '']);
+    })) });
+    var titles = { vendors: 'Vendors', payments: 'Payments', expenses: 'Expenses' };
+    Object.keys(BUDGET).forEach(function (t) {
+      var keys = Object.keys(BUDGET[t].fields);
+      sheets.push({ name: titles[t], rows: [keys.map(function (k) { return BUDGET[t].fields[k]; })].concat(all.budget[t].map(function (r) {
+        return keys.map(function (k) { return r[k]; });
+      })), dateCols: keys.map(function (k, i) { return BUDGET[t].dates.indexOf(k) !== -1 ? i : -1; }).filter(function (i) { return i !== -1; }) });
+    });
+    return sheets;
+  }
+
+  var exported = { makeBackend: makeBackend, makeRunner: makeRunner, parseWorkbook: parseWorkbook,
+    exportSheets: exportSheets, deriveFromPeople: deriveFromPeople, DEFAULT_OPTIONS: DEFAULT_OPTIONS };
+  root.AMData = exported;
+  if (typeof module !== 'undefined' && module.exports) module.exports = exported;
+})(typeof window !== 'undefined' ? window : globalThis);
+
+</script>
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js';
+  import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signInWithRedirect, getRedirectResult, signOut }
+    from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js';
+  import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, doc, onSnapshot, writeBatch,
+           terminate, clearIndexedDbPersistence }
+    from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js';
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyB6SaMvdASMwnzeAqVrEbmOknZbq_G-Sgw",
+    authDomain: "am-wedding-91ee0.firebaseapp.com",
+    projectId: "am-wedding-91ee0",
+    storageBucket: "am-wedding-91ee0.firebasestorage.app",
+    messagingSenderId: "106223647593",
+    appId: "1:106223647593:web:020dc00a964c4aef8b1bf8"
+  };
+  // Who may use the app. The real lock is the Firestore rules; this just shows a friendly message.
+  const ALLOWED = ['abbilashandmusi@gmail.com', 'abbilash.u@gmail.com', 'musissha.jeganathan@gmail.com'];
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) });
+  const provider = new GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: 'select_account' });
+
+  const gate = document.getElementById('gate');
+  const setGate = (s) => { gate.dataset.state = s; gate.classList.remove('hide'); };
+
+  async function signIn() {
+    const btn = document.getElementById('gSignIn'), err = document.getElementById('gErr');
+    btn.disabled = true; err.textContent = '';
+    try { await signInWithPopup(auth, provider); }
+    catch (e) {
+      if (/popup-blocked|operation-not-supported|web-storage-unsupported/.test(e.code || '')) {
+        try { await signInWithRedirect(auth, provider); return; } catch (e2) { e = e2; }
+      }
+      if (!/popup-closed-by-user|cancelled-popup-request/.test(e.code || '')) err.textContent = 'Couldn’t sign in: ' + (e.message || e.code);
+    } finally { btn.disabled = false; }
+  }
+  document.getElementById('gSignIn').addEventListener('click', signIn);
+  document.getElementById('gSwitch').addEventListener('click', async () => { await signOut(auth); signIn(); });
+  getRedirectResult(auth).catch((e) => { document.getElementById('gErr').textContent = 'Couldn’t sign in: ' + (e.message || e.code); });
+
+  const fsAdapter = {
+    onCollection(name, cb, onErr) {
+      return onSnapshot(collection(db, name),
+        (s) => cb(s.docs.map((d) => ({ id: d.id, data: d.data() })), { hasPendingWrites: s.metadata.hasPendingWrites }), onErr);
+    },
+    onDoc(col, id, cb, onErr) {
+      return onSnapshot(doc(db, col, id), (s) => cb(s.exists() ? s.data() : null, { hasPendingWrites: s.metadata.hasPendingWrites }), onErr);
+    },
+    batch() {
+      const b = writeBatch(db);
+      return { set: (c, id, d) => b.set(doc(db, c, id), d), delete: (c, id) => b.delete(doc(db, c, id)), commit: () => b.commit() };
+    }
+  };
+
+  window.__signOut = async () => {
+    try { await terminate(db); await clearIndexedDbPersistence(db); } catch (e) {}
+    await signOut(auth);
+    location.reload();
+  };
+
+  let started = false;
+  onAuthStateChanged(auth, (user) => {
+    if (!user) { if (!started) setGate('signin'); else location.reload(); return; }
+    const email = String(user.email || '').toLowerCase();
+    if (!ALLOWED.includes(email)) { document.getElementById('gWho').textContent = email; setGate('denied'); return; }
+    if (started) return;
+    started = true;
+    window.__email = email;
+    const api = AMData.makeBackend(fsAdapter, email, () => window.__remote && window.__remote());
+    window.__api = api;
+    window.google = { script: { get run() { return AMData.makeRunner(api); } } };
+    api._ready.catch((e) => { document.getElementById('gErrMsg').textContent = e.message; setGate('error'); });
+    gate.classList.add('hide');
+    window.__boot(email);
+  });
+</script>
 </body>
 </html>
