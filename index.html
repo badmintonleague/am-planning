@@ -342,6 +342,9 @@
   .bp-amt.ok{color:var(--ok)}
   .bp-add{border:0;background:none;color:var(--gold);font-size:14px;font-weight:500;padding:12px 4px 6px;cursor:pointer;text-align:left}
   #bPills[hidden]{display:none}
+  .hero-shop{font-size:13.5px;color:var(--ink2);margin:6px 0 0}
+  .hero-shop:empty{display:none}
+  #bForWrap[hidden]{display:none}
   .money-in{display:flex;align-items:center;gap:4px}
   .money-in span{color:var(--muted);font-size:16px}
   .field input[type=date]{min-height:24px}
@@ -509,6 +512,7 @@
     .bnum.dim{color:var(--muted)}
     #bList .item .amt,#bList .item .meta .s{display:none}
     #bList.t-bookings .list-head,#bList.t-bookings .item{grid-template-columns:minmax(0,2.3fr) minmax(0,1.3fr) 110px 110px 110px}
+    #bList.t-purchases .list-head,#bList.t-purchases .item{grid-template-columns:minmax(0,2.3fr) minmax(0,1fr) 110px 110px minmax(0,1fr)}
     .grp{padding-left:22px;padding-right:22px}
     #bList.t-installments .list-head,#bList.t-installments .item{grid-template-columns:minmax(0,2.3fr) minmax(0,1fr) 120px 110px 110px}
     #bList.t-expenses .list-head,#bList.t-expenses .item{grid-template-columns:minmax(0,2.3fr) minmax(0,1fr) 110px 110px 110px}
@@ -646,6 +650,7 @@
     <p class="eyebrow">Committed so far</p>
     <p class="big" id="bTotal">–</p>
     <p class="hero-split" id="bSplit"></p>
+    <p class="hero-shop" id="bShop"></p>
     <div class="split">
       <div class="splitbar"><div id="bBar" style="width:0;background:var(--ok)"></div></div>
       <div class="splitlegend"><span>Paid <b id="bPct">–</b></span><span>Booked <b id="bBookedN">–</b></span></div>
@@ -660,13 +665,18 @@
       <div class="rel-h"><span>By category</span><button type="button" class="rel-clear" id="bCatClear" hidden>Show all</button></div>
       <div id="bCats"></div>
     </div>
+    <div class="rel" id="bForWrap" hidden>
+      <div class="rel-h"><span>Shopping by person</span><button type="button" class="rel-clear" id="bForClear" hidden>Show all</button></div>
+      <div id="bFor"></div>
+    </div>
   </section>
   </aside>
 
   <section class="main">
     <div class="section-h"><h2>Budget</h2><span id="bCount"></span></div>
     <div class="tabs" id="bTabs" role="tablist">
-      <button class="on" data-t="bookings" role="tab">Bookings <span id="tcB"></span></button>
+      <button class="on" data-t="bookings" role="tab">Vendors <span id="tcB"></span></button>
+      <button data-t="purchases" role="tab">Shopping <span id="tcS"></span></button>
       <button data-t="installments" role="tab">Payments <span id="tcP"></span></button>
     </div>
     <div class="search" style="margin-top:12px">
@@ -917,13 +927,13 @@
   }
 
   /* ---------- Saved copy on this device (opens instantly, then refreshes) ---------- */
-  var CACHE_KEY = 'am.cache.fb2';
+  var CACHE_KEY = 'am.cache.fb3';
   function readCache() { try { return JSON.parse(localStorage.getItem(CACHE_KEY) || 'null'); } catch (e) { return null; } }
   function writeCache() {
     try {
       var c = readCache() || {};
       if (state.loadedAt) c.guests = { guests: state.guests.filter(function (g) { return !g._pending; }), people: state.people, options: state.options, at: Date.now() };
-      if (bud.loaded) c.budget = { bookings: bud.bookings.filter(function (x) { return !x._pending; }), installments: bud.installments.filter(function (x) { return !x._pending; }), options: bud.options, at: Date.now() };
+      if (bud.loaded) c.budget = { bookings: bud.bookings.filter(function (x) { return !x._pending; }), installments: bud.installments.filter(function (x) { return !x._pending; }), purchases: bud.purchases.filter(function (x) { return !x._pending; }), options: bud.options, at: Date.now() };
       c.user = window.__email || '';
       localStorage.setItem(CACHE_KEY, JSON.stringify(c));
     } catch (e) {}
@@ -1616,7 +1626,8 @@
    * Bookings = anything you're spending on (vendors, venues, outfits…), grouped by category.
    * Payments = deposits and instalments attached to a booking. Paid / still owed are worked out from them.
    */
-  var bud = { bookings: [], installments: [], options: {}, loaded: false, tab: 'bookings', q: '', filter: 'all', cat: '',
+  var bud = { bookings: [], installments: [], purchases: [], options: {}, loaded: false, tab: 'bookings', q: '', filter: 'all', cat: '',
+              sfilter: 'all', forWho: '',
               editing: null, busy: false, loadedAt: 0 };
   var COMMITTED = ['Booked', 'Paid in full'];
   var SHORTLIST = ['Considering', 'Quoted'];
@@ -1624,22 +1635,37 @@
     categories: ['Venue', 'Catering', 'Photo & Video', 'Decor & Mandap', 'Priest & Music', 'Attire & Beauty', 'Rentals', 'Stationery & Favours', 'Other'],
     events: ['Ceremony', 'Reception', 'Both', 'Pre-wedding'],
     stages: ['Considering', 'Quoted', 'Booked', 'Paid in full', 'Not going ahead'],
-    paid: ['No', 'Yes']
+    paid: ['No', 'Yes'],
+    forWho: ['Bride', 'Groom', 'Bridal party', 'Family', 'Guests', 'Other'],
+    types: ['Clothing', 'Jewellery', 'Accessories', 'Gifts & favours', 'DIY decor', 'Other'],
+    shopStatus: ['To buy', 'Ordered', 'Bought']
   };
+  var TYPE_ICON = { 'Clothing': 'CL', 'Jewellery': 'JW', 'Accessories': 'AC', 'Gifts & favours': 'GF', 'DIY decor': 'DY', 'Other': '•' };
+  function isBought(p) { return p.status === 'Bought' || p.status === 'Ordered'; }
+  function shopCost(p) { return p.actual !== '' && p.actual !== undefined ? num(p.actual) : num(p.estimate); }
   function bOpt(k) { var o = bud.options && bud.options[k]; return o && o.length ? o : BUD_DEFAULTS[k]; }
   var CAT_ICON = { 'Venue': 'VN', 'Catering': 'CT', 'Photo & Video': 'PV', 'Decor & Mandap': 'DM', 'Priest & Music': 'PM',
                    'Attire & Beauty': 'AB', 'Rentals': 'RN', 'Stationery & Favours': 'SF', 'Other': '•' };
 
   var BFORM = {
-    bookings: { noun: 'booking', addShort: 'Add booking', addTitle: 'Add a booking', key: 'name', need: 'Add a name first.',
+    bookings: { noun: 'booking', addShort: 'Add vendor', addTitle: 'Add a vendor', key: 'name', need: 'Add a name first.',
       defaults: function () { return { category: bud.cat || 'Other', stage: 'Considering', event: '' }; },
       groups: [
-        [{ k: 'name', l: 'What / who', t: 'text', ph: 'e.g. Nantha Catering, bridal saree' },
+        [{ k: 'name', l: 'What / who', t: 'text', ph: 'e.g. Nantha Catering' },
          { k: 'category', l: 'Category', t: 'select', o: 'categories', req: 1 },
          { k: 'event', l: 'For', t: 'seg', o: 'events' }],
         [{ k: 'stage', l: 'Stage', t: 'select', o: 'stages', req: 1 }, { k: 'cost', l: 'Total cost', t: 'money' }],
         [{ k: 'contact', l: 'Contact name', t: 'text', ph: 'Optional' }, { k: 'phone', l: 'Phone', t: 'tel', ph: 'Optional' },
          { k: 'email', l: 'Email', t: 'email', ph: 'Optional' }, { k: 'notes', l: 'Notes', t: 'area', ph: 'Optional' }]
+      ] },
+    purchases: { noun: 'item', addShort: 'Add item', addTitle: 'Add an item', key: 'item', need: 'Add an item name first.',
+      defaults: function () { return { status: 'To buy', forWho: bud.forWho || '', type: 'Clothing' }; },
+      groups: [
+        [{ k: 'item', l: 'Item', t: 'text', ph: 'e.g. Bridesmaids sarees' }, { k: 'forWho', l: 'For', t: 'seg', o: 'forWho' },
+         { k: 'type', l: 'Type', t: 'select', o: 'types', req: 1 }],
+        [{ k: 'status', l: 'Status', t: 'seg', o: 'shopStatus' }],
+        [{ k: 'estimate', l: 'Estimate', t: 'money', half: 1 }, { k: 'actual', l: 'Actual cost', t: 'money', half: 1 }],
+        [{ k: 'payer', l: 'Who’s paying', t: 'text', ph: 'Optional, e.g. Amma' }, { k: 'notes', l: 'Notes', t: 'area', ph: 'Store, size, colour…' }]
       ] },
     installments: { noun: 'payment', addShort: 'Add payment', addTitle: 'Add a payment', key: 'booking', need: 'Pick which booking this is for.',
       defaults: function () { return { paid: 'No', booking: bud.newFor || '' }; },
@@ -1689,7 +1715,7 @@
     google.script.run.withSuccessHandler(function (d) { if (!pendingSaves) applyBudget(d); }).getBudget();
   }
   function applyBudget(data, fromCache) {
-    bud.bookings = data.bookings || []; bud.installments = data.installments || [];
+    bud.bookings = data.bookings || []; bud.installments = data.installments || []; bud.purchases = data.purchases || [];
     bud.options = data.options || {}; bud.loaded = true; bud.loadedAt = Date.now(); bud.fromCache = !!fromCache;
     renderBudget();
     if (!fromCache) writeCache();
@@ -1707,6 +1733,14 @@
       if (isCommitted(b)) { var v = Math.max(cost, num(b.paid)); committed += v; cats[c].committed += v; nBooked++; owed += num(b.owed); }
       else if (SHORTLIST.indexOf(b.stage) !== -1) { shortlist += cost; cats[c].shortlist += cost; nShort++; }
     });
+    var shopBought = 0, shopPlanned = 0, fors = {};
+    bOpt('forWho').forEach(function (f) { fors[f] = { bought: 0, planned: 0, n: 0 }; });
+    bud.purchases.forEach(function (p) {
+      var f = p.forWho || 'Not set'; if (!fors[f]) fors[f] = { bought: 0, planned: 0, n: 0 }; fors[f].n++;
+      if (isBought(p)) { var c = shopCost(p); shopBought += c; fors[f].bought += c; }
+      else { shopPlanned += num(p.estimate); fors[f].planned += num(p.estimate); }
+    });
+    committed += shopBought; paid += shopBought;
     var upcoming = bud.installments.filter(function (p) { return !isPaid(p.paid); });
     upcoming.forEach(function (p) {
       if (p.due && p.due < today) overdue += num(p.amount);
@@ -1714,6 +1748,7 @@
     });
     $('bTotal').textContent = money(committed);
     $('bSplit').innerHTML = '<b>' + money(paid) + '</b> paid · <b>' + money(owed) + '</b> still owed';
+    $('bShop').innerHTML = bud.purchases.length ? 'Shopping: <b>' + money(shopBought) + '</b> bought · <b>~' + money(shopPlanned) + '</b> still to buy' : '';
     var pct = committed ? Math.min(100, paid / committed * 100) : 0;
     $('bBar').style.width = pct + '%';
     $('bPct').textContent = (pct < 1 && pct > 0 ? '<1' : Math.round(pct)) + '%';
@@ -1745,7 +1780,19 @@
         '<span class="cat-amt">' + (x.committed ? shortMoney(x.committed) : '<em>' + (x.shortlist ? '~' + shortMoney(x.shortlist) : '–') + '</em>') + '</span></button>';
     }).join('') + '<p class="cat-key"><i></i>Committed <i class="sl"></i>Shortlist (not booked)</p>';
 
-    $('tcB').textContent = bud.bookings.length; $('tcP').textContent = bud.installments.length;
+    // Shopping by person
+    var fmax = 0; Object.keys(fors).forEach(function (f) { fmax = Math.max(fmax, fors[f].bought + fors[f].planned); });
+    $('bForWrap').hidden = !bud.purchases.length;
+    $('bForClear').hidden = !bud.forWho;
+    $('bFor').innerHTML = Object.keys(fors).filter(function (f) { return fors[f].n; }).map(function (f) {
+      var x = fors[f], w1 = fmax ? x.bought / fmax * 100 : 0, w2 = fmax ? x.planned / fmax * 100 : 0;
+      return '<button type="button" class="rel-row cat-row' + (bud.forWho === f ? ' on' : '') + '" data-for="' + esc(f) + '">' +
+        '<span class="rel-name">' + esc(f) + '</span>' +
+        '<span class="rel-bar cat-bar"><i style="width:' + w1 + '%"></i><i class="sl" style="width:' + w2 + '%"></i></span>' +
+        '<span class="cat-amt">' + (x.bought || x.planned ? (x.bought ? shortMoney(x.bought) : '') + (x.planned ? (x.bought ? ' <em>+' : '<em>~') + shortMoney(x.planned) + '</em>' : '') : '<em>–</em>') + '</span></button>';
+    }).join('') + '<p class="cat-key"><i></i>Bought <i class="sl"></i>Still to buy</p>';
+
+    $('tcB').textContent = bud.bookings.length; $('tcP').textContent = bud.installments.length; $('tcS').textContent = bud.purchases.length;
     document.querySelectorAll('#bTabs button').forEach(function (b) { b.classList.toggle('on', b.dataset.t === bud.tab); });
     renderBudgetList();
   }
@@ -1767,9 +1814,51 @@
   function renderBudgetList() {
     var t = bud.tab, list = $('bList');
     list.className = 'list t-' + t;
-    $('bPills').hidden = t !== 'bookings';
+    $('bPills').hidden = t === 'installments';
     var html = '';
-    if (t === 'bookings') {
+    if (t === 'purchases') {
+      $('bPills').innerHTML = (bud.forWho ? '<button type="button" class="pill on" data-clearfor="1">' + esc(bud.forWho) + ' ✕</button>' : '') +
+        [['all', 'All'], ['tobuy', 'To buy'], ['ordered', 'Ordered'], ['bought', 'Bought']].map(function (f) {
+          return '<button type="button" class="pill' + (bud.sfilter === f[0] ? ' on' : '') + '" data-sfilter="' + f[0] + '">' + f[1] + '</button>'; }).join('');
+      var sf = { tobuy: 'To buy', ordered: 'Ordered', bought: 'Bought' }[bud.sfilter];
+      var items = bud.purchases.filter(function (p) { return bMatches(p) && (!sf || (p.status || 'To buy') === sf) && (!bud.forWho || (p.forWho || 'Not set') === bud.forWho); });
+      var forder = bOpt('forWho').concat(['Not set']);
+      items.sort(function (a, b) {
+        var fa = forder.indexOf(a.forWho || 'Not set'), fb = forder.indexOf(b.forWho || 'Not set');
+        if (fa !== fb) return (fa === -1 ? 98 : fa) - (fb === -1 ? 98 : fb);
+        var sa = isBought(a) ? 1 : 0, sb = isBought(b) ? 1 : 0;
+        return sa - sb || String(a.item).localeCompare(b.item);
+      });
+      var st = 0; items.forEach(function (p) { st += isBought(p) ? shopCost(p) : num(p.estimate); });
+      $('bCount').textContent = items.length + (items.length === 1 ? ' item · ' : ' items · ') + money(st);
+      var lastFor = null;
+      html = '<div class="list-head"><span>Item</span><span>Status</span><span class="r">Estimate</span><span class="r">Actual</span><span>Paid by</span></div>';
+      items.forEach(function (p) {
+        var f = p.forWho || 'Not set';
+        if (f !== lastFor) {
+          var inF = items.filter(function (x) { return (x.forWho || 'Not set') === f; }), fb = 0, fp = 0;
+          inF.forEach(function (x) { if (isBought(x)) fb += shopCost(x); else fp += num(x.estimate); });
+          html += '<div class="grp"><span>' + esc(f === 'Not set' ? 'For: not set' : f) + '</span><span>' +
+            [fb ? money(fb) + ' bought' : '', fp ? '~' + money(fp) + ' to buy' : ''].filter(Boolean).join(' · ') + '</span></div>';
+          lastFor = f;
+        }
+        var bought = isBought(p), status = p.status || 'To buy';
+        var tag = '<span class="tag ' + (status === 'Bought' ? 'ok' : status === 'Ordered' ? 'warn' : 'neutral') + '">' + esc(status) + '</span>';
+        var sub = [p.type && p.type !== 'Other' ? p.type : '', p.payer ? 'paid by ' + p.payer : ''].filter(Boolean).join(' · ');
+        var amt = bought ? money(shopCost(p)) : (p.estimate !== '' ? '~' + money(p.estimate) : '–');
+        var btn = bought ? '' : '<button type="button" class="quick" data-bought="' + p.row + '">Mark bought</button>';
+        html += '<div class="item' + (p._pending ? ' pending' : '') + '" data-t="purchases" data-row="' + p.row + '">' +
+          '<div class="who"><div class="avatar cat">' + esc(TYPE_ICON[p.type] || initials(p.item)) + '</div>' +
+          '<div class="meta"><div class="n">' + esc(p.item) + '</div><div class="s">' + tag + esc(sub) + '</div></div></div>' +
+          '<div class="bcol">' + tag + '</div>' +
+          '<div class="bcol bnum' + (p.estimate !== '' ? '' : ' dim') + '">' + (p.estimate !== '' ? money(p.estimate) : '–') + '</div>' +
+          '<div class="bcol bnum' + (p.actual !== '' ? '' : ' dim') + '">' + (p.actual !== '' ? money(p.actual) : btn || '–') + '</div>' +
+          '<div class="bcol">' + (p.payer ? esc(p.payer) : '<span style="color:var(--muted)">–</span>') + '</div>' +
+          '<div class="amt"><b>' + amt + '</b>' + (btn || '<span>' + (status === 'Ordered' ? 'ordered' : 'bought') + '</span>') + '</div></div>';
+      });
+      if (!items.length) html = '<div class="empty"><b>' + (bud.q || bud.forWho || bud.sfilter !== 'all' ? 'Nothing matches' : 'Nothing on the shopping list') + '</b>' +
+        (bud.q || bud.forWho || bud.sfilter !== 'all' ? 'Try a different filter.' : 'Add outfits, jewellery, gifts and other things you’re buying yourselves.') + '</div>';
+    } else if (t === 'bookings') {
       $('bPills').innerHTML = (bud.cat ? '<button type="button" class="pill on" data-clearcat="1">' + esc(bud.cat) + ' ✕</button>' : '') +
         STAGE_FILTERS.map(function (f) { return '<button type="button" class="pill' + (bud.filter === f[0] ? ' on' : '') + '" data-filter="' + f[0] + '">' + f[1] + '</button>'; }).join('');
       var rows = bud.bookings.filter(function (b) { return bMatches(b) && passesStage(b) && (!bud.cat || (b.category || 'Other') === bud.cat); });
@@ -1781,9 +1870,9 @@
         return sa - sb || num(b.cost) - num(a.cost) || String(a.name).localeCompare(b.name);
       });
       var tot = 0; rows.forEach(function (b) { tot += num(b.cost); });
-      $('bCount').textContent = rows.length + (rows.length === 1 ? ' booking · ' : ' bookings · ') + money(tot);
+      $('bCount').textContent = rows.length + (rows.length === 1 ? ' vendor · ' : ' vendors · ') + money(tot);
       var lastCat = null;
-      html = '<div class="list-head"><span>Booking</span><span>Stage</span><span class="r">Cost</span><span class="r">Paid</span><span class="r">Still owed</span></div>';
+      html = '<div class="list-head"><span>Vendor</span><span>Stage</span><span class="r">Cost</span><span class="r">Paid</span><span class="r">Still owed</span></div>';
       rows.forEach(function (b) {
         var cat = b.category || 'Other';
         if (cat !== lastCat) {
@@ -1807,8 +1896,8 @@
           '<div class="bcol bnum' + (committedNow && num(b.owed) ? '' : ' dim') + '">' + (committedNow ? money(b.owed) : '–') + '</div>' +
           '<div class="amt"><b>' + (hasCost ? money(b.cost) : '–') + '</b><span>' + right + '</span></div></div>';
       });
-      if (!rows.length) html = '<div class="empty"><b>' + (bud.q || bud.cat || bud.filter !== 'all' ? 'Nothing matches' : 'No bookings yet') + '</b>' +
-        (bud.q || bud.cat || bud.filter !== 'all' ? 'Try a different filter.' : 'Tap “Add booking” to add a vendor, venue or purchase.') + '</div>';
+      if (!rows.length) html = '<div class="empty"><b>' + (bud.q || bud.cat || bud.filter !== 'all' ? 'Nothing matches' : 'No vendors yet') + '</b>' +
+        (bud.q || bud.cat || bud.filter !== 'all' ? 'Try a different filter.' : 'Tap “Add vendor” to add a vendor or venue.') + '</div>';
     } else {
       var today = todayIso();
       var prow = bud.installments.filter(bMatches).slice().sort(function (a, b) {
@@ -1898,9 +1987,11 @@
     bAuto.ctx = { table: t, row: bRef.row, original: bRef.original,
       ref: { isOpen: function () { return bud.editing === bRef && $('bsheet').classList.contains('open'); } } };
     setSaveStatus($('bStatus'), 'idle');
-    $('bTitle').textContent = isNew ? F.addTitle : (t === 'installments' ? (row.forName || 'Payment') : row.name);
+    $('bTitle').textContent = isNew ? F.addTitle : (t === 'installments' ? (row.forName || 'Payment') : t === 'purchases' ? row.item : row.name);
+    if (t === 'purchases') bud.editing.display = data.item || '';
     var sub = '';
     if (!isNew && t === 'bookings') sub = [row.category, row.cost !== '' ? money(row.cost) + (isCommitted(row) ? ' · ' + money(row.owed) + ' still owed' : '') : 'No cost yet'].filter(Boolean).join(' · ');
+    if (!isNew && t === 'purchases') sub = [row.forWho ? 'For ' + row.forWho : '', row.status || 'To buy', isBought(row) ? money(shopCost(row)) : (row.estimate !== '' ? '~' + money(row.estimate) : '')].filter(Boolean).join(' · ');
     if (!isNew && t === 'installments') sub = (row.label || 'Payment') + ' · ' + money(row.amount) + (row.due ? ' · due ' + fmtDate(row.due) : '');
     $('bSub').textContent = isNew ? 'Changes save automatically as you type.' : sub;
     $('bFields').innerHTML = F.groups.map(function (g) {
@@ -1909,7 +2000,7 @@
     }).join('') + (t === 'bookings' ? '<div id="bPays">' + bookingPaymentsHtml(row ? row.row : null) + '</div>' : '');
     $('bErr').textContent = '';
     $('bDel').style.display = isNew ? 'none' : '';
-    $('bDel').textContent = t === 'bookings' ? 'Remove booking' : 'Remove payment';
+    $('bDel').textContent = t === 'bookings' ? 'Remove vendor' : t === 'purchases' ? 'Remove item' : 'Remove payment';
     $('bConfirm').classList.remove('show');
     $('bsheet').scrollTop = 0;
     $('boverlay').classList.add('open'); $('bsheet').classList.add('open');
@@ -1946,13 +2037,14 @@
       return f.t === 'money' && d[f.k] !== '' && !/^\$?\s*[\d,]+(\.\d{1,2})?$/.test(d[f.k]);
     }); });
     if (bad) return { err: 'Amounts should look like 1500 or 1500.50.' };
+    if (t === 'purchases' && d.status === 'Bought' && !d.actual && d.estimate) { d.actual = d.estimate; var ac = $('b_actual'); if (ac) ac.value = d.actual; }
     if (t === 'installments' && isPaid(d.paid) && !d.paidDate) { d.paidDate = todayIso(); var pd = $('b_paidDate'); if (pd) pd.value = d.paidDate; }
     var k = Object.assign({}, d); delete k.row; delete k.original;
     return { d: d, key: JSON.stringify(k) };
   }
   function budgetLocal(t, d) {
     var o = JSON.parse(JSON.stringify(d)); delete o.original;
-    (t === 'bookings' ? ['cost'] : ['amount']).forEach(function (k) {
+    (t === 'bookings' ? ['cost'] : t === 'purchases' ? ['estimate', 'actual'] : ['amount']).forEach(function (k) {
       var v = String(o[k] || '').replace(/[$,\s]/g, '');
       o[k] = v === '' ? '' : Number(v);
     });
@@ -1960,7 +2052,7 @@
       var prev = o.row ? bookingByRow(o.row) : null;
       o.paid = prev ? prev.paid : 0;
       o.owed = o.cost === '' ? '' : Math.max(0, o.cost - num(o.paid));
-    } else {
+    } else if (t === 'installments') {
       o.booking = Number(o.booking) || ''; var bk = bookingByRow(o.booking); o.forName = bk ? bk.name : '';
     }
     o._pending = true;
@@ -1981,9 +2073,9 @@
         ctx.row = res.row; ctx.original = String(res.item[F.key]); ctx.saved = p.key;
         if (ctx.ref.isOpen()) {
           bud.editing.row = res.row; bud.editing.original = String(res.item[F.key]);
-          bud.editing.display = t === 'installments' ? ((res.item.label || 'Payment') + (res.item.forName ? ' · ' + res.item.forName : '')) : res.item.name;
+          bud.editing.display = t === 'installments' ? ((res.item.label || 'Payment') + (res.item.forName ? ' · ' + res.item.forName : '')) : t === 'purchases' ? res.item.item : res.item.name;
           $('bDel').style.display = '';
-          if ($('bTitle').textContent === F.addTitle) $('bTitle').textContent = t === 'installments' ? (res.item.forName || 'Payment') : res.item.name;
+          if ($('bTitle').textContent === F.addTitle) $('bTitle').textContent = t === 'installments' ? (res.item.forName || 'Payment') : t === 'purchases' ? res.item.item : res.item.name;
           if (t === 'bookings' && isNew && $('bPays')) $('bPays').innerHTML = bookingPaymentsHtml(res.row);
         }
         syncEnd(true); renderBudget(); refreshBudgetQuiet(); done(true);
@@ -2023,6 +2115,20 @@
       syncEnd(true); refreshBudgetQuiet(); toast('Marked paid');
     }, function (err) {
       var j = budgetIndex('installments', rowNum); if (j !== -1) bud.installments[j] = prev;
+      syncEnd(false); renderBudget(); toast('Couldn’t save: ' + err.message, 5000);
+    });
+  }
+  function quickBought(rowNum) {
+    var i = budgetIndex('purchases', rowNum); if (i === -1) return;
+    var prev = bud.purchases[i], d = JSON.parse(JSON.stringify(prev));
+    d.status = 'Bought'; if (d.actual === '' || d.actual === undefined) d.actual = d.estimate;
+    bud.purchases[i] = budgetLocal('purchases', d);
+    renderBudget(); syncStart();
+    runSave('saveBudgetRow', ['purchases', d], function (res) {
+      var j = budgetIndex('purchases', rowNum); if (j !== -1) bud.purchases[j] = res.item;
+      syncEnd(true); renderBudget(); toast(d.actual === '' ? 'Marked bought — add what it cost' : 'Marked bought');
+    }, function (err) {
+      var j = budgetIndex('purchases', rowNum); if (j !== -1) bud.purchases[j] = prev;
       syncEnd(false); renderBudget(); toast('Couldn’t save: ' + err.message, 5000);
     });
   }
@@ -2124,6 +2230,9 @@
     var f = e.target.closest('[data-filter]'), c = e.target.closest('[data-clearcat]');
     if (f) { bud.filter = f.dataset.filter; renderBudgetList(); }
     if (c) { bud.cat = ''; renderBudget(); }
+    var sf = e.target.closest('[data-sfilter]'), cf = e.target.closest('[data-clearfor]');
+    if (sf) { bud.sfilter = sf.dataset.sfilter; renderBudgetList(); }
+    if (cf) { bud.forWho = ''; renderBudget(); }
   });
   $('bCats').addEventListener('click', function (e) {
     var r = e.target.closest('[data-cat]'); if (!r) return;
@@ -2131,6 +2240,12 @@
     if (window.innerWidth < 960) $('bTabs').scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
   $('bCatClear').addEventListener('click', function () { bud.cat = ''; renderBudget(); });
+  $('bFor').addEventListener('click', function (e) {
+    var r = e.target.closest('[data-for]'); if (!r) return;
+    bud.forWho = bud.forWho === r.dataset.for ? '' : r.dataset.for; bud.tab = 'purchases'; updateAddLabels(); renderBudget();
+    if (window.innerWidth < 960) $('bTabs').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+  $('bForClear').addEventListener('click', function () { bud.forWho = ''; renderBudget(); });
   $('bNext').addEventListener('click', function (e) { var r = e.target.closest('[data-pay]'); if (r) openPayment(r.dataset.pay); });
   $('bFields').addEventListener('click', function (e) {
     var p = e.target.closest('[data-pay]'), a = e.target.closest('[data-addpay]');
@@ -2141,6 +2256,7 @@
   $('bList').addEventListener('click', function (e) {
     var q = e.target.closest('[data-quick]');
     if (q) { e.stopPropagation(); quickPay(Number(q.dataset.quick)); return; }
+    var qb = e.target.closest('[data-bought]'); if (qb) { e.stopPropagation(); quickBought(Number(qb.dataset.bought)); return; }
     var it = e.target.closest('.item'); if (!it) return;
     var row = bud[it.dataset.t].filter(function (x) { return String(x.row) === it.dataset.row; })[0];
     if (row && row._pending) { toast('Still saving — one sec'); return; }
@@ -2269,7 +2385,7 @@
       var data = AMData.parseWorkbook(sheets, serialToIso);
       var msg = 'Replace everything in the app with this file?\n\n' +
         data.guests.length + ' households, ' + data.people.length + ' people, ' +
-        data.bookings.length + ' bookings and ' + data.installments.length + ' payments.' +
+        data.bookings.length + ' vendors, ' + data.installments.length + ' payments, ' + data.purchases.length + ' shopping items.' +
         (data.warnings.length ? '\n\nHeads up:\n• ' + data.warnings.slice(0, 6).join('\n• ') : '') +
         '\n\nWhat’s in the app now will be overwritten.';
       if (!window.confirm(msg)) return;
@@ -2316,7 +2432,10 @@
                    'Rentals', 'Stationery & Favours', 'Other'],
       events: ['Ceremony', 'Reception', 'Both', 'Pre-wedding'],
       stages: ['Considering', 'Quoted', 'Booked', 'Paid in full', 'Not going ahead'],
-      paid: ['No', 'Yes']
+      paid: ['No', 'Yes'],
+      forWho: ['Bride', 'Groom', 'Bridal party', 'Family', 'Guests', 'Other'],
+      types: ['Clothing', 'Jewellery', 'Accessories', 'Gifts & favours', 'DIY decor', 'Other'],
+      shopStatus: ['To buy', 'Ordered', 'Bought']
     }
   };
 
@@ -2340,7 +2459,11 @@
     installments: { key: 'booking', match: ['Booking #', 'Payment', 'Amount (CAD)'],
       fields: { booking: 'Booking #', forName: 'For', label: 'Payment', amount: 'Amount (CAD)', due: 'Due Date',
         paid: 'Paid?', paidDate: 'Paid Date', method: 'Method / Ref', notes: 'Notes' },
-      readOnly: ['forName'], money: ['amount'], dates: ['due', 'paidDate'] }
+      readOnly: ['forName'], money: ['amount'], dates: ['due', 'paidDate'] },
+    purchases: { key: 'item', match: ['Item', 'For', 'Status'],
+      fields: { item: 'Item', forWho: 'For', type: 'Type', status: 'Status', estimate: 'Estimate (CAD)', actual: 'Actual (CAD)',
+        payer: 'Paid by', notes: 'Notes', row: 'Item #' },
+      readOnly: ['row'], money: ['estimate', 'actual'], dates: [] }
   };
   // The old planning-sheet tables, only read to move them across.
   var LEGACY = {
@@ -2358,7 +2481,7 @@
         paid: 'Paid?', due: 'Due Date', notes: 'Notes' },
       readOnly: [], money: ['estimated', 'actual'], dates: ['due'] }
   };
-  var COLLECTIONS = ['households', 'people', 'bookings', 'installments', 'vendors', 'payments', 'expenses'];
+  var COLLECTIONS = ['households', 'people', 'bookings', 'installments', 'purchases', 'vendors', 'payments', 'expenses'];
   var LEGACY_COLS = ['vendors', 'payments', 'expenses'];
 
   /* ---------------- shared helpers ---------------- */
@@ -2454,7 +2577,7 @@
     if (table === 'bookings') {
       out.paid = Math.round((paid || 0) * 100) / 100;
       out.owed = out.cost === '' ? '' : Math.max(0, Math.round((Number(out.cost) - out.paid) * 100) / 100);
-    } else {
+    } else if (table === 'installments') {
       out.booking = Number(out.booking) || ''; out.forName = names ? (names[out.booking] || '') : '';
       out.paid = out.paid === 'Yes' ? 'Yes' : 'No';
     }
@@ -2506,6 +2629,30 @@
     return cost !== '' && cost !== undefined && cost !== null && Number(cost) > 0 ? 'Quoted' : 'Considering';
   }
   function blank(v) { return v === undefined || v === null ? '' : v; }
+  function guessFor(name) {
+    var n = String(name || '');
+    if (/bridesmaid|groomsm|bridal party/i.test(n)) return 'Bridal party';
+    if (/amma|appa|athe|mama|aunt|uncle|swarsh|latchi|trishan|family|parents?/i.test(n)) return 'Family';
+    if (/manavarai|henna|bride|bridal/i.test(n)) return 'Bride';
+    if (/groom|mappillai/i.test(n)) return 'Groom';
+    if (/favou?r|gift|guest/i.test(n)) return 'Guests';
+    return '';
+  }
+  function guessType(name) {
+    var n = String(name || '');
+    if (/jewel|necklace|bangle|earring|thali|chain/i.test(n)) return 'Jewellery';
+    if (/favou?r|gift/i.test(n)) return 'Gifts & favours';
+    if (/shoe|bag|clutch|accessor|veil|turban/i.test(n)) return 'Accessories';
+    if (/saree|sari\b|outfit|vetti|veshti|shirt|dress|suit|lehenga|kurta|sherwani|blouse/i.test(n)) return 'Clothing';
+    return 'Other';
+  }
+  /** A booking that's really a personal purchase (sarees, jewellery, outfits…) rather than a vendor. */
+  function looksLikePurchase(b) {
+    if (b.category !== 'Attire & Beauty') return false;
+    if (b.contact || b.phone || b.email) return false;
+    if (/glow|makeup|make-up|pleat|salon|studio|artist|hair/i.test(b.name || '')) return false;
+    return guessType(b.name) !== 'Other' || /^paying:/i.test(b.notes || '');
+  }
   /** Turns the old vendors / payment schedule / personal expenses into bookings + payments. */
   function legacyToBookings(L) {
     var bookings = [], inst = [], byName = {}, row = 0, irow = 0, paidSoFar = {}, covered = {};
@@ -2533,17 +2680,14 @@
       var gap = Math.round(((paidSoFar[b.row] || 0) - (covered[b.row] || 0)) * 100) / 100;
       if (gap > 0) inst.push({ row: ++irow, booking: b.row, label: 'Deposit', amount: gap, due: '', paid: 'Yes', paidDate: '', method: '', notes: '' });
     });
+    var purchases = [];
     (L.expenses || []).forEach(function (e) {
-      var cost = e.actual !== '' && e.actual !== undefined && e.actual !== null ? e.actual : blank(e.estimated);
-      var cat = guessCategory(e.item, ''); if (cat === 'Other') cat = 'Attire & Beauty';
       var yes = String(e.paid).toLowerCase() === 'yes';
-      var b = addBooking({ name: e.item, category: cat, event: '', stage: yes ? 'Paid in full' : (cost !== '' && Number(cost) > 0 ? 'Quoted' : 'Considering'),
-        cost: cost, contact: '', phone: '', email: '', notes: [e.owner ? 'Paying: ' + e.owner : '', blank(e.notes)].filter(Boolean).join(' — ') });
-      if (cost !== '' && Number(cost) > 0 && (yes || e.due)) {
-        inst.push({ row: ++irow, booking: b.row, label: yes ? 'Paid' : 'Payment', amount: cost, due: blank(e.due), paid: yes ? 'Yes' : 'No', paidDate: '', method: '', notes: '' });
-      }
+      purchases.push({ row: purchases.length + 1, item: e.item, forWho: guessFor(e.item), type: guessType(e.item),
+        status: yes ? 'Bought' : 'To buy', estimate: blank(e.estimated), actual: blank(e.actual), payer: blank(e.owner),
+        notes: [e.due ? 'Due ' + e.due : '', blank(e.notes)].filter(Boolean).join(' — ') });
     });
-    return { bookings: bookings, installments: inst };
+    return { bookings: bookings, installments: inst, purchases: purchases };
   }
 
   /* ---------------- backend ---------------- */
@@ -2557,7 +2701,7 @@
   function makeBackend(fs, user, onRemoteChange, opts) {
     opts = opts || {};
     var COMMIT_WAIT = opts.commitWait || 6000;
-    var data = { households: {}, people: {}, bookings: {}, installments: {}, vendors: {}, payments: {}, expenses: {}, options: null, budgetMeta: null };
+    var data = { households: {}, people: {}, bookings: {}, installments: {}, purchases: {}, vendors: {}, payments: {}, expenses: {}, options: null, budgetMeta: null };
     var seen = {};
     var ready = new Promise(function (resolve, reject) {
       var need = COLLECTIONS.length + 2;
@@ -2606,11 +2750,38 @@
       return sum;
     }
     function bookingNames() { var n = {}; Object.keys(data.bookings).forEach(function (id) { n[Number(data.bookings[id].row || id)] = data.bookings[id].name; }); return n; }
+    /** One-time: personal items that were filed as bookings move to Shopping. */
+    function movePurchases() {
+      var b = fs.batch(), next = 0, moved = 0;
+      Object.keys(data.purchases).forEach(function (id) { next = Math.max(next, Number(data.purchases[id].row || id) || 0); });
+      rowsOf('bookings').forEach(function (bk) {
+        if (!looksLikePurchase(bk)) return;
+        var paid = 0;
+        Object.keys(data.installments).forEach(function (id) {
+          var p = data.installments[id];
+          if (Number(p.booking) !== bk.row) return;
+          if (p.paid === 'Yes') paid += Number(p.amount) || 0;
+          b.delete('installments', id); delete data.installments[id];
+        });
+        var bought = bk.stage === 'Paid in full' || paid > 0;
+        var payer = '', notes = String(bk.notes || '');
+        var m = notes.match(/^Paying: ([^—]+?)(?: — |$)/); if (m) { payer = m[1].trim(); notes = notes.slice(m[0].length).trim(); }
+        var item = { row: ++next, item: bk.name, forWho: guessFor(bk.name), type: guessType(bk.name), status: bought ? 'Bought' : 'To buy',
+          estimate: bk.cost, actual: bought ? (paid || bk.cost) : '', payer: payer, notes: notes };
+        b.set('purchases', String(item.row), stamp(Object.assign({}, item))); data.purchases[String(item.row)] = item;
+        b.delete('bookings', String(bk.row)); delete data.bookings[String(bk.row)];
+        moved++;
+      });
+      b.set('meta', 'budget', Object.assign({}, data.budgetMeta || {}, { migrated: true, purchasesMoved: true }));
+      data.budgetMeta = Object.assign({}, data.budgetMeta || {}, { migrated: true, purchasesMoved: true });
+      return commit(b);
+    }
     function budgetOut() {
       var names = bookingNames();
       return {
         bookings: rowsOf('bookings').map(function (r) { return budgetItem('bookings', r.row, r, paidFor(r.row)); }),
         installments: rowsOf('installments').map(function (r) { return budgetItem('installments', r.row, r, 0, names); }),
+        purchases: rowsOf('purchases').map(function (r) { return budgetItem('purchases', r.row, r); }),
         options: mergeOptions(data.options).budget, url: ''
       };
     }
@@ -2683,10 +2854,12 @@
             var conv = legacyToBookings(legacy), b = fs.batch();
             conv.bookings.forEach(function (r) { b.set('bookings', String(r.row), stamp(Object.assign({}, r))); data.bookings[String(r.row)] = r; });
             conv.installments.forEach(function (r) { b.set('installments', String(r.row), stamp(Object.assign({}, r))); data.installments[String(r.row)] = r; });
-            b.set('meta', 'budget', { migrated: true, at: new Date().toISOString() });
-            data.budgetMeta = { migrated: true };
+            conv.purchases.forEach(function (r) { b.set('purchases', String(r.row), stamp(Object.assign({}, r))); data.purchases[String(r.row)] = r; });
+            b.set('meta', 'budget', { migrated: true, purchasesMoved: true, at: new Date().toISOString() });
+            data.budgetMeta = { migrated: true, purchasesMoved: true };
             return commit(b).then(budgetOut);
           }
+          if (!(data.budgetMeta && data.budgetMeta.purchasesMoved)) return movePurchases().then(budgetOut);
           return budgetOut();
         });
       },
@@ -2709,7 +2882,7 @@
           var b = fs.batch();
           b.set(table, String(row), stamp(Object.assign({}, clean)));
           return commit(b).then(function () {
-            var item = table === 'bookings' ? budgetItem('bookings', row, clean, paidFor(row)) : budgetItem('installments', row, clean, 0, bookingNames());
+            var item = table === 'bookings' ? budgetItem('bookings', row, clean, paidFor(row)) : table === 'purchases' ? budgetItem('purchases', row, clean) : budgetItem('installments', row, clean, 0, bookingNames());
             return { row: row, item: item, inserted: false };
           });
         });
@@ -2751,7 +2924,7 @@
             });
           });
           ops.push(['set', 'meta', 'options', JSON.parse(JSON.stringify(DEFAULT_OPTIONS))]);
-          ops.push(['set', 'meta', 'budget', { migrated: true, at: new Date().toISOString() }]);
+          ops.push(['set', 'meta', 'budget', { migrated: true, purchasesMoved: true, at: new Date().toISOString() }]);
           // A set after a delete of the same doc in one batch is fine; split into chunks Firestore accepts.
           var chunks = [];
           for (var i = 0; i < ops.length; i += 400) chunks.push(ops.slice(i, i + 400));
@@ -2766,7 +2939,7 @@
             });
           }, Promise.resolve()).then(function () {
             return { households: payload.guests.length, people: payload.people.length,
-              bookings: (payload.bookings || []).length, installments: (payload.installments || []).length };
+              bookings: (payload.bookings || []).length, installments: (payload.installments || []).length, purchases: (payload.purchases || []).length };
           });
         });
       }
@@ -2917,11 +3090,12 @@
       out.installments = (readTable(BUDGET.installments, false) || []).map(function (p, i) {
         p.row = i + 1; p.booking = Number(p.booking) || ''; p.paid = p.paid === 'Yes' ? 'Yes' : 'No'; return p;
       }).filter(function (p) { return nb.some(function (b) { return b.row === p.booking; }); });
+      out.purchases = readTable(BUDGET.purchases, false) || [];
     } else {
       var legacy = {};
       Object.keys(LEGACY).forEach(function (t) { legacy[t] = readTable(LEGACY[t], true) || []; });
       var conv = legacyToBookings(legacy);
-      out.bookings = conv.bookings; out.installments = conv.installments;
+      out.bookings = conv.bookings; out.installments = conv.installments; out.purchases = conv.purchases;
     }
     return out;
   }
@@ -2937,7 +3111,7 @@
     sheets.push({ name: 'People', rows: [pKeys.map(function (k) { return PERSON_HEADERS[k]; }).concat(['Household'])].concat(all.people.map(function (p) {
       return pKeys.map(function (k) { return p[k]; }).concat([names[p.guestId] || '']);
     })) });
-    var titles = { bookings: 'Bookings', installments: 'Payments' };
+    var titles = { bookings: 'Vendors', installments: 'Payments', purchases: 'Shopping' };
     Object.keys(BUDGET).forEach(function (t) {
       var keys = Object.keys(BUDGET[t].fields);
       sheets.push({ name: titles[t], rows: [keys.map(function (k) { return BUDGET[t].fields[k]; })].concat(all.budget[t].map(function (r) {
