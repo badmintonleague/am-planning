@@ -298,6 +298,46 @@
   .tag.bad{background:var(--no-soft);color:var(--no)}
   .tag.neutral{background:var(--soft);color:var(--ink2)}
   .bcol{display:none}
+  .grp{display:flex;justify-content:space-between;align-items:baseline;padding:16px 16px 8px;background:var(--bg);
+    font-size:11.5px;letter-spacing:1px;text-transform:uppercase;color:var(--ink2);font-weight:600}
+  .grp span+span{letter-spacing:0;text-transform:none;font-weight:400;color:var(--muted);font-size:12.5px}
+  .list .grp:first-child,.list .list-head+.grp{padding-top:12px}
+  .item+.grp{border-top:1px solid var(--line)}
+  .grp+.item{border-top:0}
+  .avatar.cat{background:var(--gold-soft);color:#8A6A22;font-size:12px;letter-spacing:.5px}
+  .item.dropped{opacity:.55}
+  .ev{font-size:12.5px;color:var(--muted);margin-left:6px}
+  .kpi.alert b{color:var(--no)}
+  .next-row{display:flex;align-items:center;gap:12px;width:100%;border:0;background:transparent;padding:8px 4px;border-radius:12px;
+    cursor:pointer;text-align:left;color:var(--ink)}
+  .next-row:hover{background:#FAF8F4}
+  .next-n{flex:1;min-width:0;display:flex;flex-direction:column}
+  .next-n b{font-weight:500;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .next-n small{font-size:12px;color:var(--muted);margin-top:2px}
+  .next-amt{font-family:var(--serif);font-size:17px}
+  .next-empty,.bp-empty{font-size:13px;color:var(--muted);margin:2px 4px 8px;line-height:1.45}
+  .cat-row{grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) 64px}
+  .cat-amt{text-align:right;font-variant-numeric:tabular-nums}
+  .cat-amt em{font-style:normal;color:var(--muted)}
+  .cat-bar{display:flex}
+  .cat-bar i{border-radius:0}
+  .cat-bar i.sl{background:#E7D9B3}
+  .rel-row.on .cat-bar i.sl{background:rgba(255,255,255,.45)}
+  .rel-row.on .cat-amt em{color:#fff}
+  .cat-key{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--muted);margin:8px 6px 4px}
+  .cat-key i{width:10px;height:6px;border-radius:2px;background:var(--gold);display:inline-block}
+  .cat-key i.sl{background:#E7D9B3;margin-left:8px}
+  .bp{padding:4px 0}
+  .bp-row{display:flex;justify-content:space-between;align-items:center;width:100%;border:0;background:transparent;padding:10px 4px;
+    cursor:pointer;text-align:left;color:var(--ink)}
+  .bp-row+.bp-row{border-top:1px solid var(--line)}
+  .bp-row span{display:flex;flex-direction:column}
+  .bp-row b{font-weight:500;font-size:14.5px}
+  .bp-row small{font-size:12.5px;color:var(--muted);margin-top:2px}
+  .bp-amt{font-family:var(--serif);font-size:18px}
+  .bp-amt.ok{color:var(--ok)}
+  .bp-add{border:0;background:none;color:var(--gold);font-size:14px;font-weight:500;padding:12px 4px 6px;cursor:pointer;text-align:left}
+  #bPills[hidden]{display:none}
   .money-in{display:flex;align-items:center;gap:4px}
   .money-in span{color:var(--muted);font-size:16px}
   .field input[type=date]{min-height:24px}
@@ -464,8 +504,9 @@
     .bnum{text-align:right;font-family:var(--serif);font-size:18px;color:var(--ink)}
     .bnum.dim{color:var(--muted)}
     #bList .item .amt,#bList .item .meta .s{display:none}
-    #bList.t-vendors .list-head,#bList.t-vendors .item{grid-template-columns:minmax(0,2.3fr) minmax(0,1.2fr) 110px 110px 110px}
-    #bList.t-payments .list-head,#bList.t-payments .item{grid-template-columns:minmax(0,2.3fr) minmax(0,1fr) 120px 110px 110px}
+    #bList.t-bookings .list-head,#bList.t-bookings .item{grid-template-columns:minmax(0,2.3fr) minmax(0,1.3fr) 110px 110px 110px}
+    .grp{padding-left:22px;padding-right:22px}
+    #bList.t-installments .list-head,#bList.t-installments .item{grid-template-columns:minmax(0,2.3fr) minmax(0,1fr) 120px 110px 110px}
     #bList.t-expenses .list-head,#bList.t-expenses .item{grid-template-columns:minmax(0,2.3fr) minmax(0,1fr) 110px 110px 110px}
     .tabs{max-width:420px}
     /* Edit panel becomes a right-hand drawer */
@@ -598,23 +639,22 @@
 <div class="wrap layout view" id="viewBudget" hidden>
   <aside class="side">
   <section class="hero">
-    <p class="eyebrow">Vendors &amp; venues quoted</p>
+    <p class="eyebrow">Committed so far</p>
     <p class="big" id="bTotal">–</p>
     <p class="hero-split" id="bSplit"></p>
     <div class="split">
       <div class="splitbar"><div id="bBar" style="width:0;background:var(--ok)"></div></div>
-      <div class="splitlegend"><span>Paid <b id="bPct">–</b></span><span>Quotes in <b id="bQuotes">–</b></span></div>
+      <div class="splitlegend"><span>Paid <b id="bPct">–</b></span><span>Booked <b id="bBookedN">–</b></span></div>
     </div>
     <div class="kpis">
-      <div class="kpi"><b id="bkBooked">–</b><span>Booked</span></div>
-      <div class="kpi"><b id="bkNeed">–</b><span>Need a quote</span></div>
-      <div class="kpi"><b id="bkDue">–</b><span>Scheduled to pay</span></div>
+      <div class="kpi"><b id="bkDue">–</b><span>Due in 60 days</span></div>
+      <div class="kpi"><b id="bkOver">–</b><span>Overdue</span></div>
+      <div class="kpi"><b id="bkShort">–</b><span>Shortlist</span></div>
     </div>
+    <div class="rel" id="bNext"></div>
     <div class="rel">
-      <div class="rel-h"><span>All-in estimate</span></div>
-      <div class="sumrow"><span>Vendors &amp; venues</span><b id="sVend">–</b></div>
-      <div class="sumrow"><span>Personal expenses</span><b id="sPers">–</b></div>
-      <div class="sumrow total"><span>Total</span><b id="sAll">–</b></div>
+      <div class="rel-h"><span>By category</span><button type="button" class="rel-clear" id="bCatClear" hidden>Show all</button></div>
+      <div id="bCats"></div>
     </div>
   </section>
   </aside>
@@ -622,14 +662,14 @@
   <section class="main">
     <div class="section-h"><h2>Budget</h2><span id="bCount"></span></div>
     <div class="tabs" id="bTabs" role="tablist">
-      <button class="on" data-t="vendors" role="tab">Vendors <span id="tcV"></span></button>
-      <button data-t="payments" role="tab">Payments <span id="tcP"></span></button>
-      <button data-t="expenses" role="tab">Personal <span id="tcE"></span></button>
+      <button class="on" data-t="bookings" role="tab">Bookings <span id="tcB"></span></button>
+      <button data-t="installments" role="tab">Payments <span id="tcP"></span></button>
     </div>
     <div class="search" style="margin-top:12px">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
       <input id="bq" type="search" placeholder="Search" autocomplete="off">
     </div>
+    <div class="pills" id="bPills"></div>
     <div class="list" id="bList">
       <div class="skel" style="border-top:0"></div><div class="skel"></div><div class="skel"></div>
     </div>
@@ -690,7 +730,7 @@
       <button type="submit" class="btn primary" id="bSave">Done</button>
       <button type="button" class="btn text" id="bDel">Remove</button>
       <div class="confirm" id="bConfirm">
-        <p>Remove <b id="bConfirmName"></b>? This clears the row in the sheet.</p>
+        <p>Remove <b id="bConfirmName"></b>?<span id="bConfirmMore"></span></p>
         <div class="row">
           <button type="button" class="btn soft" id="bNo">Keep</button>
           <button type="button" class="btn danger" id="bYes">Remove</button>
@@ -861,13 +901,13 @@
   }
 
   /* ---------- Saved copy on this device (opens instantly, then refreshes) ---------- */
-  var CACHE_KEY = 'am.cache.fb1';
+  var CACHE_KEY = 'am.cache.fb2';
   function readCache() { try { return JSON.parse(localStorage.getItem(CACHE_KEY) || 'null'); } catch (e) { return null; } }
   function writeCache() {
     try {
       var c = readCache() || {};
       if (state.loadedAt) c.guests = { guests: state.guests.filter(function (g) { return !g._pending; }), people: state.people, options: state.options, at: Date.now() };
-      if (bud.loaded) c.budget = { vendors: bud.vendors, payments: bud.payments, expenses: bud.expenses, options: bud.options, url: $('navSheet').href, at: Date.now() };
+      if (bud.loaded) c.budget = { bookings: bud.bookings.filter(function (x) { return !x._pending; }), installments: bud.installments.filter(function (x) { return !x._pending; }), options: bud.options, at: Date.now() };
       c.user = window.__email || '';
       localStorage.setItem(CACHE_KEY, JSON.stringify(c));
     } catch (e) {}
@@ -1555,33 +1595,41 @@
   }
   function shortMoney(n) { return n >= 1000 ? '$' + (Math.round(n / 100) / 10) + 'k' : money(n); }
 
-  /* ================= BUDGET ================= */
-  var bud = { vendors: [], payments: [], expenses: [], options: {}, loaded: false, tab: 'vendors', q: '', editing: null, busy: false, loadedAt: 0 };
-  var BOOKED = ['Booked', 'Deposit paid', 'In progress', 'Paid in full'];
+  /* ================= BUDGET =================
+   * Bookings = anything you're spending on (vendors, venues, outfits…), grouped by category.
+   * Payments = deposits and instalments attached to a booking. Paid / still owed are worked out from them.
+   */
+  var bud = { bookings: [], installments: [], options: {}, loaded: false, tab: 'bookings', q: '', filter: 'all', cat: '',
+              editing: null, busy: false, loadedAt: 0 };
+  var COMMITTED = ['Booked', 'Paid in full'];
+  var SHORTLIST = ['Considering', 'Quoted'];
+  var BUD_DEFAULTS = {
+    categories: ['Venue', 'Catering', 'Photo & Video', 'Decor & Mandap', 'Priest & Music', 'Attire & Beauty', 'Rentals', 'Stationery & Favours', 'Other'],
+    events: ['Ceremony', 'Reception', 'Both', 'Pre-wedding'],
+    stages: ['Considering', 'Quoted', 'Booked', 'Paid in full', 'Not going ahead'],
+    paid: ['No', 'Yes']
+  };
+  function bOpt(k) { var o = bud.options && bud.options[k]; return o && o.length ? o : BUD_DEFAULTS[k]; }
+  var CAT_ICON = { 'Venue': 'VN', 'Catering': 'CT', 'Photo & Video': 'PV', 'Decor & Mandap': 'DM', 'Priest & Music': 'PM',
+                   'Attire & Beauty': 'AB', 'Rentals': 'RN', 'Stationery & Favours': 'SF', 'Other': '•' };
 
   var BFORM = {
-    vendors: { noun: 'vendor', addShort: 'Add vendor', addTitle: 'Add a vendor', key: 'name',
-      defaults: function () { return { type: 'Vendor', status: (bud.options.vendors.status || [''])[0] }; },
+    bookings: { noun: 'booking', addShort: 'Add booking', addTitle: 'Add a booking', key: 'name', need: 'Add a name first.',
+      defaults: function () { return { category: bud.cat || 'Other', stage: 'Considering', event: '' }; },
       groups: [
-        [{ k: 'name', l: 'Vendor or venue', t: 'text', ph: 'e.g. Nantha Catering' }, { k: 'type', l: 'Type', t: 'seg', o: 'type' }, { k: 'service', l: 'Service / package', t: 'text', ph: 'Optional' }],
-        [{ k: 'quoted', l: 'Quoted', t: 'money', half: 1 }, { k: 'paid', l: 'Paid so far', t: 'money', half: 1 }],
-        [{ k: 'status', l: 'Status', t: 'select', o: 'status' }, { k: 'nextDue', l: 'Next payment due', t: 'date' }],
-        [{ k: 'contact', l: 'Contact name', t: 'text', ph: 'Optional' }, { k: 'phone', l: 'Phone', t: 'tel', ph: 'Optional' }, { k: 'email', l: 'Email', t: 'email', ph: 'Optional' }, { k: 'notes', l: 'Notes', t: 'area', ph: 'Optional' }]
+        [{ k: 'name', l: 'What / who', t: 'text', ph: 'e.g. Nantha Catering, bridal saree' },
+         { k: 'category', l: 'Category', t: 'select', o: 'categories', req: 1 },
+         { k: 'event', l: 'For', t: 'seg', o: 'events' }],
+        [{ k: 'stage', l: 'Stage', t: 'select', o: 'stages', req: 1 }, { k: 'cost', l: 'Total cost', t: 'money' }],
+        [{ k: 'contact', l: 'Contact name', t: 'text', ph: 'Optional' }, { k: 'phone', l: 'Phone', t: 'tel', ph: 'Optional' },
+         { k: 'email', l: 'Email', t: 'email', ph: 'Optional' }, { k: 'notes', l: 'Notes', t: 'area', ph: 'Optional' }]
       ] },
-    payments: { noun: 'payment', addShort: 'Add payment', addTitle: 'Add a payment', key: 'vendor',
-      defaults: function () { return { paid: 'No' }; },
+    installments: { noun: 'payment', addShort: 'Add payment', addTitle: 'Add a payment', key: 'booking', need: 'Pick which booking this is for.',
+      defaults: function () { return { paid: 'No', booking: bud.newFor || '' }; },
       groups: [
-        [{ k: 'vendor', l: 'Vendor or venue', t: 'vendor', ph: 'Who is this payment for?' }, { k: 'stage', l: 'Payment stage', t: 'text', ph: 'e.g. Deposit, Final balance' }],
+        [{ k: 'booking', l: 'For', t: 'booking' }, { k: 'label', l: 'Payment', t: 'text', ph: 'e.g. Deposit, Final balance' }],
         [{ k: 'amount', l: 'Amount', t: 'money', half: 1 }, { k: 'due', l: 'Due date', t: 'date', half: 1 }],
         [{ k: 'paid', l: 'Paid?', t: 'seg', o: 'paid' }, { k: 'paidDate', l: 'Paid on', t: 'date' }, { k: 'method', l: 'Method / reference', t: 'text', ph: 'Optional' }],
-        [{ k: 'notes', l: 'Notes', t: 'area', ph: 'Optional' }]
-      ] },
-    expenses: { noun: 'expense', addShort: 'Add expense', addTitle: 'Add an expense', key: 'item',
-      defaults: function () { return { paid: 'No' }; },
-      groups: [
-        [{ k: 'item', l: 'Item', t: 'text', ph: 'e.g. Manavarai saree' }, { k: 'owner', l: 'Who’s paying', t: 'text', ph: 'Optional' }],
-        [{ k: 'estimated', l: 'Estimated', t: 'money', half: 1 }, { k: 'actual', l: 'Actual', t: 'money', half: 1 }],
-        [{ k: 'paid', l: 'Paid?', t: 'seg', o: 'paid' }, { k: 'due', l: 'Due date', t: 'date' }],
         [{ k: 'notes', l: 'Notes', t: 'area', ph: 'Optional' }]
       ] }
   };
@@ -1594,14 +1642,14 @@
   var MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   function parseIso(d) { var m = String(d || '').match(/^(\d{4})-(\d{2})-(\d{2})$/); return m ? { y: +m[1], m: +m[2], d: +m[3] } : null; }
   function fmtDate(d) { var p = parseIso(d); return p ? MONTHS[p.m - 1] + ' ' + p.d + ', ' + p.y : (d || ''); }
-  function todayIso() { var t = new Date(); return t.getFullYear() + '-' + ('0' + (t.getMonth() + 1)).slice(-2) + '-' + ('0' + t.getDate()).slice(-2); }
+  function isoOf(t) { return t.getFullYear() + '-' + ('0' + (t.getMonth() + 1)).slice(-2) + '-' + ('0' + t.getDate()).slice(-2); }
+  function todayIso() { return isoOf(new Date()); }
+  function isoPlusDays(n) { var t = new Date(); t.setDate(t.getDate() + n); return isoOf(t); }
   function isPaid(v) { return String(v).toLowerCase() === 'yes'; }
-  function statusTone(s) {
-    if (BOOKED.indexOf(s) !== -1) return 'ok';
-    if (s === 'Unavailable') return 'bad';
-    if (!s) return 'neutral';
-    return 'warn';
-  }
+  function stageTone(s) { return COMMITTED.indexOf(s) !== -1 ? 'ok' : s === 'Quoted' ? 'warn' : s === 'Not going ahead' ? 'bad' : 'neutral'; }
+  function isCommitted(b) { return COMMITTED.indexOf(b.stage) !== -1 || (num(b.paid) > 0 && b.stage !== 'Not going ahead'); }
+  function bookingByRow(r) { r = Number(r); for (var i = 0; i < bud.bookings.length; i++) if (bud.bookings[i].row === r) return bud.bookings[i]; return null; }
+  function paymentsOf(r) { return bud.installments.filter(function (p) { return Number(p.booking) === Number(r); }); }
 
   var budgetLoading = false;
   function loadBudget(quiet) {
@@ -1619,36 +1667,68 @@
         '<div style="margin-top:12px"><button type="button" class="btn-soft" onclick="loadBudget(true)">Try again</button></div></div>';
     });
   }
+  /** Re-reads the budget from the local copy (instant) so paid / owed totals catch up after a save. */
+  function refreshBudgetQuiet() {
+    google.script.run.withSuccessHandler(function (d) { if (!pendingSaves) applyBudget(d); }).getBudget();
+  }
   function applyBudget(data, fromCache) {
-    bud.vendors = data.vendors || []; bud.payments = data.payments || []; bud.expenses = data.expenses || [];
+    bud.bookings = data.bookings || []; bud.installments = data.installments || [];
     bud.options = data.options || {}; bud.loaded = true; bud.loadedAt = Date.now(); bud.fromCache = !!fromCache;
-    if (data.url) $('navSheet').href = data.url;
     renderBudget();
     if (!fromCache) writeCache();
   }
 
+  /* ---------- summary ---------- */
   function renderBudget() {
-    var quoted = 0, paid = 0, withQuote = 0, booked = 0, scheduled = 0, personal = 0;
-    bud.vendors.forEach(function (v) {
-      if (v.quoted !== '') { quoted += num(v.quoted); withQuote++; }
-      paid += num(v.paid);
-      if (BOOKED.indexOf(v.status) !== -1) booked++;
+    var committed = 0, paid = 0, owed = 0, shortlist = 0, nBooked = 0, nShort = 0, due60 = 0, overdue = 0;
+    var today = todayIso(), soon = isoPlusDays(60), cats = {};
+    bOpt('categories').forEach(function (c) { cats[c] = { committed: 0, paid: 0, shortlist: 0, n: 0 }; });
+    bud.bookings.forEach(function (b) {
+      var c = b.category || 'Other'; if (!cats[c]) cats[c] = { committed: 0, paid: 0, shortlist: 0, n: 0 };
+      var cost = num(b.cost); cats[c].n++;
+      paid += num(b.paid); cats[c].paid += num(b.paid);
+      if (isCommitted(b)) { var v = Math.max(cost, num(b.paid)); committed += v; cats[c].committed += v; nBooked++; owed += num(b.owed); }
+      else if (SHORTLIST.indexOf(b.stage) !== -1) { shortlist += cost; cats[c].shortlist += cost; nShort++; }
     });
-    bud.payments.forEach(function (p) { if (!isPaid(p.paid)) scheduled += num(p.amount); });
-    bud.expenses.forEach(function (e) { personal += e.actual !== '' ? num(e.actual) : num(e.estimated); });
-    var nV = bud.vendors.length;
-    $('bTotal').textContent = money(quoted);
-    $('bSplit').innerHTML = '<b>' + money(paid) + '</b> paid · <b>' + money(Math.max(0, quoted - paid)) + '</b> to go';
-    var pct = quoted ? Math.min(100, paid / quoted * 100) : 0;
+    var upcoming = bud.installments.filter(function (p) { return !isPaid(p.paid); });
+    upcoming.forEach(function (p) {
+      if (p.due && p.due < today) overdue += num(p.amount);
+      else if (p.due && p.due <= soon) due60 += num(p.amount);
+    });
+    $('bTotal').textContent = money(committed);
+    $('bSplit').innerHTML = '<b>' + money(paid) + '</b> paid · <b>' + money(owed) + '</b> still owed';
+    var pct = committed ? Math.min(100, paid / committed * 100) : 0;
     $('bBar').style.width = pct + '%';
     $('bPct').textContent = (pct < 1 && pct > 0 ? '<1' : Math.round(pct)) + '%';
-    $('bQuotes').textContent = withQuote + ' of ' + nV;
-    $('bkBooked').textContent = booked + '/' + nV;
-    $('bkNeed').textContent = nV - withQuote;
-    $('bkDue').textContent = money(scheduled);
-    $('sVend').textContent = money(quoted); $('sPers').textContent = money(personal); $('sAll').textContent = money(quoted + personal);
-    $('navBudget').textContent = shortMoney(quoted) + ' quoted';
-    $('tcV').textContent = nV; $('tcP').textContent = bud.payments.length; $('tcE').textContent = bud.expenses.length;
+    $('bBookedN').textContent = nBooked + ' of ' + (nBooked + nShort);
+    $('bkDue').textContent = money(due60);
+    $('bkOver').textContent = money(overdue);
+    $('bkOver').parentNode.classList.toggle('alert', overdue > 0);
+    $('bkShort').textContent = shortMoney(shortlist);
+    $('navBudget').textContent = shortMoney(committed) + ' committed · ' + shortMoney(owed) + ' owed';
+
+    // Coming up: the next few unpaid payments
+    upcoming.sort(function (a, b) { return (a.due || '9999') < (b.due || '9999') ? -1 : (a.due || '9999') > (b.due || '9999') ? 1 : 0; });
+    $('bNext').innerHTML = '<div class="rel-h"><span>Coming up</span></div>' + (upcoming.length ? upcoming.slice(0, 3).map(function (p) {
+      var d = parseIso(p.due), over = p.due && p.due < today;
+      return '<button type="button" class="next-row" data-pay="' + p.row + '"><div class="datechip' + (over ? ' over' : '') + (d ? '' : ' none') + '">' +
+        (d ? '<b>' + d.d + '</b><span>' + MONTHS[d.m - 1] + '</span>' : '<b>–</b>') + '</div>' +
+        '<span class="next-n"><b>' + esc(p.forName || 'Payment') + '</b><small>' + esc(p.label || 'Payment') + (over ? ' · overdue' : '') + '</small></span>' +
+        '<span class="next-amt">' + money(p.amount) + '</span></button>';
+    }).join('') : '<p class="next-empty">No payments scheduled. Add deposits and instalments to a booking to see them here.</p>');
+
+    // By category
+    var max = 0; Object.keys(cats).forEach(function (c) { max = Math.max(max, cats[c].committed + cats[c].shortlist); });
+    $('bCatClear').hidden = !bud.cat;
+    $('bCats').innerHTML = Object.keys(cats).filter(function (c) { return cats[c].n; }).map(function (c) {
+      var x = cats[c], w1 = max ? x.committed / max * 100 : 0, w2 = max ? x.shortlist / max * 100 : 0;
+      return '<button type="button" class="rel-row cat-row' + (bud.cat === c ? ' on' : '') + '" data-cat="' + esc(c) + '">' +
+        '<span class="rel-name">' + esc(c) + '</span>' +
+        '<span class="rel-bar cat-bar"><i style="width:' + w1 + '%"></i><i class="sl" style="width:' + w2 + '%"></i></span>' +
+        '<span class="cat-amt">' + (x.committed ? shortMoney(x.committed) : '<em>' + (x.shortlist ? '~' + shortMoney(x.shortlist) : '–') + '</em>') + '</span></button>';
+    }).join('') + '<p class="cat-key"><i></i>Committed <i class="sl"></i>Shortlist (not booked)</p>';
+
+    $('tcB').textContent = bud.bookings.length; $('tcP').textContent = bud.installments.length;
     document.querySelectorAll('#bTabs button').forEach(function (b) { b.classList.toggle('on', b.dataset.t === bud.tab); });
     renderBudgetList();
   }
@@ -1657,91 +1737,98 @@
     if (!bud.q) return true;
     return Object.keys(row).some(function (k) { return k !== 'row' && String(row[k]).toLowerCase().indexOf(bud.q) !== -1; });
   }
+  var STAGE_FILTERS = [['all', 'All'], ['booked', 'Booked'], ['short', 'Shortlist'], ['owed', 'Still owed'], ['dropped', 'Not going ahead']];
+  function passesStage(b) {
+    var f = bud.filter;
+    if (f === 'booked') return isCommitted(b);
+    if (f === 'short') return !isCommitted(b) && SHORTLIST.indexOf(b.stage) !== -1;
+    if (f === 'owed') return isCommitted(b) && num(b.owed) > 0;
+    if (f === 'dropped') return b.stage === 'Not going ahead';
+    return b.stage !== 'Not going ahead';
+  }
 
   function renderBudgetList() {
     var t = bud.tab, list = $('bList');
     list.className = 'list t-' + t;
-    var rows = bud[t].filter(bMatches).slice();
+    $('bPills').hidden = t !== 'bookings';
     var html = '';
-    if (t === 'vendors') {
+    if (t === 'bookings') {
+      $('bPills').innerHTML = (bud.cat ? '<button type="button" class="pill on" data-clearcat="1">' + esc(bud.cat) + ' ✕</button>' : '') +
+        STAGE_FILTERS.map(function (f) { return '<button type="button" class="pill' + (bud.filter === f[0] ? ' on' : '') + '" data-filter="' + f[0] + '">' + f[1] + '</button>'; }).join('');
+      var rows = bud.bookings.filter(function (b) { return bMatches(b) && passesStage(b) && (!bud.cat || (b.category || 'Other') === bud.cat); });
+      var order = bOpt('categories'), stageOrder = bOpt('stages');
       rows.sort(function (a, b) {
-        var qa = a.quoted === '' ? -1 : num(a.quoted), qb = b.quoted === '' ? -1 : num(b.quoted);
-        return qb - qa || a.name.localeCompare(b.name);
+        var ca = order.indexOf(a.category || 'Other'), cb = order.indexOf(b.category || 'Other');
+        if (ca !== cb) return (ca === -1 ? 99 : ca) - (cb === -1 ? 99 : cb);
+        var sa = isCommitted(a) ? 0 : stageOrder.indexOf(a.stage) + 1, sb = isCommitted(b) ? 0 : stageOrder.indexOf(b.stage) + 1;
+        return sa - sb || num(b.cost) - num(a.cost) || String(a.name).localeCompare(b.name);
       });
-      var tq = 0; rows.forEach(function (v) { tq += num(v.quoted); });
-      $('bCount').textContent = rows.length + ' vendors · ' + money(tq);
-      html = '<div class="list-head"><span>Vendor</span><span>Status</span><span class="r">Quoted</span><span class="r">Paid</span><span class="r">Remaining</span></div>' +
-        rows.map(function (v) {
-          var hasQ = v.quoted !== '', rem = hasQ ? num(v.quoted) - num(v.paid) : '';
-          var tag = v.status ? '<span class="tag ' + statusTone(v.status) + '">' + esc(v.status) + '</span>' : '';
-          return '<div class="item' + (v._pending ? ' pending' : '') + '" data-t="vendors" data-row="' + v.row + '">' +
-            '<div class="who"><div class="avatar ' + esc(v.type || 'Vendor') + '">' + esc(initials(v.name)) + '</div>' +
-            '<div class="meta"><div class="n">' + esc(v.name) + '</div><div class="s">' + tag + esc(v.service || v.type || '') + '</div></div></div>' +
-            '<div class="bcol">' + (tag || '<span style="color:var(--muted)">–</span>') + '</div>' +
-            '<div class="bcol bnum' + (hasQ ? '' : ' dim') + '">' + (hasQ ? money(v.quoted) : 'Quote needed') + '</div>' +
-            '<div class="bcol bnum' + (num(v.paid) ? '' : ' dim') + '">' + (num(v.paid) ? money(v.paid) : '–') + '</div>' +
-            '<div class="bcol bnum">' + (hasQ ? money(rem) : '–') + '</div>' +
-            '<div class="amt"><b>' + (hasQ ? money(v.quoted) : '–') + '</b><span>' + (hasQ ? (num(v.paid) ? money(v.paid) + ' paid' : 'nothing paid') : 'quote needed') + '</span></div>' +
-            '</div>';
-        }).join('');
-    } else if (t === 'payments') {
+      var tot = 0; rows.forEach(function (b) { tot += num(b.cost); });
+      $('bCount').textContent = rows.length + (rows.length === 1 ? ' booking · ' : ' bookings · ') + money(tot);
+      var lastCat = null;
+      html = '<div class="list-head"><span>Booking</span><span>Stage</span><span class="r">Cost</span><span class="r">Paid</span><span class="r">Still owed</span></div>';
+      rows.forEach(function (b) {
+        var cat = b.category || 'Other';
+        if (cat !== lastCat) {
+          var inCat = rows.filter(function (x) { return (x.category || 'Other') === cat; }), cc = 0;
+          inCat.forEach(function (x) { if (isCommitted(x)) cc += Math.max(num(x.cost), num(x.paid)); });
+          html += '<div class="grp"><span>' + esc(cat) + '</span><span>' + (cc ? money(cc) + ' committed' : inCat.length + ' on the shortlist') + '</span></div>';
+          lastCat = cat;
+        }
+        var hasCost = b.cost !== '', committedNow = isCommitted(b);
+        var tag = '<span class="tag ' + stageTone(b.stage) + '">' + esc(b.stage || 'Considering') + '</span>';
+        var sub = [b.event ? (b.event === 'Both' ? 'Ceremony + reception' : b.event) : ''].filter(Boolean).join(' · ');
+        var right = committedNow
+          ? (num(b.owed) > 0 ? money(b.owed) + ' owed' : hasCost ? 'paid in full' : 'no cost yet')
+          : (hasCost ? (b.stage === 'Quoted' ? 'quoted' : 'estimate') : 'no quote yet');
+        html += '<div class="item' + (b._pending ? ' pending' : '') + (b.stage === 'Not going ahead' ? ' dropped' : '') + '" data-t="bookings" data-row="' + b.row + '">' +
+          '<div class="who"><div class="avatar cat">' + esc(CAT_ICON[cat] || initials(b.name)) + '</div>' +
+          '<div class="meta"><div class="n">' + esc(b.name) + '</div><div class="s">' + tag + esc(sub) + '</div></div></div>' +
+          '<div class="bcol">' + tag + (b.event ? '<span class="ev">' + esc(b.event) + '</span>' : '') + '</div>' +
+          '<div class="bcol bnum' + (hasCost ? '' : ' dim') + '">' + (hasCost ? money(b.cost) : '–') + '</div>' +
+          '<div class="bcol bnum' + (num(b.paid) ? '' : ' dim') + '">' + (num(b.paid) ? money(b.paid) : '–') + '</div>' +
+          '<div class="bcol bnum' + (committedNow && num(b.owed) ? '' : ' dim') + '">' + (committedNow ? money(b.owed) : '–') + '</div>' +
+          '<div class="amt"><b>' + (hasCost ? money(b.cost) : '–') + '</b><span>' + right + '</span></div></div>';
+      });
+      if (!rows.length) html = '<div class="empty"><b>' + (bud.q || bud.cat || bud.filter !== 'all' ? 'Nothing matches' : 'No bookings yet') + '</b>' +
+        (bud.q || bud.cat || bud.filter !== 'all' ? 'Try a different filter.' : 'Tap “Add booking” to add a vendor, venue or purchase.') + '</div>';
+    } else {
       var today = todayIso();
-      rows.sort(function (a, b) {
+      var prow = bud.installments.filter(bMatches).slice().sort(function (a, b) {
         var pa = isPaid(a.paid) ? 1 : 0, pb = isPaid(b.paid) ? 1 : 0;
         if (pa !== pb) return pa - pb;
-        return (a.due || '9999') < (b.due || '9999') ? -1 : (a.due || '9999') > (b.due || '9999') ? 1 : 0;
+        var da = a.due || '9999', db = b.due || '9999';
+        return pa ? (da < db ? 1 : da > db ? -1 : 0) : (da < db ? -1 : da > db ? 1 : 0);
       });
-      var due = 0; rows.forEach(function (p) { if (!isPaid(p.paid)) due += num(p.amount); });
-      $('bCount').textContent = rows.length + ' payments · ' + money(due) + ' to pay';
+      var due = 0; prow.forEach(function (p) { if (!isPaid(p.paid)) due += num(p.amount); });
+      $('bCount').textContent = prow.length + ' payments · ' + money(due) + ' to pay';
       html = '<div class="list-head"><span>Payment</span><span>Due</span><span>Status</span><span class="r">Amount</span><span></span></div>' +
-        rows.map(function (p) {
+        prow.map(function (p) {
           var d = parseIso(p.due), paidNow = isPaid(p.paid), over = !paidNow && p.due && p.due < today;
           var chip = '<div class="datechip' + (paidNow ? ' done' : over ? ' over' : '') + (d ? '' : ' none') + '">' +
             (d ? '<b>' + d.d + '</b><span>' + MONTHS[d.m - 1] + '</span>' : '<b>–</b>') + '</div>';
           var tag = paidNow ? '<span class="tag ok">Paid' + (p.paidDate ? ' ' + esc(fmtDate(p.paidDate).replace(/, \d{4}$/, '')) : '') + '</span>'
-            : over ? '<span class="tag bad">Overdue</span>'
-            : String(p.paid).toLowerCase() === 'partially' ? '<span class="tag warn">Partially paid</span>'
-            : '<span class="tag neutral">Upcoming</span>';
+            : over ? '<span class="tag bad">Overdue</span>' : '<span class="tag neutral">Upcoming</span>';
           var btn = paidNow ? '' : '<button type="button" class="quick" data-quick="' + p.row + '">Mark paid</button>';
-          return '<div class="item' + (p._pending ? ' pending' : '') + '" data-t="payments" data-row="' + p.row + '">' +
-            '<div class="who">' + chip + '<div class="meta"><div class="n">' + esc(p.vendor) + '</div><div class="s">' + tag + esc(p.stage || '') +
-            (p.due ? ' · due ' + esc(fmtDate(p.due)) : '') + '</div></div></div>' +
+          return '<div class="item' + (p._pending ? ' pending' : '') + '" data-t="installments" data-row="' + p.row + '">' +
+            '<div class="who">' + chip + '<div class="meta"><div class="n">' + esc(p.forName || 'Payment') + '</div><div class="s">' + tag + esc(p.label || '') +
+            (p.due && !paidNow ? ' · due ' + esc(fmtDate(p.due)) : '') + '</div></div></div>' +
             '<div class="bcol">' + (p.due ? esc(fmtDate(p.due)) : '<span style="color:var(--muted)">No date</span>') + '</div>' +
             '<div class="bcol">' + tag + '</div>' +
             '<div class="bcol bnum">' + money(p.amount) + '</div>' +
             '<div class="bcol" style="text-align:right">' + btn + '</div>' +
-            '<div class="amt"><b>' + money(p.amount) + '</b>' + (btn ? btn : '<span>' + esc(p.stage || '') + '</span>') + '</div>' +
+            '<div class="amt"><b>' + money(p.amount) + '</b>' + (btn ? btn : '<span>' + esc(p.label || '') + '</span>') + '</div>' +
             '</div>';
         }).join('');
-    } else {
-      var te = 0; rows.forEach(function (e) { te += e.actual !== '' ? num(e.actual) : num(e.estimated); });
-      $('bCount').textContent = rows.length + ' items · ' + money(te);
-      html = '<div class="list-head"><span>Item</span><span>Who’s paying</span><span>Status</span><span class="r">Estimated</span><span class="r">Actual</span></div>' +
-        rows.map(function (e) {
-          var p = String(e.paid || 'No'), tone = p === 'Yes' ? 'ok' : p === 'Partially' ? 'warn' : 'neutral';
-          var tag = '<span class="tag ' + tone + '">' + (p === 'Yes' ? 'Paid' : p === 'Partially' ? 'Partially paid' : 'Not paid') + '</span>';
-          var showActual = e.actual !== '';
-          return '<div class="item' + (e._pending ? ' pending' : '') + '" data-t="expenses" data-row="' + e.row + '">' +
-            '<div class="who"><div class="avatar exp">' + esc(initials(e.item)) + '</div>' +
-            '<div class="meta"><div class="n">' + esc(e.item) + '</div><div class="s">' + tag + esc([e.owner, e.due ? 'due ' + fmtDate(e.due) : ''].filter(Boolean).join(' · ')) + '</div></div></div>' +
-            '<div class="bcol">' + (e.owner ? esc(e.owner) : '<span style="color:var(--muted)">–</span>') + '</div>' +
-            '<div class="bcol">' + tag + '</div>' +
-            '<div class="bcol bnum' + (e.estimated === '' ? ' dim' : '') + '">' + money(e.estimated) + '</div>' +
-            '<div class="bcol bnum' + (showActual ? '' : ' dim') + '">' + money(e.actual) + '</div>' +
-            '<div class="amt"><b>' + (showActual ? money(e.actual) : money(e.estimated)) + '</b><span>' + (showActual ? 'actual' : e.estimated !== '' ? 'estimated' : 'no estimate') + '</span></div>' +
-            '</div>';
-        }).join('');
-    }
-    if (!rows.length) {
-      html = '<div class="empty"><b>' + (bud.q ? 'No matches' : 'Nothing here yet') + '</b>' +
-        (bud.q ? 'Try a different search.' : 'Tap “' + BFORM[t].addShort + '” to add one.') + '</div>';
+      if (!prow.length) html = '<div class="empty"><b>' + (bud.q ? 'No matches' : 'No payments yet') + '</b>' +
+        (bud.q ? 'Try a different search.' : 'Add deposits and instalments here, or from inside a booking.') + '</div>';
     }
     list.innerHTML = html;
   }
 
-  /* ---- budget edit panel ---- */
+  /* ---------- edit panel ---------- */
   function bField(f, v) {
-    var o = (bud.options[bud.tab] || {})[f.o] || [];
+    var o = f.o ? bOpt(f.o) : [];
     var id = 'b_' + f.k, val = v === undefined || v === null ? '' : v;
     var label = '<label for="' + id + '">' + esc(f.l) + '</label>';
     if (f.t === 'seg') {
@@ -1751,8 +1838,14 @@
     }
     if (f.t === 'select') {
       var so = o.slice(); if (val && so.indexOf(val) === -1) so.push(val);
-      return '<div class="field">' + label + '<select id="' + id + '"><option value="">Not set</option>' +
+      return '<div class="field">' + label + '<select id="' + id + '">' + (f.req ? '' : '<option value="">Not set</option>') +
         so.map(function (x) { return '<option' + (x === val ? ' selected' : '') + '>' + esc(x) + '</option>'; }).join('') + '</select></div>';
+    }
+    if (f.t === 'booking') {
+      var list = bud.bookings.filter(function (b) { return b.stage !== 'Not going ahead' || String(b.row) === String(val); })
+        .slice().sort(function (a, b) { return String(a.name).localeCompare(b.name); });
+      return '<div class="field">' + label + '<select id="' + id + '"><option value="">Choose a booking…</option>' +
+        list.map(function (b) { return '<option value="' + b.row + '"' + (String(b.row) === String(val) ? ' selected' : '') + '>' + esc(b.name) + '</option>'; }).join('') + '</select></div>';
     }
     if (f.t === 'money') {
       return '<div class="field">' + label + '<div class="money-in"><span>$</span><input id="' + id + '" inputmode="decimal" placeholder="0" value="' +
@@ -1760,33 +1853,46 @@
     }
     if (f.t === 'date') return '<div class="field">' + label + '<input id="' + id + '" type="date" value="' + esc(val) + '"></div>';
     if (f.t === 'area') return '<div class="field">' + label + '<textarea id="' + id + '" maxlength="1000" placeholder="' + esc(f.ph || '') + '">' + esc(val) + '</textarea></div>';
-    var type = f.t === 'vendor' ? 'text' : f.t;
-    return '<div class="field">' + label + '<input id="' + id + '" type="' + type + '" maxlength="300" placeholder="' + esc(f.ph || '') + '" value="' + esc(val) + '"' +
-      (f.t === 'vendor' ? ' list="vendorNames"' : '') + '></div>';
+    return '<div class="field">' + label + '<input id="' + id + '" type="' + f.t + '" maxlength="300" placeholder="' + esc(f.ph || '') + '" value="' + esc(val) + '"></div>';
+  }
+  function bookingPaymentsHtml(row) {
+    if (!row) return '<div class="group-title">Payments</div><p class="bp-empty">Give it a name first, then add deposits and instalments here.</p>';
+    var ps = paymentsOf(row).slice().sort(function (a, b) { return (a.due || '9999') < (b.due || '9999') ? -1 : 1; });
+    var b = bookingByRow(row), paidSum = 0; ps.forEach(function (p) { if (isPaid(p.paid)) paidSum += num(p.amount); });
+    var head = b && b.cost !== '' ? money(paidSum) + ' of ' + money(b.cost) + ' paid' : (paidSum ? money(paidSum) + ' paid' : '');
+    return '<div class="group-title">Payments <span class="hint">' + esc(head) + '</span></div><div class="group bp">' +
+      ps.map(function (p) {
+        var paidNow = isPaid(p.paid);
+        return '<button type="button" class="bp-row" data-pay="' + p.row + '"><span><b>' + esc(p.label || 'Payment') + '</b><small>' +
+          (paidNow ? 'Paid' + (p.paidDate ? ' ' + esc(fmtDate(p.paidDate)) : '') : p.due ? 'Due ' + esc(fmtDate(p.due)) : 'No date yet') + '</small></span>' +
+          '<span class="bp-amt' + (paidNow ? ' ok' : '') + '">' + money(p.amount) + '</span></button>';
+      }).join('') +
+      '<button type="button" class="bp-add" data-addpay="' + row + '">+ Add a payment</button></div>';
   }
 
-  function openBudgetForm(row) {
-    var t = bud.tab, F = BFORM[t], isNew = !row;
+  var bAuto = null;
+  function openBudgetForm(row, table) {
+    var t = table || bud.tab, F = BFORM[t], isNew = !row;
     var data = row ? JSON.parse(JSON.stringify(row)) : F.defaults();
-    bud.editing = { table: t, row: row ? row.row : null, original: row ? row[F.key] : '' };
+    var display = t === 'installments' ? ((data.label || 'Payment') + (data.forName ? ' · ' + data.forName : '')) : (data.name || '');
+    bud.editing = { table: t, row: row ? row.row : null, original: row ? String(row[F.key]) : '', display: display };
     var bRef = bud.editing; closeBudgetForm._ok = false;
     bAuto = makeAuto(budgetPayload, sendBudgetAuto, $('bStatus'), $('bErr'));
     bAuto.ctx = { table: t, row: bRef.row, original: bRef.original,
       ref: { isOpen: function () { return bud.editing === bRef && $('bsheet').classList.contains('open'); } } };
     setSaveStatus($('bStatus'), 'idle');
-    $('bTitle').textContent = isNew ? F.addTitle : (row[F.key] || 'Edit');
+    $('bTitle').textContent = isNew ? F.addTitle : (t === 'installments' ? (row.forName || 'Payment') : row.name);
     var sub = '';
-    if (!isNew && t === 'vendors') sub = row.quoted !== '' ? money(row.quoted) + ' quoted · ' + money(num(row.quoted) - num(row.paid)) + ' remaining' : 'No quote yet';
-    if (!isNew && t === 'payments') sub = money(row.amount) + (row.due ? ' · due ' + fmtDate(row.due) : '');
-    if (!isNew && t === 'expenses') sub = row.estimated !== '' ? money(row.estimated) + ' estimated' : 'No estimate yet';
+    if (!isNew && t === 'bookings') sub = [row.category, row.cost !== '' ? money(row.cost) + (isCommitted(row) ? ' · ' + money(row.owed) + ' still owed' : '') : 'No cost yet'].filter(Boolean).join(' · ');
+    if (!isNew && t === 'installments') sub = (row.label || 'Payment') + ' · ' + money(row.amount) + (row.due ? ' · due ' + fmtDate(row.due) : '');
     $('bSub').textContent = isNew ? 'Changes save automatically as you type.' : sub;
     $('bFields').innerHTML = F.groups.map(function (g) {
       var half = g.every(function (f) { return f.half; });
       return '<div class="group' + (half ? ' counts' : '') + '">' + g.map(function (f) { return bField(f, data[f.k]); }).join('') + '</div>';
-    }).join('');
-    $('vendorNames').innerHTML = bud.vendors.map(function (v) { return '<option value="' + esc(v.name) + '">'; }).join('');
+    }).join('') + (t === 'bookings' ? '<div id="bPays">' + bookingPaymentsHtml(row ? row.row : null) + '</div>' : '');
     $('bErr').textContent = '';
     $('bDel').style.display = isNew ? 'none' : '';
+    $('bDel').textContent = t === 'bookings' ? 'Remove booking' : 'Remove payment';
     $('bConfirm').classList.remove('show');
     $('bsheet').scrollTop = 0;
     $('boverlay').classList.add('open'); $('bsheet').classList.add('open');
@@ -1813,19 +1919,38 @@
     bud.busy = b; $('bSave').disabled = b; $('bDel').disabled = b; $('bYes').disabled = b;
     $('bSave').textContent = b && label ? label : 'Done';
   }
-  var bAuto = null;
+  function saveBudget(e) { e.preventDefault(); closeBudgetForm(); }
+
   function budgetPayload(ctx) {
     var t = ctx.table, F = BFORM[t], d = collectBudget();
     d.row = ctx.row || null; d.original = ctx.original || '';
-    if (!d[F.key]) return { err: ctx.row ? 'Add a name first.' : '' };
+    if (!d[F.key]) return { err: ctx.row ? F.need : '' };
     var bad = F.groups.some(function (g) { return g.some(function (f) {
       return f.t === 'money' && d[f.k] !== '' && !/^\$?\s*[\d,]+(\.\d{1,2})?$/.test(d[f.k]);
     }); });
     if (bad) return { err: 'Amounts should look like 1500 or 1500.50.' };
-    if (t === 'payments' && isPaid(d.paid) && !d.paidDate) { d.paidDate = todayIso(); var pd = $('b_paidDate'); if (pd) pd.value = d.paidDate; }
+    if (t === 'installments' && isPaid(d.paid) && !d.paidDate) { d.paidDate = todayIso(); var pd = $('b_paidDate'); if (pd) pd.value = d.paidDate; }
     var k = Object.assign({}, d); delete k.row; delete k.original;
     return { d: d, key: JSON.stringify(k) };
   }
+  function budgetLocal(t, d) {
+    var o = JSON.parse(JSON.stringify(d)); delete o.original;
+    (t === 'bookings' ? ['cost'] : ['amount']).forEach(function (k) {
+      var v = String(o[k] || '').replace(/[$,\s]/g, '');
+      o[k] = v === '' ? '' : Number(v);
+    });
+    if (t === 'bookings') {
+      var prev = o.row ? bookingByRow(o.row) : null;
+      o.paid = prev ? prev.paid : 0;
+      o.owed = o.cost === '' ? '' : Math.max(0, o.cost - num(o.paid));
+    } else {
+      o.booking = Number(o.booking) || ''; var bk = bookingByRow(o.booking); o.forName = bk ? bk.name : '';
+    }
+    o._pending = true;
+    return o;
+  }
+  function budgetIndex(t, row) { for (var i = 0; i < bud[t].length; i++) if (bud[t][i].row === row && !bud[t][i]._tmp) return i; return -1; }
+  function budgetIndexTmp(t, tmp) { for (var i = 0; i < bud[t].length; i++) if (bud[t][i]._tmp === tmp) return i; return -1; }
   function sendBudgetAuto(ctx, p, done) {
     var t = ctx.table, F = BFORM[t], d = p.d;
     d.row = ctx.row || null; d.original = ctx.original || '';
@@ -1836,13 +1961,15 @@
     runSave('saveBudgetRow', [t, d], function (res) {
         var j = local._tmp ? budgetIndexTmp(t, local._tmp) : budgetIndex(t, local.row);
         if (j !== -1) bud[t][j] = res.item; else bud[t].push(res.item);
-        ctx.row = res.row; ctx.original = res.item[F.key]; ctx.saved = p.key;
+        ctx.row = res.row; ctx.original = String(res.item[F.key]); ctx.saved = p.key;
         if (ctx.ref.isOpen()) {
-          bud.editing.row = res.row; bud.editing.original = res.item[F.key];
+          bud.editing.row = res.row; bud.editing.original = String(res.item[F.key]);
+          bud.editing.display = t === 'installments' ? ((res.item.label || 'Payment') + (res.item.forName ? ' · ' + res.item.forName : '')) : res.item.name;
           $('bDel').style.display = '';
-          if ($('bTitle').textContent === F.addTitle) $('bTitle').textContent = res.item[F.key];
+          if ($('bTitle').textContent === F.addTitle) $('bTitle').textContent = t === 'installments' ? (res.item.forName || 'Payment') : res.item.name;
+          if (t === 'bookings' && isNew && $('bPays')) $('bPays').innerHTML = bookingPaymentsHtml(res.row);
         }
-        syncEnd(true); renderBudget(); done(true);
+        syncEnd(true); renderBudget(); refreshBudgetQuiet(); done(true);
       }, function (err) {
         var j = local._tmp ? budgetIndexTmp(t, local._tmp) : budgetIndex(t, local.row);
         if (j !== -1) { if (isNew) bud[t].splice(j, 1); else if (prev) bud[t][j] = prev; }
@@ -1852,75 +1979,46 @@
         done(false);
       });
   }
-  function saveBudget(e) { e.preventDefault(); closeBudgetForm(); }
-  function saveBudgetOld_unused(e) {
-    e.preventDefault(); if (bud.busy || !bud.editing) return;
-    var t = bud.editing.table, F = BFORM[t], d = collectBudget();
-    if (!d[F.key]) { $('bErr').textContent = 'Add a name first.'; return; }
-    var bad = F.groups.some(function (g) { return g.some(function (f) {
-      return f.t === 'money' && d[f.k] !== '' && !/^\$?\s*[\d,]+(\.\d{1,2})?$/.test(d[f.k]);
-    }); });
-    if (bad) { $('bErr').textContent = 'Amounts should look like 1500 or 1500.50.'; return; }
-    if (t === 'payments' && isPaid(d.paid) && !d.paidDate) d.paidDate = todayIso();
-    var isNew = !d.row;
-    var local = budgetLocal(t, d), prev = null, i = -1;
-    if (isNew) { local._tmp = 'tmp-' + Date.now(); bud[t].push(local); }
-    else { i = budgetIndex(t, d.row); prev = bud[t][i]; bud[t][i] = local; }
-    closeBudgetForm(); renderBudget();
-    sendBudgetSave(t, d, local, function () {
-      var j = local._tmp ? budgetIndexTmp(t, local._tmp) : budgetIndex(t, local.row);
-      if (j !== -1) { if (isNew) bud[t].splice(j, 1); else bud[t][j] = prev; }
-    });
-  }
-  /** Saves in the background; on success swaps in the server's copy, on failure runs undo(). */
-  function sendBudgetSave(t, d, local, undo) {
-    syncStart();
-    runSave('saveBudgetRow', [t, d], function (res) {
-        var j = local._tmp ? budgetIndexTmp(t, local._tmp) : budgetIndex(t, local.row);
-        if (j !== -1) bud[t][j] = res.item;
-        syncEnd(true);
-        if (res.inserted) loadBudget(false);   // a row was added inside a full table; refresh positions
-        else renderBudget();
-      }, function (err) {
-        undo(); syncEnd(false); renderBudget();
-        toast('Couldn’t save: ' + err.message, 5000);
-      });
-  }
-  function budgetLocal(t, d) {
-    var cfgMoney = { vendors: ['quoted', 'paid'], payments: ['amount'], expenses: ['estimated', 'actual'] }[t];
-    var o = JSON.parse(JSON.stringify(d)); delete o.original;
-    cfgMoney.forEach(function (k) {
-      var v = String(o[k] || '').replace(/[$,\s]/g, '');
-      o[k] = v === '' ? '' : Number(v);
-    });
-    o._pending = true;
-    return o;
-  }
-  function budgetIndex(t, row) { for (var i = 0; i < bud[t].length; i++) if (bud[t][i].row === row && !bud[t][i]._tmp) return i; return -1; }
-  function budgetIndexTmp(t, tmp) { for (var i = 0; i < bud[t].length; i++) if (bud[t][i]._tmp === tmp) return i; return -1; }
   function deleteBudget() {
     if (bud.busy || !bud.editing) return;
     if (bAuto) { bAuto.cancel(); bAuto = null; }
     var ed = bud.editing, i = budgetIndex(ed.table, ed.row);
     if (i === -1) return;
-    var removed = bud[ed.table].splice(i, 1)[0];
+    var removed = bud[ed.table].splice(i, 1)[0], prevInst = bud.installments.slice();
+    if (ed.table === 'bookings') bud.installments = bud.installments.filter(function (p) { return Number(p.booking) !== ed.row; });
     closeBudgetForm(); renderBudget();
     syncStart();
-    runSave('deleteBudgetRow', [ed.table, ed.row, ed.original], function () { syncEnd(true); }, function (err) {
+    runSave('deleteBudgetRow', [ed.table, ed.row, ed.original], function () { syncEnd(true); refreshBudgetQuiet(); }, function (err) {
         bud[ed.table].splice(Math.min(i, bud[ed.table].length), 0, removed);
+        if (ed.table === 'bookings') bud.installments = prevInst;
         syncEnd(false); renderBudget();
         toast('Couldn’t remove: ' + err.message, 5000);
       });
   }
-  function quickPay(rowNum, btn) {
-    var p = bud.payments.filter(function (x) { return x.row === rowNum; })[0]; if (!p) return;
-    var d = JSON.parse(JSON.stringify(p)); d.original = p.vendor; d.paid = 'Yes'; d.paidDate = d.paidDate || todayIso();
-    var i = budgetIndex('payments', rowNum), prev = bud.payments[i];
-    var local = budgetLocal('payments', d); bud.payments[i] = local;
-    renderBudget();
-    sendBudgetSave('payments', d, local, function () {
-      var j = budgetIndex('payments', rowNum); if (j !== -1) bud.payments[j] = prev;
+  function quickPay(rowNum) {
+    var i = budgetIndex('installments', rowNum); if (i === -1) return;
+    var prev = bud.installments[i];
+    var d = JSON.parse(JSON.stringify(prev)); d.paid = 'Yes'; d.paidDate = d.paidDate || todayIso(); d.booking = String(d.booking);
+    bud.installments[i] = budgetLocal('installments', d);
+    renderBudget(); syncStart();
+    runSave('saveBudgetRow', ['installments', d], function (res) {
+      var j = budgetIndex('installments', rowNum); if (j !== -1) bud.installments[j] = res.item;
+      syncEnd(true); refreshBudgetQuiet(); toast('Marked paid');
+    }, function (err) {
+      var j = budgetIndex('installments', rowNum); if (j !== -1) bud.installments[j] = prev;
+      syncEnd(false); renderBudget(); toast('Couldn’t save: ' + err.message, 5000);
     });
+  }
+  /** Open a payment from the summary or from inside a booking. */
+  function openPayment(rowNum) {
+    var p = bud.installments.filter(function (x) { return x.row === Number(rowNum); })[0];
+    if (!p) return;
+    if (p._pending) { toast('Still saving — one sec'); return; }
+    openBudgetForm(p, 'installments');
+  }
+  function switchToPayment(fn) {
+    if ($('bsheet').classList.contains('open')) { closeBudgetForm(); if ($('bsheet').classList.contains('open')) return; setTimeout(fn, 320); }
+    else fn();
   }
 
   /* ---------- Events ---------- */
@@ -1998,10 +2096,27 @@
   $('bTabs').addEventListener('click', function (e) {
     var b = e.target.closest('[data-t]'); if (!b) return; bud.tab = b.dataset.t; updateAddLabels(); renderBudget();
   });
+  $('bPills').addEventListener('click', function (e) {
+    var f = e.target.closest('[data-filter]'), c = e.target.closest('[data-clearcat]');
+    if (f) { bud.filter = f.dataset.filter; renderBudgetList(); }
+    if (c) { bud.cat = ''; renderBudget(); }
+  });
+  $('bCats').addEventListener('click', function (e) {
+    var r = e.target.closest('[data-cat]'); if (!r) return;
+    bud.cat = bud.cat === r.dataset.cat ? '' : r.dataset.cat; bud.tab = 'bookings'; updateAddLabels(); renderBudget();
+    if (window.innerWidth < 960) $('bTabs').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+  $('bCatClear').addEventListener('click', function () { bud.cat = ''; renderBudget(); });
+  $('bNext').addEventListener('click', function (e) { var r = e.target.closest('[data-pay]'); if (r) openPayment(r.dataset.pay); });
+  $('bFields').addEventListener('click', function (e) {
+    var p = e.target.closest('[data-pay]'), a = e.target.closest('[data-addpay]');
+    if (p) { var pr = p.dataset.pay; switchToPayment(function () { openPayment(pr); }); }
+    if (a) { var br = a.dataset.addpay; switchToPayment(function () { bud.newFor = br; openBudgetForm(null, 'installments'); bud.newFor = ''; }); }
+  });
   $('bq').addEventListener('input', function (e) { bud.q = e.target.value.trim().toLowerCase(); renderBudgetList(); });
   $('bList').addEventListener('click', function (e) {
     var q = e.target.closest('[data-quick]');
-    if (q) { e.stopPropagation(); quickPay(Number(q.dataset.quick), q); return; }
+    if (q) { e.stopPropagation(); quickPay(Number(q.dataset.quick)); return; }
     var it = e.target.closest('.item'); if (!it) return;
     var row = bud[it.dataset.t].filter(function (x) { return String(x.row) === it.dataset.row; })[0];
     if (row && row._pending) { toast('Still saving — one sec'); return; }
@@ -2019,7 +2134,8 @@
   $('bClose').addEventListener('click', closeBudgetForm);
   $('boverlay').addEventListener('click', closeBudgetForm);
   $('bDel').addEventListener('click', function () {
-    $('bConfirmName').textContent = bud.editing ? bud.editing.original : '';
+    $('bConfirmName').textContent = bud.editing ? bud.editing.display : '';
+    $('bConfirmMore').textContent = bud.editing && bud.editing.table === 'bookings' && paymentsOf(bud.editing.row).length ? ' Its payments are removed too.' : '';
     $('bConfirm').classList.add('show');
     setTimeout(function () { $('bConfirm').scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 50);
   });
@@ -2129,7 +2245,7 @@
       var data = AMData.parseWorkbook(sheets, serialToIso);
       var msg = 'Replace everything in the app with this file?\n\n' +
         data.guests.length + ' households, ' + data.people.length + ' people, ' +
-        data.vendors.length + ' vendors, ' + data.payments.length + ' payments, ' + data.expenses.length + ' expenses.' +
+        data.bookings.length + ' bookings and ' + data.installments.length + ' payments.' +
         (data.warnings.length ? '\n\nHeads up:\n• ' + data.warnings.slice(0, 6).join('\n• ') : '') +
         '\n\nWhat’s in the app now will be overwritten.';
       if (!window.confirm(msg)) return;
@@ -2172,11 +2288,11 @@
     receptionRsvp: RSVP_OPTIONS,
     dietary: ['Non-veg', 'Vegetarian', 'Vegan', 'Other (see notes)'],
     budget: {
-      vendors: { type: ['Vendor', 'Venue', 'Other'],
-        status: ['To confirm', 'Planned — confirm', 'Booked', 'Deposit paid', 'In progress',
-                 'Paid in full', 'Researching', 'Unavailable', 'Pending'] },
-      payments: { paid: ['No', 'Yes', 'Partially'] },
-      expenses: { paid: ['No', 'Yes', 'Partially'] }
+      categories: ['Venue', 'Catering', 'Photo & Video', 'Decor & Mandap', 'Priest & Music', 'Attire & Beauty',
+                   'Rentals', 'Stationery & Favours', 'Other'],
+      events: ['Ceremony', 'Reception', 'Both', 'Pre-wedding'],
+      stages: ['Considering', 'Quoted', 'Booked', 'Paid in full', 'Not going ahead'],
+      paid: ['No', 'Yes']
     }
   };
 
@@ -2191,7 +2307,19 @@
   var PERSON_HEADERS = { pid: 'Person ID', guestId: 'Guest ID', name: 'Name', age: 'Adult / Kid',
     wedding: 'Wedding RSVP', reception: 'Reception RSVP', dietary: 'Dietary', notes: 'Notes' };
 
+  // Budget: bookings (anything you're spending on) and the payments attached to each one.
   var BUDGET = {
+    bookings: { key: 'name', match: ['Booking', 'Category', 'Stage'],
+      fields: { name: 'Booking', category: 'Category', event: 'Event', stage: 'Stage', cost: 'Cost (CAD)',
+        paid: 'Paid (CAD)', owed: 'Still owed (CAD)', contact: 'Contact Name', phone: 'Phone', email: 'Email', notes: 'Notes', row: 'Booking #' },
+      readOnly: ['paid', 'owed', 'row'], money: ['cost', 'paid', 'owed'], dates: [] },
+    installments: { key: 'booking', match: ['Booking #', 'Payment', 'Amount (CAD)'],
+      fields: { booking: 'Booking #', forName: 'For', label: 'Payment', amount: 'Amount (CAD)', due: 'Due Date',
+        paid: 'Paid?', paidDate: 'Paid Date', method: 'Method / Ref', notes: 'Notes' },
+      readOnly: ['forName'], money: ['amount'], dates: ['due', 'paidDate'] }
+  };
+  // The old planning-sheet tables, only read to move them across.
+  var LEGACY = {
     vendors: { key: 'name', match: ['Type', 'Vendor / Venue'],
       fields: { type: 'Type', name: 'Vendor / Venue', service: 'Service / Package', quoted: 'Quoted Cost (CAD)',
         paid: 'Paid to Date (CAD)', remaining: 'Remaining (CAD)', nextDue: 'Next Payment Due', status: 'Status',
@@ -2206,7 +2334,8 @@
         paid: 'Paid?', due: 'Due Date', notes: 'Notes' },
       readOnly: [], money: ['estimated', 'actual'], dates: ['due'] }
   };
-  var COLLECTIONS = ['households', 'people', 'vendors', 'payments', 'expenses'];
+  var COLLECTIONS = ['households', 'people', 'bookings', 'installments', 'vendors', 'payments', 'expenses'];
+  var LEGACY_COLS = ['vendors', 'payments', 'expenses'];
 
   /* ---------------- shared helpers ---------------- */
   function str(v, max) { return String(v === undefined || v === null ? '' : v).trim().slice(0, max || 1000); }
@@ -2285,13 +2414,26 @@
         out[k] = v;
       } else out[k] = str(v, 1000);
     });
+    if (cfg === BUDGET.installments) {
+      out.booking = Number(out.booking) || '';
+      if (!out.booking) throw new Error('Pick which booking this payment is for.');
+      out.paid = out.paid === 'Yes' ? 'Yes' : 'No';
+      return out;
+    }
     if (!out[cfg.key]) throw new Error(cfg.fields[cfg.key] + ' is required.');
     return out;
   }
-  function budgetItem(table, row, d) {
-    var cfg = BUDGET[table], out = { row: Number(row) };
+  function budgetItem(table, row, d, paid, names) {
+    var cfg = BUDGET[table], out = {};
     Object.keys(cfg.fields).forEach(function (k) { out[k] = d[k] === undefined || d[k] === null ? '' : d[k]; });
-    if (table === 'vendors') out.remaining = out.quoted === '' ? '' : Math.round((Number(out.quoted) - Number(out.paid || 0)) * 100) / 100;
+    out.row = Number(row);
+    if (table === 'bookings') {
+      out.paid = Math.round((paid || 0) * 100) / 100;
+      out.owed = out.cost === '' ? '' : Math.max(0, Math.round((Number(out.cost) - out.paid) * 100) / 100);
+    } else {
+      out.booking = Number(out.booking) || ''; out.forName = names ? (names[out.booking] || '') : '';
+      out.paid = out.paid === 'Yes' ? 'Yes' : 'No';
+    }
     return out;
   }
   function mergeOptions(saved) {
@@ -2310,6 +2452,76 @@
     return e instanceof Error ? e : new Error(msg);
   }
 
+  /* ---------------- old budget -> bookings ---------------- */
+  var CAT_RULES = [
+    ['Venue', /winery|venue|banquet|\bhall\b|centre|center|resort|hotel/i],
+    ['Catering', /cater|lingam|food|cake|sweet|dessert|drinks/i],
+    ['Photo & Video', /photo|video|\bprod\b|film|tiltin|visions|camera|drone/i],
+    ['Decor & Mandap', /decor|mandap|flor|flower|canvas|genie|meraki|backdrop/i],
+    ['Priest & Music', /iyer|priest|kurukkal|nathaswaram|thavil|music|\bdj\b|band|melam/i],
+    ['Attire & Beauty', /glow|makeup|make-up|pleat|saree|sari\b|jewel|outfit|vetti|veshti|shirt|henna|mehndi|\bhair\b|attire|dress|suit|bridesmaid/i],
+    ['Rentals', /rental|chairs|tables|tent|\brent\b|sana/i],
+    ['Stationery & Favours', /invit|\bcards?\b|favou?r|station|print/i]
+  ];
+  function guessCategory(name, type) {
+    if (type === 'Venue') return 'Venue';
+    for (var i = 0; i < CAT_RULES.length; i++) if (CAT_RULES[i][1].test(name || '')) return CAT_RULES[i][0];
+    return 'Other';
+  }
+  function guessEvent(service, notes) {
+    var s = String(service || '').trim(), n = String(notes || '');
+    if (/(wedding|ceremony)\s*\+\s*reception/i.test(s + ' ' + n)) return 'Both';
+    if (/^ceremony$/i.test(s)) return 'Ceremony';
+    if (/^reception$/i.test(s)) return 'Reception';
+    return '';
+  }
+  function legacyStage(status, cost) {
+    if (/^(booked|deposit paid|in progress)$/i.test(status || '')) return 'Booked';
+    if (/^paid in full$/i.test(status || '')) return 'Paid in full';
+    if (/^unavailable$/i.test(status || '')) return 'Not going ahead';
+    return cost !== '' && cost !== undefined && cost !== null && Number(cost) > 0 ? 'Quoted' : 'Considering';
+  }
+  function blank(v) { return v === undefined || v === null ? '' : v; }
+  /** Turns the old vendors / payment schedule / personal expenses into bookings + payments. */
+  function legacyToBookings(L) {
+    var bookings = [], inst = [], byName = {}, row = 0, irow = 0, paidSoFar = {}, covered = {};
+    function addBooking(b) { b.row = ++row; bookings.push(b); byName[String(b.name).trim().toLowerCase()] = b; return b; }
+    (L.vendors || []).forEach(function (v) {
+      if (/experience by james/i.test(v.name)) return;            // dropped, as asked
+      var svc = String(v.service || '').trim();
+      var b = addBooking({ name: v.name, category: guessCategory(v.name, v.type), event: guessEvent(svc, v.notes),
+        stage: legacyStage(v.status, v.quoted), cost: blank(v.quoted), contact: blank(v.contact), phone: blank(v.phone),
+        email: blank(v.email), notes: [/^(ceremony|reception)$/i.test(svc) ? '' : svc, blank(v.notes)].filter(Boolean).join(' — ') });
+      paidSoFar[b.row] = Number(v.paid) || 0;
+    });
+    (L.payments || []).forEach(function (p) {
+      var b = byName[String(p.vendor || '').trim().toLowerCase()];
+      if (!b) b = addBooking({ name: p.vendor, category: guessCategory(p.vendor, ''), event: '', stage: 'Booked', cost: '',
+        contact: '', phone: '', email: '', notes: '' });
+      var yes = String(p.paid).toLowerCase() === 'yes';
+      inst.push({ row: ++irow, booking: b.row, label: p.stage || 'Payment', amount: blank(p.amount), due: blank(p.due),
+        paid: yes ? 'Yes' : 'No', paidDate: blank(p.paidDate), method: blank(p.method),
+        notes: [String(p.paid).toLowerCase() === 'partially' ? 'Partially paid' : '', blank(p.notes)].filter(Boolean).join(' — ') });
+      if (yes) covered[b.row] = (covered[b.row] || 0) + (Number(p.amount) || 0);
+    });
+    // "Paid to date" on a vendor that the schedule doesn't account for becomes a paid deposit.
+    bookings.forEach(function (b) {
+      var gap = Math.round(((paidSoFar[b.row] || 0) - (covered[b.row] || 0)) * 100) / 100;
+      if (gap > 0) inst.push({ row: ++irow, booking: b.row, label: 'Deposit', amount: gap, due: '', paid: 'Yes', paidDate: '', method: '', notes: '' });
+    });
+    (L.expenses || []).forEach(function (e) {
+      var cost = e.actual !== '' && e.actual !== undefined && e.actual !== null ? e.actual : blank(e.estimated);
+      var cat = guessCategory(e.item, ''); if (cat === 'Other') cat = 'Attire & Beauty';
+      var yes = String(e.paid).toLowerCase() === 'yes';
+      var b = addBooking({ name: e.item, category: cat, event: '', stage: yes ? 'Paid in full' : (cost !== '' && Number(cost) > 0 ? 'Quoted' : 'Considering'),
+        cost: cost, contact: '', phone: '', email: '', notes: [e.owner ? 'Paying: ' + e.owner : '', blank(e.notes)].filter(Boolean).join(' — ') });
+      if (cost !== '' && Number(cost) > 0 && (yes || e.due)) {
+        inst.push({ row: ++irow, booking: b.row, label: yes ? 'Paid' : 'Payment', amount: cost, due: blank(e.due), paid: yes ? 'Yes' : 'No', paidDate: '', method: '', notes: '' });
+      }
+    });
+    return { bookings: bookings, installments: inst };
+  }
+
   /* ---------------- backend ---------------- */
   /**
    * fs: small adapter around Firestore (see the module script):
@@ -2321,10 +2533,10 @@
   function makeBackend(fs, user, onRemoteChange, opts) {
     opts = opts || {};
     var COMMIT_WAIT = opts.commitWait || 6000;
-    var data = { households: {}, people: {}, vendors: {}, payments: {}, expenses: {}, options: null };
+    var data = { households: {}, people: {}, bookings: {}, installments: {}, vendors: {}, payments: {}, expenses: {}, options: null, budgetMeta: null };
     var seen = {};
     var ready = new Promise(function (resolve, reject) {
-      var need = COLLECTIONS.length + 1;
+      var need = COLLECTIONS.length + 2;
       function arrived(k) { if (seen[k]) return false; seen[k] = true; if (--need === 0) resolve(); return true; }
       COLLECTIONS.forEach(function (c) {
         fs.onCollection(c, function (docs, meta) {
@@ -2333,6 +2545,7 @@
           if (!arrived(c) && !(meta && meta.hasPendingWrites) && onRemoteChange) onRemoteChange(c);
         }, function (e) { reject(friendly(e)); });
       });
+      fs.onDoc('meta', 'budget', function (d) { data.budgetMeta = d || null; arrived('budgetMeta'); }, function (e) { reject(friendly(e)); });
       fs.onDoc('meta', 'options', function (d, meta) {
         data.options = d || null;
         if (!arrived('options') && !(meta && meta.hasPendingWrites) && onRemoteChange) onRemoteChange('options');
@@ -2359,6 +2572,24 @@
       return o;
     }
     function byId(a, b) { return a < b ? -1 : a > b ? 1 : 0; }
+    function rowsOf(t) {
+      return Object.keys(data[t]).map(function (id) { return Object.assign({}, data[t][id], { row: Number(data[t][id].row || id) }); })
+        .sort(function (a, b) { return a.row - b.row; });
+    }
+    function paidFor(row) {
+      var sum = 0;
+      Object.keys(data.installments).forEach(function (id) { var p = data.installments[id]; if (Number(p.booking) === Number(row) && p.paid === 'Yes') sum += Number(p.amount) || 0; });
+      return sum;
+    }
+    function bookingNames() { var n = {}; Object.keys(data.bookings).forEach(function (id) { n[Number(data.bookings[id].row || id)] = data.bookings[id].name; }); return n; }
+    function budgetOut() {
+      var names = bookingNames();
+      return {
+        bookings: rowsOf('bookings').map(function (r) { return budgetItem('bookings', r.row, r, paidFor(r.row)); }),
+        installments: rowsOf('installments').map(function (r) { return budgetItem('installments', r.row, r, 0, names); }),
+        options: mergeOptions(data.options).budget, url: ''
+      };
+    }
 
     var api = {
       getData: function () {
@@ -2420,12 +2651,19 @@
 
       getBudget: function () {
         return ready.then(function () {
-          var o = mergeOptions(data.options), out = { options: o.budget, url: '' };
-          Object.keys(BUDGET).forEach(function (t) {
-            out[t] = Object.keys(data[t]).map(function (id) { return budgetItem(t, data[t][id].row || id, data[t][id]); })
-              .sort(function (a, b) { return a.row - b.row; });
-          });
-          return out;
+          var hasLegacy = LEGACY_COLS.some(function (c) { return Object.keys(data[c]).length; });
+          if (!Object.keys(data.bookings).length && hasLegacy && !(data.budgetMeta && data.budgetMeta.migrated)) {
+            // One-time move from the old planning tables. Ids are fixed, so if you both open it at once the same thing is written.
+            var legacy = {};
+            LEGACY_COLS.forEach(function (c) { legacy[c] = rowsOf(c); });
+            var conv = legacyToBookings(legacy), b = fs.batch();
+            conv.bookings.forEach(function (r) { b.set('bookings', String(r.row), stamp(Object.assign({}, r))); data.bookings[String(r.row)] = r; });
+            conv.installments.forEach(function (r) { b.set('installments', String(r.row), stamp(Object.assign({}, r))); data.installments[String(r.row)] = r; });
+            b.set('meta', 'budget', { migrated: true, at: new Date().toISOString() });
+            data.budgetMeta = { migrated: true };
+            return commit(b).then(budgetOut);
+          }
+          return budgetOut();
         });
       },
 
@@ -2442,10 +2680,14 @@
             Object.keys(data[table]).forEach(function (id) { row = Math.max(row, Number(data[table][id].row || id) || 0); });
             row++;
           }
+          if (table === 'installments' && !data.bookings[String(clean.booking)]) throw new Error('That booking was removed. Pick another one.');
           clean.row = row;
           var b = fs.batch();
           b.set(table, String(row), stamp(Object.assign({}, clean)));
-          return commit(b).then(function () { return { row: row, item: budgetItem(table, row, clean), inserted: false }; });
+          return commit(b).then(function () {
+            var item = table === 'bookings' ? budgetItem('bookings', row, clean, paidFor(row)) : budgetItem('installments', row, clean, 0, bookingNames());
+            return { row: row, item: item, inserted: false };
+          });
         });
       },
 
@@ -2454,6 +2696,7 @@
           if (!BUDGET[table]) throw new Error('Unknown table.');
           var b = fs.batch();
           b.delete(table, String(Number(row)));
+          if (table === 'bookings') Object.keys(data.installments).forEach(function (id) { if (Number(data.installments[id].booking) === Number(row)) b.delete('installments', id); });
           return commit(b).then(function () { return { row: Number(row) }; });
         });
       },
@@ -2484,6 +2727,7 @@
             });
           });
           ops.push(['set', 'meta', 'options', JSON.parse(JSON.stringify(DEFAULT_OPTIONS))]);
+          ops.push(['set', 'meta', 'budget', { migrated: true, at: new Date().toISOString() }]);
           // A set after a delete of the same doc in one batch is fine; split into chunks Firestore accepts.
           var chunks = [];
           for (var i = 0; i < ops.length; i += 400) chunks.push(ops.slice(i, i + 400));
@@ -2498,7 +2742,7 @@
             });
           }, Promise.resolve()).then(function () {
             return { households: payload.guests.length, people: payload.people.length,
-              vendors: (payload.vendors || []).length, payments: (payload.payments || []).length, expenses: (payload.expenses || []).length };
+              bookings: (payload.bookings || []).length, installments: (payload.installments || []).length };
           });
         });
       }
@@ -2568,7 +2812,8 @@
       var s = norm(v); if (s === '') return '';
       var n = Math.round(Number(s)); return isFinite(n) && n > 0 ? n : '';
     }
-    var allHeaders = [['Family / Household', 'Guest ID'], ['Person ID', 'Name']].concat(Object.keys(BUDGET).map(function (t) { return BUDGET[t].match; }));
+    var allHeaders = [['Family / Household', 'Guest ID'], ['Person ID', 'Name']]
+      .concat(Object.keys(BUDGET).map(function (t) { return BUDGET[t].match; }), Object.keys(LEGACY).map(function (t) { return LEGACY[t].match; }));
     function isHeaderRow(cells) { return allHeaders.some(function (m) { return m.every(function (x) { return cells.indexOf(x) !== -1; }); }); }
 
     var warnings = [];
@@ -2615,30 +2860,45 @@
       guests.forEach(function (g) { if (byGuest[g.id]) Object.assign(g, deriveFromPeople(byGuest[g.id])); });
     }
 
-    // Budget tables (optional)
     var out = { guests: guests, people: people, warnings: warnings };
-    Object.keys(BUDGET).forEach(function (t) {
-      var cfg = BUDGET[t], h = findHeader(cfg.match), list = [];
-      if (h) {
-        var c = colsFor(h, cfg.fields);
-        for (var r2 = h.r + 1; r2 < h.rows.length; r2++) {
-          var brow = h.rows[r2], cells = brow.map(norm);
-          if (isHeaderRow(cells)) break;                 // reached the next table
-          var key = norm(get(brow, c[cfg.key]));
-          if (!key || key === 'Item') continue;          // blank or the template placeholder
+    // Budget: the new Bookings/Payments tabs if present, otherwise convert the old planning tables.
+    function readTable(cfg, legacyRules) {
+      var h = findHeader(cfg.match), list = [];
+      if (!h) return null;
+      var c = colsFor(h, cfg.fields);
+      for (var r2 = h.r + 1; r2 < h.rows.length; r2++) {
+        var brow = h.rows[r2], cells = brow.map(norm);
+        if (isHeaderRow(cells)) break;                   // reached the next table
+        var key = norm(get(brow, c[cfg.key]));
+        if (!key) continue;
+        if (legacyRules) {
+          if (key === 'Item') continue;                  // the template placeholder
           var others = Object.keys(cfg.fields).some(function (k) { return k !== cfg.key && c[k] !== -1 && norm(get(brow, c[k])) !== ''; });
           if (!others) continue;                         // a note/heading line, not an entry
-          var item = { row: list.length + 1 };
-          Object.keys(cfg.fields).forEach(function (k) {
-            if (cfg.readOnly.indexOf(k) !== -1) return;
-            var v = get(brow, c[k]);
-            item[k] = cfg.money.indexOf(k) !== -1 ? moneyVal(v) : cfg.dates.indexOf(k) !== -1 ? dateVal(v) : norm(v).slice(0, 1000);
-          });
-          list.push(item);
         }
+        var item = { row: list.length + 1 };
+        Object.keys(cfg.fields).forEach(function (k) {
+          if (cfg.readOnly.indexOf(k) !== -1) return;
+          var v = get(brow, c[k]);
+          item[k] = cfg.money.indexOf(k) !== -1 ? moneyVal(v) : cfg.dates.indexOf(k) !== -1 ? dateVal(v) : norm(v).slice(0, 1000);
+        });
+        if (c.row !== undefined && c.row !== -1) { var n = Number(norm(get(brow, c.row))); if (n > 0) item.row = n; }
+        list.push(item);
       }
-      out[t] = list;
-    });
+      return list;
+    }
+    var nb = readTable(BUDGET.bookings, false);
+    if (nb) {
+      out.bookings = nb;
+      out.installments = (readTable(BUDGET.installments, false) || []).map(function (p, i) {
+        p.row = i + 1; p.booking = Number(p.booking) || ''; p.paid = p.paid === 'Yes' ? 'Yes' : 'No'; return p;
+      }).filter(function (p) { return nb.some(function (b) { return b.row === p.booking; }); });
+    } else {
+      var legacy = {};
+      Object.keys(LEGACY).forEach(function (t) { legacy[t] = readTable(LEGACY[t], true) || []; });
+      var conv = legacyToBookings(legacy);
+      out.bookings = conv.bookings; out.installments = conv.installments;
+    }
     return out;
   }
 
@@ -2653,7 +2913,7 @@
     sheets.push({ name: 'People', rows: [pKeys.map(function (k) { return PERSON_HEADERS[k]; }).concat(['Household'])].concat(all.people.map(function (p) {
       return pKeys.map(function (k) { return p[k]; }).concat([names[p.guestId] || '']);
     })) });
-    var titles = { vendors: 'Vendors', payments: 'Payments', expenses: 'Expenses' };
+    var titles = { bookings: 'Bookings', installments: 'Payments' };
     Object.keys(BUDGET).forEach(function (t) {
       var keys = Object.keys(BUDGET[t].fields);
       sheets.push({ name: titles[t], rows: [keys.map(function (k) { return BUDGET[t].fields[k]; })].concat(all.budget[t].map(function (r) {
@@ -2664,7 +2924,7 @@
   }
 
   var exported = { makeBackend: makeBackend, makeRunner: makeRunner, parseWorkbook: parseWorkbook,
-    exportSheets: exportSheets, deriveFromPeople: deriveFromPeople, DEFAULT_OPTIONS: DEFAULT_OPTIONS };
+    exportSheets: exportSheets, deriveFromPeople: deriveFromPeople, legacyToBookings: legacyToBookings, DEFAULT_OPTIONS: DEFAULT_OPTIONS };
   root.AMData = exported;
   if (typeof module !== 'undefined' && module.exports) module.exports = exported;
 })(typeof window !== 'undefined' ? window : globalThis);
