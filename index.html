@@ -95,6 +95,10 @@
   .kpi+.kpi{border-left:1px solid var(--line)}
   .kpi b{display:block;font-family:var(--serif);font-weight:400;font-size:24px;letter-spacing:-.5px}
   .kpi span{font-size:12px;color:var(--muted)}
+  button.kpi{border:0;background:transparent;font:inherit;color:inherit;text-align:left;cursor:pointer;transition:background .15s}
+  button.kpi:hover{background:#FAF8F4}
+  .kyn[data-yn="Confirmed"] b{color:var(--ok)} .kyn[data-yn="Declined"] b{color:var(--no)} .kyn[data-yn="Maybe"] b{color:var(--maybe)}
+  .kyn.on{background:var(--ink)!important} .kyn.on b,.kyn.on span{color:#fff!important}
 
   /* Relationship breakdown */
   .rel{background:var(--surface);border-radius:18px;padding:16px 16px 10px;margin-top:14px}
@@ -602,9 +606,9 @@
       </div>
     </div>
     <div class="kpis">
-      <div class="kpi"><b id="kHouse">–</b><span>Households</span></div>
-      <div class="kpi"><b id="kSent">–</b><span>Invites sent</span></div>
-      <div class="kpi"><b id="kConf">–</b><span>Confirmed</span></div>
+      <button type="button" class="kpi kyn" data-yn="Confirmed"><b id="kYes">–</b><span>Yes</span></button>
+      <button type="button" class="kpi kyn" data-yn="Declined"><b id="kNo">–</b><span>No</span></button>
+      <button type="button" class="kpi kyn" data-yn="Maybe"><b id="kMaybe">–</b><span>Maybe</span></button>
     </div>
     <div class="rel">
       <div class="rel-h"><span>By relationship</span><button type="button" id="relClear" class="rel-clear">Show all</button></div>
@@ -854,7 +858,19 @@
   function adultsOf(g, ev) { return num(g[(ev || state.ev) + 'Adults']); }
   function kidsOf(g, ev) { return num(g[(ev || state.ev) + 'Kids']); }
   function countOf(g, ev) { return adultsOf(g, ev) + kidsOf(g, ev); }
-  function inEvent(g) { return countOf(g) > 0; }
+  function inEvent(g, ev) {
+    ev = ev || state.ev;
+    if (countOf(g, ev) > 0) return true;
+    if (g[ev + 'Rsvp'] === 'Declined') return true;
+    return state.people.some(function (p) { return p.guestId === g.id && p[ev]; });
+  }
+  /** Headcount by answer for this event: people's own answers if listed, otherwise the household's. */
+  function ynCounts(g, ev) {
+    var out = { Confirmed: 0, Declined: 0, Maybe: 0 }, ppl = peopleOf(g.id);
+    if (ppl.length) ppl.forEach(function (p) { if (out[p[ev]] !== undefined) out[p[ev]]++; });
+    else { var s = g[ev + 'Rsvp']; if (out[s] !== undefined) out[s] += Math.max(countOf(g, ev), s === 'Declined' ? 1 : 0); }
+    return out;
+  }
   function summary(g, ev) { var a = adultsOf(g, ev), k = kidsOf(g, ev); return k ? a + ' + ' + k + (k === 1 ? ' kid' : ' kids') : String(a); }
   function isSent(g) { return !isNotInvited(g.weddingRsvp) || !isNotInvited(g.receptionRsvp); }
   function initials(name) {
@@ -969,6 +985,7 @@
 
   function passes(g, skip) {
     if (!inEvent(g)) return false;
+    if (state.yn && !ynCounts(g, state.ev)[state.yn]) return false;
     for (var k in FACETS) {
       if (k === skip || !state.f[k].length) continue;
       if (state.f[k].indexOf(FACETS[k].value(g)) === -1) return false;
@@ -1011,6 +1028,7 @@
       c.classList.toggle('open', state.openFacet === k);
       c.setAttribute('aria-expanded', state.openFacet === k ? 'true' : 'false');
       if (sel.length) any = true;
+      if (state.yn) any = true;
     });
     $('clearAll').style.display = any ? '' : 'none';
   }
@@ -1055,13 +1073,12 @@
     renderChips();
     var all = state.guests;
     var rk = state.ev === 'wedding' ? 'weddingRsvp' : 'receptionRsvp';
-    var total = 0, bride = 0, groom = 0, sent = 0, conf = 0, houses = 0, kidsTotal = 0;
+    var total = 0, bride = 0, groom = 0, kidsTotal = 0, yn = { Confirmed: 0, Declined: 0, Maybe: 0 };
     all.forEach(function (g) {
       if (!inEvent(g)) return;
-      var c = countOf(g); total += c; houses++; kidsTotal += kidsOf(g);
+      var c = countOf(g); total += c; kidsTotal += kidsOf(g);
       if (g.side === 'Bride') bride += c; else if (g.side === 'Groom') groom += c;
-      if (!isNotInvited(g[rk])) sent++;
-      if (g[rk] === 'Confirmed') conf += c;
+      var y = ynCounts(g, state.ev); yn.Confirmed += y.Confirmed; yn.Declined += y.Declined; yn.Maybe += y.Maybe;
     });
     $('heroLabel').textContent = state.ev === 'wedding' ? 'Guests at the wedding' : 'Guests at the reception';
     $('heroNum').innerHTML = total + '<small>guests</small>';
@@ -1070,9 +1087,8 @@
     $('barBride').style.width = (bride / denom * 100) + '%';
     $('barGroom').style.width = (groom / denom * 100) + '%';
     $('lgBride').textContent = bride; $('lgGroom').textContent = groom;
-    $('kHouse').textContent = houses;
-    $('kSent').textContent = sent + '/' + houses;
-    $('kConf').textContent = conf;
+    $('kYes').textContent = yn.Confirmed; $('kNo').textContent = yn.Declined; $('kMaybe').textContent = yn.Maybe;
+    document.querySelectorAll('.kyn').forEach(function (b) { b.classList.toggle('on', state.yn === b.dataset.yn); b.setAttribute('aria-pressed', state.yn === b.dataset.yn); });
     var wedTotal = 0; all.forEach(function (g) { wedTotal += countOf(g, 'wedding'); });
     $('navGuests').textContent = wedTotal + ' at the wedding · ' + all.length + ' households';
     renderRel();
@@ -1081,7 +1097,8 @@
       return a.household.localeCompare(b.household, undefined, { sensitivity: 'base' });
     });
     var shownCount = 0; shown.forEach(function (g) { shownCount += countOf(g); });
-    $('countLine').textContent = shown.length + ' households · ' + shownCount + ' guests';
+    $('countLine').textContent = shown.length + ' households · ' + shownCount + ' guests' +
+      (state.yn ? ' · showing ' + ({ Confirmed: 'Yes', Declined: 'No', Maybe: 'Maybe' })[state.yn] : '');
 
     if (!shown.length) {
       $('list').innerHTML = '<div class="empty"><b>No guests found</b>' + (houses ? 'Try a different search or filter.' :
@@ -2026,7 +2043,14 @@
   $('filters').addEventListener('click', function (e) {
     var c = e.target.closest('.fchip'); if (c) openFacet(c.dataset.f, c);
   });
-  $('clearAll').addEventListener('click', function () { state.f = { side: [], rsvp: [], rel: [], kids: [], from: [] }; closeFacet(); render(); });
+  $('clearAll').addEventListener('click', function () { state.f = { side: [], rsvp: [], rel: [], kids: [], from: [] }; state.yn = null; closeFacet(); render(); });
+  document.querySelectorAll('.kyn').forEach(function (b) {
+    b.addEventListener('click', function () {
+      state.yn = state.yn === b.dataset.yn ? null : b.dataset.yn;
+      render();
+      if (state.yn && window.innerWidth < 960) $('list').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
   $('fpList').addEventListener('click', function (e) {
     var b = e.target.closest('.fopt'); if (b && state.openFacet) toggleValue(state.openFacet, b.dataset.v);
   });
