@@ -342,7 +342,8 @@
   .bp-amt.ok{color:var(--ok)}
   .bp-add{border:0;background:none;color:var(--gold);font-size:14px;font-weight:500;padding:12px 4px 6px;cursor:pointer;text-align:left}
   #bPills[hidden]{display:none}
-  .hero-shop{font-size:13.5px;color:var(--ink2);margin:6px 0 0}
+  .tag.us{background:#ECEAF6;color:#4B4785}
+  .tag.fam{background:var(--gold-soft);color:#8A6A22}
   .hero-shop:empty{display:none}
   #bForWrap[hidden]{display:none}
   .money-in{display:flex;align-items:center;gap:4px}
@@ -512,7 +513,7 @@
     .bnum.dim{color:var(--muted)}
     #bList .item .amt,#bList .item .meta .s{display:none}
     #bList.t-bookings .list-head,#bList.t-bookings .item{grid-template-columns:minmax(0,2.3fr) minmax(0,1.3fr) 110px 110px 110px}
-    #bList.t-purchases .list-head,#bList.t-purchases .item{grid-template-columns:minmax(0,2.3fr) minmax(0,1fr) 110px minmax(0,1fr) 130px}
+    #bList.t-purchases .list-head,#bList.t-purchases .item{grid-template-columns:minmax(0,2.3fr) minmax(0,1fr) 100px minmax(0,1fr) 130px;column-gap:28px}
     .grp{padding-left:22px;padding-right:22px}
     #bList.t-installments .list-head,#bList.t-installments .item{grid-template-columns:minmax(0,2.3fr) minmax(0,1fr) 120px 110px 110px}
     #bList.t-expenses .list-head,#bList.t-expenses .item{grid-template-columns:minmax(0,2.3fr) minmax(0,1fr) 110px 110px 110px}
@@ -1637,7 +1638,8 @@
     paid: ['No', 'Yes'],
     forWho: ['Bride', 'Groom', 'Bridal party', 'Family', 'Guests', 'Other'],
     types: ['Clothing', 'Jewellery', 'Accessories', 'Gifts & favours', 'DIY decor', 'Other'],
-    shopStatus: ['To buy', 'Ordered', 'Bought']
+    shopStatus: ['To buy', 'Ordered', 'Bought'],
+    payers: ['Us', 'Family']
   };
   var TYPE_ICON = { 'Clothing': 'CL', 'Jewellery': 'JW', 'Accessories': 'AC', 'Gifts & favours': 'GF', 'DIY decor': 'DY', 'Other': '•' };
   function isBought(p) { return p.status === 'Bought' || p.status === 'Ordered'; }
@@ -1663,7 +1665,7 @@
         [{ k: 'item', l: 'Item', t: 'text', ph: 'e.g. Bridesmaids sarees' }, { k: 'forWho', l: 'For', t: 'seg', o: 'forWho' },
          { k: 'type', l: 'Type', t: 'select', o: 'types', req: 1 }],
         [{ k: 'status', l: 'Status', t: 'seg', o: 'shopStatus' }, { k: 'actual', l: 'Cost', t: 'money' }],
-        [{ k: 'payer', l: 'Who’s paying', t: 'text', ph: 'Optional, e.g. Amma' }, { k: 'notes', l: 'Notes', t: 'area', ph: 'Store, size, colour…' }]
+        [{ k: 'payer', l: 'Paid by', t: 'seg', o: 'payers' }, { k: 'notes', l: 'Notes', t: 'area', ph: 'Store, size, colour…' }]
       ] },
     installments: { noun: 'payment', addShort: 'Add payment', addTitle: 'Add a payment', key: 'booking', need: 'Pick which booking this is for.',
       defaults: function () { return { paid: 'No', booking: bud.newFor || '' }; },
@@ -1841,15 +1843,16 @@
         }
         var bought = isBought(p), status = p.status || 'To buy';
         var tag = '<span class="tag ' + (status === 'Bought' ? 'ok' : status === 'Ordered' ? 'warn' : 'neutral') + '">' + esc(status) + '</span>';
-        var sub = [p.type && p.type !== 'Other' ? p.type : '', p.payer ? 'paid by ' + p.payer : ''].filter(Boolean).join(' · ');
+        var payTag = p.payer ? '<span class="tag ' + (p.payer === 'Family' ? 'fam' : 'us') + '">' + (p.payer === 'Family' ? 'Family' : 'Us') + '</span>' : '';
+        var sub = p.type && p.type !== 'Other' ? p.type : '';
         var amt = p.actual !== '' ? money(p.actual) : '–';
         var btn = bought ? '' : '<button type="button" class="quick" data-bought="' + p.row + '">Mark bought</button>';
         html += '<div class="item' + (p._pending ? ' pending' : '') + '" data-t="purchases" data-row="' + p.row + '">' +
           '<div class="who"><div class="avatar cat">' + esc(TYPE_ICON[p.type] || initials(p.item)) + '</div>' +
-          '<div class="meta"><div class="n">' + esc(p.item) + '</div><div class="s">' + tag + esc(sub) + '</div></div></div>' +
+          '<div class="meta"><div class="n">' + esc(p.item) + '</div><div class="s">' + tag + payTag + esc(sub) + '</div></div></div>' +
           '<div class="bcol">' + tag + '</div>' +
           '<div class="bcol bnum' + (p.actual !== '' ? '' : ' dim') + '">' + amt + '</div>' +
-          '<div class="bcol">' + (p.payer ? esc(p.payer) : '<span style="color:var(--muted)">–</span>') + '</div>' +
+          '<div class="bcol">' + (payTag || '<span style="color:var(--muted)">–</span>') + '</div>' +
           '<div class="bcol" style="text-align:right">' + btn + '</div>' +
           '<div class="amt"><b>' + amt + '</b>' + (btn || '<span>' + (status === 'Ordered' ? 'ordered' : 'bought') + '</span>') + '</div></div>';
       });
@@ -2431,7 +2434,8 @@
       paid: ['No', 'Yes'],
       forWho: ['Bride', 'Groom', 'Bridal party', 'Family', 'Guests', 'Other'],
       types: ['Clothing', 'Jewellery', 'Accessories', 'Gifts & favours', 'DIY decor', 'Other'],
-      shopStatus: ['To buy', 'Ordered', 'Bought']
+      shopStatus: ['To buy', 'Ordered', 'Bought'],
+      payers: ['Us', 'Family']
     }
   };
 
@@ -2557,6 +2561,7 @@
         out[k] = v;
       } else out[k] = str(v, 1000);
     });
+    if (cfg === BUDGET.purchases) out.payer = normPayer(out.payer);
     if (cfg === BUDGET.installments) {
       out.booking = Number(out.booking) || '';
       if (!out.booking) throw new Error('Pick which booking this payment is for.');
@@ -2575,6 +2580,7 @@
       out.owed = out.cost === '' ? '' : Math.max(0, Math.round((Number(out.cost) - out.paid) * 100) / 100);
     } else if (table === 'purchases') {
       if (out.actual === '' && d.estimate !== undefined && d.estimate !== null) out.actual = d.estimate;   // older items kept the cost here
+      out.payer = normPayer(out.payer);
     } else if (table === 'installments') {
       out.booking = Number(out.booking) || ''; out.forName = names ? (names[out.booking] || '') : '';
       out.paid = out.paid === 'Yes' ? 'Yes' : 'No';
@@ -2627,6 +2633,13 @@
     return cost !== '' && cost !== undefined && cost !== null && Number(cost) > 0 ? 'Quoted' : 'Considering';
   }
   function blank(v) { return v === undefined || v === null ? '' : v; }
+  /** Paid by: 'Us' (the two of you) or 'Family'. Older free-text names are sorted into one of the two. */
+  function normPayer(v) {
+    var s = String(v || '').trim();
+    if (!s) return '';
+    if (/^(us|we|our|ours|both|bride|groom|couple|abb|abbi|abbilash|musi|musissha)\b/i.test(s) || /abbi\s*(&|and)\s*musi/i.test(s)) return 'Us';
+    return 'Family';
+  }
   function guessFor(name) {
     var n = String(name || '');
     if (/bridesmaid|groomsm|bridal party/i.test(n)) return 'Bridal party';
@@ -2682,7 +2695,7 @@
     (L.expenses || []).forEach(function (e) {
       var yes = String(e.paid).toLowerCase() === 'yes';
       purchases.push({ row: purchases.length + 1, item: e.item, forWho: guessFor(e.item), type: guessType(e.item),
-        status: yes ? 'Bought' : 'To buy', actual: e.actual !== '' && e.actual !== undefined && e.actual !== null ? e.actual : blank(e.estimated), payer: blank(e.owner),
+        status: yes ? 'Bought' : 'To buy', actual: e.actual !== '' && e.actual !== undefined && e.actual !== null ? e.actual : blank(e.estimated), payer: normPayer(e.owner),
         notes: [e.due ? 'Due ' + e.due : '', blank(e.notes)].filter(Boolean).join(' — ') });
     });
     return { bookings: bookings, installments: inst, purchases: purchases };
@@ -2765,7 +2778,7 @@
         var payer = '', notes = String(bk.notes || '');
         var m = notes.match(/^Paying: ([^—]+?)(?: — |$)/); if (m) { payer = m[1].trim(); notes = notes.slice(m[0].length).trim(); }
         var item = { row: ++next, item: bk.name, forWho: guessFor(bk.name), type: guessType(bk.name), status: bought ? 'Bought' : 'To buy',
-          actual: bought && paid ? paid : bk.cost, payer: payer, notes: notes };
+          actual: bought && paid ? paid : bk.cost, payer: normPayer(payer), notes: notes };
         b.set('purchases', String(item.row), stamp(Object.assign({}, item))); data.purchases[String(item.row)] = item;
         b.delete('bookings', String(bk.row)); delete data.bookings[String(bk.row)];
         moved++;
