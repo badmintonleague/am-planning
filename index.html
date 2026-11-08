@@ -512,7 +512,7 @@
     .bnum.dim{color:var(--muted)}
     #bList .item .amt,#bList .item .meta .s{display:none}
     #bList.t-bookings .list-head,#bList.t-bookings .item{grid-template-columns:minmax(0,2.3fr) minmax(0,1.3fr) 110px 110px 110px}
-    #bList.t-purchases .list-head,#bList.t-purchases .item{grid-template-columns:minmax(0,2.3fr) minmax(0,1fr) 110px 110px minmax(0,1fr)}
+    #bList.t-purchases .list-head,#bList.t-purchases .item{grid-template-columns:minmax(0,2.3fr) minmax(0,1fr) 110px minmax(0,1fr) 130px}
     .grp{padding-left:22px;padding-right:22px}
     #bList.t-installments .list-head,#bList.t-installments .item{grid-template-columns:minmax(0,2.3fr) minmax(0,1fr) 120px 110px 110px}
     #bList.t-expenses .list-head,#bList.t-expenses .item{grid-template-columns:minmax(0,2.3fr) minmax(0,1fr) 110px 110px 110px}
@@ -647,10 +647,9 @@
 <div class="wrap layout view" id="viewBudget" hidden>
   <aside class="side">
   <section class="hero">
-    <p class="eyebrow">Committed so far</p>
+    <p class="eyebrow">Committed</p>
     <p class="big" id="bTotal">–</p>
     <p class="hero-split" id="bSplit"></p>
-    <p class="hero-shop" id="bShop"></p>
     <div class="split">
       <div class="splitbar"><div id="bBar" style="width:0;background:var(--ok)"></div></div>
       <div class="splitlegend"><span>Paid <b id="bPct">–</b></span><span>Booked <b id="bBookedN">–</b></span></div>
@@ -1642,7 +1641,7 @@
   };
   var TYPE_ICON = { 'Clothing': 'CL', 'Jewellery': 'JW', 'Accessories': 'AC', 'Gifts & favours': 'GF', 'DIY decor': 'DY', 'Other': '•' };
   function isBought(p) { return p.status === 'Bought' || p.status === 'Ordered'; }
-  function shopCost(p) { return p.actual !== '' && p.actual !== undefined ? num(p.actual) : num(p.estimate); }
+  function shopCost(p) { return num(p.actual); }
   function bOpt(k) { var o = bud.options && bud.options[k]; return o && o.length ? o : BUD_DEFAULTS[k]; }
   var CAT_ICON = { 'Venue': 'VN', 'Catering': 'CT', 'Photo & Video': 'PV', 'Decor & Mandap': 'DM', 'Priest & Music': 'PM',
                    'Attire & Beauty': 'AB', 'Rentals': 'RN', 'Stationery & Favours': 'SF', 'Other': '•' };
@@ -1663,8 +1662,7 @@
       groups: [
         [{ k: 'item', l: 'Item', t: 'text', ph: 'e.g. Bridesmaids sarees' }, { k: 'forWho', l: 'For', t: 'seg', o: 'forWho' },
          { k: 'type', l: 'Type', t: 'select', o: 'types', req: 1 }],
-        [{ k: 'status', l: 'Status', t: 'seg', o: 'shopStatus' }],
-        [{ k: 'estimate', l: 'Estimate', t: 'money', half: 1 }, { k: 'actual', l: 'Actual cost', t: 'money', half: 1 }],
+        [{ k: 'status', l: 'Status', t: 'seg', o: 'shopStatus' }, { k: 'actual', l: 'Cost', t: 'money' }],
         [{ k: 'payer', l: 'Who’s paying', t: 'text', ph: 'Optional, e.g. Amma' }, { k: 'notes', l: 'Notes', t: 'area', ph: 'Store, size, colour…' }]
       ] },
     installments: { noun: 'payment', addShort: 'Add payment', addTitle: 'Add a payment', key: 'booking', need: 'Pick which booking this is for.',
@@ -1738,7 +1736,7 @@
     bud.purchases.forEach(function (p) {
       var f = p.forWho || 'Not set'; if (!fors[f]) fors[f] = { bought: 0, planned: 0, n: 0 }; fors[f].n++;
       if (isBought(p)) { var c = shopCost(p); shopBought += c; fors[f].bought += c; }
-      else { shopPlanned += num(p.estimate); fors[f].planned += num(p.estimate); }
+      else { shopPlanned += shopCost(p); fors[f].planned += shopCost(p); }
     });
     committed += shopBought; paid += shopBought;
     var upcoming = bud.installments.filter(function (p) { return !isPaid(p.paid); });
@@ -1747,8 +1745,7 @@
       else if (p.due && p.due <= soon) due60 += num(p.amount);
     });
     $('bTotal').textContent = money(committed);
-    $('bSplit').innerHTML = '<b>' + money(paid) + '</b> paid · <b>' + money(owed) + '</b> still owed';
-    $('bShop').innerHTML = bud.purchases.length ? 'Shopping: <b>' + money(shopBought) + '</b> bought · <b>~' + money(shopPlanned) + '</b> still to buy' : '';
+    $('bSplit').innerHTML = '<b>' + money(paid) + '</b> paid · <b>' + money(owed) + '</b> owed';
     var pct = committed ? Math.min(100, paid / committed * 100) : 0;
     $('bBar').style.width = pct + '%';
     $('bPct').textContent = (pct < 1 && pct > 0 ? '<1' : Math.round(pct)) + '%';
@@ -1789,7 +1786,7 @@
       return '<button type="button" class="rel-row cat-row' + (bud.forWho === f ? ' on' : '') + '" data-for="' + esc(f) + '">' +
         '<span class="rel-name">' + esc(f) + '</span>' +
         '<span class="rel-bar cat-bar"><i style="width:' + w1 + '%"></i><i class="sl" style="width:' + w2 + '%"></i></span>' +
-        '<span class="cat-amt">' + (x.bought || x.planned ? (x.bought ? shortMoney(x.bought) : '') + (x.planned ? (x.bought ? ' <em>+' : '<em>~') + shortMoney(x.planned) + '</em>' : '') : '<em>–</em>') + '</span></button>';
+        '<span class="cat-amt">' + (x.bought + x.planned ? shortMoney(x.bought + x.planned) : '<em>–</em>') + '</span></button>';
     }).join('') + '<p class="cat-key"><i></i>Bought <i class="sl"></i>Still to buy</p>';
 
     $('tcB').textContent = bud.bookings.length; $('tcP').textContent = bud.installments.length; $('tcS').textContent = bud.purchases.length;
@@ -1829,31 +1826,31 @@
         var sa = isBought(a) ? 1 : 0, sb = isBought(b) ? 1 : 0;
         return sa - sb || String(a.item).localeCompare(b.item);
       });
-      var st = 0; items.forEach(function (p) { st += isBought(p) ? shopCost(p) : num(p.estimate); });
+      var st = 0; items.forEach(function (p) { st += shopCost(p); });
       $('bCount').textContent = items.length + (items.length === 1 ? ' item · ' : ' items · ') + money(st);
       var lastFor = null;
-      html = '<div class="list-head"><span>Item</span><span>Status</span><span class="r">Estimate</span><span class="r">Actual</span><span>Paid by</span></div>';
+      html = '<div class="list-head"><span>Item</span><span>Status</span><span class="r">Cost</span><span>Paid by</span><span></span></div>';
       items.forEach(function (p) {
         var f = p.forWho || 'Not set';
         if (f !== lastFor) {
           var inF = items.filter(function (x) { return (x.forWho || 'Not set') === f; }), fb = 0, fp = 0;
-          inF.forEach(function (x) { if (isBought(x)) fb += shopCost(x); else fp += num(x.estimate); });
+          inF.forEach(function (x) { if (isBought(x)) fb += shopCost(x); else fp += shopCost(x); });
           html += '<div class="grp"><span>' + esc(f === 'Not set' ? 'For: not set' : f) + '</span><span>' +
-            [fb ? money(fb) + ' bought' : '', fp ? '~' + money(fp) + ' to buy' : ''].filter(Boolean).join(' · ') + '</span></div>';
+            [fb ? money(fb) + ' bought' : '', fp ? money(fp) + ' to buy' : ''].filter(Boolean).join(' · ') + '</span></div>';
           lastFor = f;
         }
         var bought = isBought(p), status = p.status || 'To buy';
         var tag = '<span class="tag ' + (status === 'Bought' ? 'ok' : status === 'Ordered' ? 'warn' : 'neutral') + '">' + esc(status) + '</span>';
         var sub = [p.type && p.type !== 'Other' ? p.type : '', p.payer ? 'paid by ' + p.payer : ''].filter(Boolean).join(' · ');
-        var amt = bought ? money(shopCost(p)) : (p.estimate !== '' ? '~' + money(p.estimate) : '–');
+        var amt = p.actual !== '' ? money(p.actual) : '–';
         var btn = bought ? '' : '<button type="button" class="quick" data-bought="' + p.row + '">Mark bought</button>';
         html += '<div class="item' + (p._pending ? ' pending' : '') + '" data-t="purchases" data-row="' + p.row + '">' +
           '<div class="who"><div class="avatar cat">' + esc(TYPE_ICON[p.type] || initials(p.item)) + '</div>' +
           '<div class="meta"><div class="n">' + esc(p.item) + '</div><div class="s">' + tag + esc(sub) + '</div></div></div>' +
           '<div class="bcol">' + tag + '</div>' +
-          '<div class="bcol bnum' + (p.estimate !== '' ? '' : ' dim') + '">' + (p.estimate !== '' ? money(p.estimate) : '–') + '</div>' +
-          '<div class="bcol bnum' + (p.actual !== '' ? '' : ' dim') + '">' + (p.actual !== '' ? money(p.actual) : btn || '–') + '</div>' +
+          '<div class="bcol bnum' + (p.actual !== '' ? '' : ' dim') + '">' + amt + '</div>' +
           '<div class="bcol">' + (p.payer ? esc(p.payer) : '<span style="color:var(--muted)">–</span>') + '</div>' +
+          '<div class="bcol" style="text-align:right">' + btn + '</div>' +
           '<div class="amt"><b>' + amt + '</b>' + (btn || '<span>' + (status === 'Ordered' ? 'ordered' : 'bought') + '</span>') + '</div></div>';
       });
       if (!items.length) html = '<div class="empty"><b>' + (bud.q || bud.forWho || bud.sfilter !== 'all' ? 'Nothing matches' : 'Nothing on the shopping list') + '</b>' +
@@ -1991,7 +1988,7 @@
     if (t === 'purchases') bud.editing.display = data.item || '';
     var sub = '';
     if (!isNew && t === 'bookings') sub = [row.category, row.cost !== '' ? money(row.cost) + (isCommitted(row) ? ' · ' + money(row.owed) + ' still owed' : '') : 'No cost yet'].filter(Boolean).join(' · ');
-    if (!isNew && t === 'purchases') sub = [row.forWho ? 'For ' + row.forWho : '', row.status || 'To buy', isBought(row) ? money(shopCost(row)) : (row.estimate !== '' ? '~' + money(row.estimate) : '')].filter(Boolean).join(' · ');
+    if (!isNew && t === 'purchases') sub = [row.forWho ? 'For ' + row.forWho : '', row.status || 'To buy', row.actual !== '' ? money(row.actual) : ''].filter(Boolean).join(' · ');
     if (!isNew && t === 'installments') sub = (row.label || 'Payment') + ' · ' + money(row.amount) + (row.due ? ' · due ' + fmtDate(row.due) : '');
     $('bSub').textContent = isNew ? 'Changes save automatically as you type.' : sub;
     $('bFields').innerHTML = F.groups.map(function (g) {
@@ -2037,14 +2034,13 @@
       return f.t === 'money' && d[f.k] !== '' && !/^\$?\s*[\d,]+(\.\d{1,2})?$/.test(d[f.k]);
     }); });
     if (bad) return { err: 'Amounts should look like 1500 or 1500.50.' };
-    if (t === 'purchases' && d.status === 'Bought' && !d.actual && d.estimate) { d.actual = d.estimate; var ac = $('b_actual'); if (ac) ac.value = d.actual; }
     if (t === 'installments' && isPaid(d.paid) && !d.paidDate) { d.paidDate = todayIso(); var pd = $('b_paidDate'); if (pd) pd.value = d.paidDate; }
     var k = Object.assign({}, d); delete k.row; delete k.original;
     return { d: d, key: JSON.stringify(k) };
   }
   function budgetLocal(t, d) {
     var o = JSON.parse(JSON.stringify(d)); delete o.original;
-    (t === 'bookings' ? ['cost'] : t === 'purchases' ? ['estimate', 'actual'] : ['amount']).forEach(function (k) {
+    (t === 'bookings' ? ['cost'] : t === 'purchases' ? ['actual'] : ['amount']).forEach(function (k) {
       var v = String(o[k] || '').replace(/[$,\s]/g, '');
       o[k] = v === '' ? '' : Number(v);
     });
@@ -2121,7 +2117,7 @@
   function quickBought(rowNum) {
     var i = budgetIndex('purchases', rowNum); if (i === -1) return;
     var prev = bud.purchases[i], d = JSON.parse(JSON.stringify(prev));
-    d.status = 'Bought'; if (d.actual === '' || d.actual === undefined) d.actual = d.estimate;
+    d.status = 'Bought';
     bud.purchases[i] = budgetLocal('purchases', d);
     renderBudget(); syncStart();
     runSave('saveBudgetRow', ['purchases', d], function (res) {
@@ -2461,9 +2457,9 @@
         paid: 'Paid?', paidDate: 'Paid Date', method: 'Method / Ref', notes: 'Notes' },
       readOnly: ['forName'], money: ['amount'], dates: ['due', 'paidDate'] },
     purchases: { key: 'item', match: ['Item', 'For', 'Status'],
-      fields: { item: 'Item', forWho: 'For', type: 'Type', status: 'Status', estimate: 'Estimate (CAD)', actual: 'Actual (CAD)',
+      fields: { item: 'Item', forWho: 'For', type: 'Type', status: 'Status', actual: 'Cost (CAD)',
         payer: 'Paid by', notes: 'Notes', row: 'Item #' },
-      readOnly: ['row'], money: ['estimate', 'actual'], dates: [] }
+      readOnly: ['row'], money: ['actual'], dates: [] }
   };
   // The old planning-sheet tables, only read to move them across.
   var LEGACY = {
@@ -2577,6 +2573,8 @@
     if (table === 'bookings') {
       out.paid = Math.round((paid || 0) * 100) / 100;
       out.owed = out.cost === '' ? '' : Math.max(0, Math.round((Number(out.cost) - out.paid) * 100) / 100);
+    } else if (table === 'purchases') {
+      if (out.actual === '' && d.estimate !== undefined && d.estimate !== null) out.actual = d.estimate;   // older items kept the cost here
     } else if (table === 'installments') {
       out.booking = Number(out.booking) || ''; out.forName = names ? (names[out.booking] || '') : '';
       out.paid = out.paid === 'Yes' ? 'Yes' : 'No';
@@ -2684,7 +2682,7 @@
     (L.expenses || []).forEach(function (e) {
       var yes = String(e.paid).toLowerCase() === 'yes';
       purchases.push({ row: purchases.length + 1, item: e.item, forWho: guessFor(e.item), type: guessType(e.item),
-        status: yes ? 'Bought' : 'To buy', estimate: blank(e.estimated), actual: blank(e.actual), payer: blank(e.owner),
+        status: yes ? 'Bought' : 'To buy', actual: e.actual !== '' && e.actual !== undefined && e.actual !== null ? e.actual : blank(e.estimated), payer: blank(e.owner),
         notes: [e.due ? 'Due ' + e.due : '', blank(e.notes)].filter(Boolean).join(' — ') });
     });
     return { bookings: bookings, installments: inst, purchases: purchases };
@@ -2767,7 +2765,7 @@
         var payer = '', notes = String(bk.notes || '');
         var m = notes.match(/^Paying: ([^—]+?)(?: — |$)/); if (m) { payer = m[1].trim(); notes = notes.slice(m[0].length).trim(); }
         var item = { row: ++next, item: bk.name, forWho: guessFor(bk.name), type: guessType(bk.name), status: bought ? 'Bought' : 'To buy',
-          estimate: bk.cost, actual: bought ? (paid || bk.cost) : '', payer: payer, notes: notes };
+          actual: bought && paid ? paid : bk.cost, payer: payer, notes: notes };
         b.set('purchases', String(item.row), stamp(Object.assign({}, item))); data.purchases[String(item.row)] = item;
         b.delete('bookings', String(bk.row)); delete data.bookings[String(bk.row)];
         moved++;
