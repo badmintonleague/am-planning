@@ -512,7 +512,7 @@
     .bnum{text-align:right;font-family:var(--serif);font-size:18px;color:var(--ink)}
     .bnum.dim{color:var(--muted)}
     #bList .item .amt,#bList .item .meta .s{display:none}
-    #bList.t-bookings .list-head,#bList.t-bookings .item{grid-template-columns:minmax(0,2.3fr) minmax(0,1.3fr) 110px 110px 110px}
+    #bList.t-bookings .list-head,#bList.t-bookings .item{grid-template-columns:minmax(0,2.2fr) minmax(0,1.3fr) minmax(0,.8fr) 100px 100px 100px}
     #bList.t-purchases .list-head,#bList.t-purchases .item{grid-template-columns:minmax(0,2.3fr) minmax(0,1fr) 100px minmax(0,1fr) 130px;column-gap:28px}
     .grp{padding-left:22px;padding-right:22px}
     #bList.t-installments .list-head,#bList.t-installments .item{grid-template-columns:minmax(0,2.3fr) minmax(0,1fr) 120px 110px 110px}
@@ -1655,7 +1655,8 @@
         [{ k: 'name', l: 'What / who', t: 'text', ph: 'e.g. Nantha Catering' },
          { k: 'category', l: 'Category', t: 'select', o: 'categories', req: 1 },
          { k: 'event', l: 'For', t: 'seg', o: 'events' }],
-        [{ k: 'stage', l: 'Stage', t: 'select', o: 'stages', req: 1 }, { k: 'cost', l: 'Total cost', t: 'money' }],
+        [{ k: 'stage', l: 'Stage', t: 'select', o: 'stages', req: 1 }, { k: 'cost', l: 'Total cost', t: 'money' },
+         { k: 'payer', l: 'Paid by', t: 'seg', o: 'payers' }],
         [{ k: 'contact', l: 'Contact name', t: 'text', ph: 'Optional' }, { k: 'phone', l: 'Phone', t: 'tel', ph: 'Optional' },
          { k: 'email', l: 'Email', t: 'email', ph: 'Optional' }, { k: 'notes', l: 'Notes', t: 'area', ph: 'Optional' }]
       ] },
@@ -1689,6 +1690,7 @@
   function todayIso() { return isoOf(new Date()); }
   function isoPlusDays(n) { var t = new Date(); t.setDate(t.getDate() + n); return isoOf(t); }
   function isPaid(v) { return String(v).toLowerCase() === 'yes'; }
+  function payerTag(v) { return v ? '<span class="tag ' + (v === 'Family' ? 'fam' : 'us') + '">' + (v === 'Family' ? 'Family' : 'Us') + '</span>' : ''; }
   function stageTone(s) { return COMMITTED.indexOf(s) !== -1 ? 'ok' : s === 'Quoted' ? 'warn' : s === 'Not going ahead' ? 'bad' : 'neutral'; }
   function isCommitted(b) { return COMMITTED.indexOf(b.stage) !== -1 || (num(b.paid) > 0 && b.stage !== 'Not going ahead'); }
   function bookingByRow(r) { r = Number(r); for (var i = 0; i < bud.bookings.length; i++) if (bud.bookings[i].row === r) return bud.bookings[i]; return null; }
@@ -1872,7 +1874,7 @@
       var tot = 0; rows.forEach(function (b) { tot += num(b.cost); });
       $('bCount').textContent = rows.length + (rows.length === 1 ? ' vendor · ' : ' vendors · ') + money(tot);
       var lastCat = null;
-      html = '<div class="list-head"><span>Vendor</span><span>Stage</span><span class="r">Cost</span><span class="r">Paid</span><span class="r">Still owed</span></div>';
+      html = '<div class="list-head"><span>Vendor</span><span>Stage</span><span>Paid by</span><span class="r">Cost</span><span class="r">Paid</span><span class="r">Still owed</span></div>';
       rows.forEach(function (b) {
         var cat = b.category || 'Other';
         if (cat !== lastCat) {
@@ -1889,8 +1891,9 @@
           : (hasCost ? (b.stage === 'Quoted' ? 'quoted' : 'estimate') : 'no quote yet');
         html += '<div class="item' + (b._pending ? ' pending' : '') + (b.stage === 'Not going ahead' ? ' dropped' : '') + '" data-t="bookings" data-row="' + b.row + '">' +
           '<div class="who"><div class="avatar cat">' + esc(CAT_ICON[cat] || initials(b.name)) + '</div>' +
-          '<div class="meta"><div class="n">' + esc(b.name) + '</div><div class="s">' + tag + esc(sub) + '</div></div></div>' +
+          '<div class="meta"><div class="n">' + esc(b.name) + '</div><div class="s">' + tag + payerTag(b.payer) + esc(sub) + '</div></div></div>' +
           '<div class="bcol">' + tag + (b.event ? '<span class="ev">' + esc(b.event) + '</span>' : '') + '</div>' +
+          '<div class="bcol">' + (payerTag(b.payer) || '<span style="color:var(--muted)">–</span>') + '</div>' +
           '<div class="bcol bnum' + (hasCost ? '' : ' dim') + '">' + (hasCost ? money(b.cost) : '–') + '</div>' +
           '<div class="bcol bnum' + (num(b.paid) ? '' : ' dim') + '">' + (num(b.paid) ? money(b.paid) : '–') + '</div>' +
           '<div class="bcol bnum' + (committedNow && num(b.owed) ? '' : ' dim') + '">' + (committedNow ? money(b.owed) : '–') + '</div>' +
@@ -2454,7 +2457,7 @@
   var BUDGET = {
     bookings: { key: 'name', match: ['Booking', 'Category', 'Stage'],
       fields: { name: 'Booking', category: 'Category', event: 'Event', stage: 'Stage', cost: 'Cost (CAD)',
-        paid: 'Paid (CAD)', owed: 'Still owed (CAD)', contact: 'Contact Name', phone: 'Phone', email: 'Email', notes: 'Notes', row: 'Booking #' },
+        paid: 'Paid (CAD)', owed: 'Still owed (CAD)', payer: 'Paid by', contact: 'Contact Name', phone: 'Phone', email: 'Email', notes: 'Notes', row: 'Booking #' },
       readOnly: ['paid', 'owed', 'row'], money: ['cost', 'paid', 'owed'], dates: [] },
     installments: { key: 'booking', match: ['Booking #', 'Payment', 'Amount (CAD)'],
       fields: { booking: 'Booking #', forName: 'For', label: 'Payment', amount: 'Amount (CAD)', due: 'Due Date',
@@ -2561,7 +2564,7 @@
         out[k] = v;
       } else out[k] = str(v, 1000);
     });
-    if (cfg === BUDGET.purchases) out.payer = normPayer(out.payer);
+    if (cfg === BUDGET.purchases || cfg === BUDGET.bookings) out.payer = normPayer(out.payer);
     if (cfg === BUDGET.installments) {
       out.booking = Number(out.booking) || '';
       if (!out.booking) throw new Error('Pick which booking this payment is for.');
@@ -2576,6 +2579,7 @@
     Object.keys(cfg.fields).forEach(function (k) { out[k] = d[k] === undefined || d[k] === null ? '' : d[k]; });
     out.row = Number(row);
     if (table === 'bookings') {
+      out.payer = normPayer(out.payer);
       out.paid = Math.round((paid || 0) * 100) / 100;
       out.owed = out.cost === '' ? '' : Math.max(0, Math.round((Number(out.cost) - out.paid) * 100) / 100);
     } else if (table === 'purchases') {
