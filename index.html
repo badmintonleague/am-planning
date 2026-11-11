@@ -1213,6 +1213,7 @@
     renderPeopleEditor();
     $('sheet').scrollTop = 0;
     $('overlay').classList.add('open'); $('sheet').classList.add('open');
+    var start0 = guestPayload(gAuto.ctx); if (start0 && start0.key) gAuto.ctx.saved = start0.key;   // nothing to save until something changes
     if (isNew) setTimeout(function () { $('f_household').focus(); }, 350);
   }
   function closeForm() {
@@ -1656,8 +1657,7 @@
         [{ k: 'name', l: 'What / who', t: 'text', ph: 'e.g. Nantha Catering' },
          { k: 'category', l: 'Category', t: 'select', o: 'categories', req: 1 },
          { k: 'event', l: 'For', t: 'seg', o: 'events' }],
-        [{ k: 'stage', l: 'Stage', t: 'select', o: 'stages', req: 1 }, { k: 'cost', l: 'Total cost', t: 'money' },
-         { k: 'payer', l: 'Usually paid by', t: 'seg', o: 'payers', hint: 'New payments start with this. Change it on any payment that’s different.' }],
+        [{ k: 'stage', l: 'Stage', t: 'select', o: 'stages', req: 1 }, { k: 'cost', l: 'Total cost', t: 'money' }],
         [{ k: 'contact', l: 'Contact name', t: 'text', ph: 'Optional' }, { k: 'phone', l: 'Phone', t: 'tel', ph: 'Optional' },
          { k: 'email', l: 'Email', t: 'email', ph: 'Optional' }, { k: 'notes', l: 'Notes', t: 'area', ph: 'Optional' }]
       ] },
@@ -1670,7 +1670,7 @@
         [{ k: 'payer', l: 'Paid by', t: 'seg', o: 'payers' }, { k: 'notes', l: 'Notes', t: 'area', ph: 'Store, size, colour…' }]
       ] },
     installments: { noun: 'payment', addShort: 'Add payment', addTitle: 'Add a payment', key: 'booking', need: 'Pick which booking this is for.',
-      defaults: function () { var bk = bud.newFor ? bookingByRow(bud.newFor) : null; return { paid: 'No', booking: bud.newFor || '', payer: bk ? bk.payer || '' : '' }; },
+      defaults: function () { return { paid: 'No', booking: bud.newFor || '' }; },
       groups: [
         [{ k: 'booking', l: 'For', t: 'booking' }, { k: 'label', l: 'Payment', t: 'text', ph: 'e.g. Deposit, Final balance' }],
         [{ k: 'amount', l: 'Amount', t: 'money', half: 1 }, { k: 'due', l: 'Due date', t: 'date', half: 1 }],
@@ -1897,9 +1897,9 @@
           : (hasCost ? (b.stage === 'Quoted' ? 'quoted' : 'estimate') : 'no quote yet');
         html += '<div class="item' + (b._pending ? ' pending' : '') + (b.stage === 'Not going ahead' ? ' dropped' : '') + '" data-t="bookings" data-row="' + b.row + '">' +
           '<div class="who"><div class="avatar cat">' + esc(CAT_ICON[cat] || initials(b.name)) + '</div>' +
-          '<div class="meta"><div class="n">' + esc(b.name) + '</div><div class="s">' + tag + payerTag(b.payerSummary || b.payer) + esc(sub) + '</div></div></div>' +
+          '<div class="meta"><div class="n">' + esc(b.name) + '</div><div class="s">' + tag + payerTag(b.payerSummary) + esc(sub) + '</div></div></div>' +
           '<div class="bcol">' + tag + (b.event ? '<span class="ev">' + esc(b.event) + '</span>' : '') + '</div>' +
-          '<div class="bcol">' + (payerTag(b.payerSummary || b.payer) || '<span style="color:var(--muted)">–</span>') + '</div>' +
+          '<div class="bcol">' + (payerTag(b.payerSummary) || '<span style="color:var(--muted)">–</span>') + '</div>' +
           '<div class="bcol bnum' + (hasCost ? '' : ' dim') + '">' + (hasCost ? money(b.cost) : '–') + '</div>' +
           '<div class="bcol bnum' + (num(b.paid) ? '' : ' dim') + '">' + (num(b.paid) ? money(b.paid) : '–') + '</div>' +
           '<div class="bcol bnum' + (committedNow && num(b.owed) ? '' : ' dim') + '">' + (committedNow ? money(b.owed) : '–') + '</div>' +
@@ -2015,6 +2015,8 @@
     $('bConfirm').classList.remove('show');
     $('bsheet').scrollTop = 0;
     $('boverlay').classList.add('open'); $('bsheet').classList.add('open');
+    // Opening and closing without changes shouldn't save anything.
+    var start = budgetPayload(bAuto.ctx); if (start && start.key) bAuto.ctx.saved = start.key;
     if (isNew) setTimeout(function () { var first = $('bFields').querySelector('input'); if (first) first.focus(); }, 350);
   }
   function closeBudgetForm() {
@@ -2787,7 +2789,7 @@
         bookings: rowsOf('bookings').map(function (r) {
           var it = budgetItem('bookings', r.row, r, paidFor(r.row)), s = split[r.row];
           it.byUs = s ? Math.round(s.Us * 100) / 100 : 0; it.byFamily = s ? Math.round(s.Family * 100) / 100 : 0;
-          it.payerSummary = !s || (!it.byUs && !it.byFamily) ? it.payer : it.byUs && it.byFamily ? 'Split' : it.byUs ? 'Us' : 'Family';
+          it.payerSummary = !s || (!it.byUs && !it.byFamily) ? '' : it.byUs && it.byFamily ? 'Split' : it.byUs ? 'Us' : 'Family';
           return it;
         }),
         installments: inst,
@@ -2889,6 +2891,8 @@
             row++;
           }
           if (table === 'installments' && !data.bookings[String(clean.booking)]) throw new Error('That booking was removed. Pick another one.');
+          // Vendors no longer have a Paid by field; keep any earlier value so older payments still show who paid.
+          if (table === 'bookings' && d.payer === undefined) clean.payer = normPayer((data.bookings[String(row)] || {}).payer);
           clean.row = row;
           var b = fs.batch();
           b.set(table, String(row), stamp(Object.assign({}, clean)));
