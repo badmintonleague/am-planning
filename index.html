@@ -2791,6 +2791,39 @@
       data.budgetMeta = Object.assign({}, data.budgetMeta || {}, { migrated: true, purchasesMoved: true });
       return commit(b);
     }
+    /**
+     * One-time: the signed Willow Springs Winery contract (Nov 2026) and its payment schedule.
+     * Fixed document ids, so it's safe if you both open the app at the same moment.
+     */
+    function applyWillowContract() {
+      var b = fs.batch(), row = null;
+      Object.keys(data.bookings).forEach(function (id) { if (/willow\s*springs/i.test(data.bookings[id].name || '')) row = Number(data.bookings[id].row || id); });
+      if (row === null) { row = 0; Object.keys(data.bookings).forEach(function (id) { row = Math.max(row, Number(data.bookings[id].row || id) || 0); }); row++; }
+      var prev = data.bookings[String(row)] || {};
+      var booking = { row: row, name: 'Willow Springs Winery', category: 'Venue', event: 'Ceremony', stage: 'Booked', cost: 32205,
+        payer: prev.payer || '', contact: prev.contact || '', phone: prev.phone || '905-642-9463', email: prev.email || 'willowsprings@unitedentdj.com',
+        notes: 'Contract total $32,205 (+ $1,000 refundable security deposit = $33,205). Final payment is reconciled for guest count, rentals, seating, staffing, setup, catering/kitchen, extra services and taxes — may be higher or lower. Post-event charges (e.g. damage) invoiced separately. 5572 Bethesda Rd, Whitchurch-Stouffville.' };
+      b.set('bookings', String(row), stamp(Object.assign({}, booking))); data.bookings[String(row)] = booking;
+      // Replace any earlier placeholder payments for the venue with the contract schedule.
+      Object.keys(data.installments).forEach(function (id) {
+        if (Number(data.installments[id].booking) === row) { b.delete('installments', id); delete data.installments[id]; }
+      });
+      [['Initial booking deposit', 7000, '2026-11-15', 'Non-refundable. Secures the wedding date.'],
+       ['Installment 1 of 4', 5041, '2027-01-05', ''],
+       ['Installment 2 of 4', 5041, '2027-03-05', ''],
+       ['Installment 3 of 4', 5041, '2027-05-05', ''],
+       ['Installment 4 of 4', 5041, '2027-07-05', ''],
+       ['Final balance (estimate)', 5041, '2027-08-05', 'Reconciled to final guest count and approved extras — may change.'],
+       ['Security deposit (refundable)', 1000, '2027-08-05', 'Refundable. Paid with the final payment; not part of the $32,205 contract.']
+      ].forEach(function (p, i) {
+        var r = 9001 + i;
+        var inst = { row: r, booking: row, label: p[0], amount: p[1], due: p[2], paid: 'No', paidDate: '', method: '', notes: p[3] };
+        b.set('installments', String(r), stamp(Object.assign({}, inst))); data.installments[String(r)] = inst;
+      });
+      var meta = Object.assign({}, data.budgetMeta || {}, { migrated: true, purchasesMoved: true, willowContract: true });
+      b.set('meta', 'budget', meta); data.budgetMeta = meta;
+      return commit(b);
+    }
     function budgetOut() {
       var names = bookingNames();
       return {
@@ -2872,10 +2905,12 @@
             conv.purchases.forEach(function (r) { b.set('purchases', String(r.row), stamp(Object.assign({}, r))); data.purchases[String(r.row)] = r; });
             b.set('meta', 'budget', { migrated: true, purchasesMoved: true, at: new Date().toISOString() });
             data.budgetMeta = { migrated: true, purchasesMoved: true };
-            return commit(b).then(budgetOut);
+            return commit(b).then(function () { return api.getBudget(); });
           }
-          if (!(data.budgetMeta && data.budgetMeta.purchasesMoved)) return movePurchases().then(budgetOut);
-          return budgetOut();
+          var steps = Promise.resolve();
+          if (!(data.budgetMeta && data.budgetMeta.purchasesMoved)) steps = steps.then(movePurchases);
+          if (!(data.budgetMeta && data.budgetMeta.willowContract)) steps = steps.then(applyWillowContract);
+          return steps.then(budgetOut);
         });
       },
 
