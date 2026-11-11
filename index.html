@@ -343,6 +343,10 @@
   .bp-add{border:0;background:none;color:var(--gold);font-size:14px;font-weight:500;padding:12px 4px 6px;cursor:pointer;text-align:left}
   #bPills[hidden]{display:none}
   .tag.us{background:#ECEAF6;color:#4B4785}
+  .tag.split{background:linear-gradient(90deg,#ECEAF6 50%,var(--gold-soft) 50%);color:#5d4f6e}
+  .hero-who{font-size:13px;color:var(--muted);margin:4px 0 0}.hero-who:empty{display:none}.hero-who b{color:var(--ink2);font-weight:500}
+  .fhint{font-size:12px;color:var(--muted);margin:6px 2px 0;line-height:1.4}
+  .bp-right{display:flex;flex-direction:row!important;align-items:center;gap:8px}
   .tag.fam{background:var(--gold-soft);color:#8A6A22}
   .hero-shop:empty{display:none}
   #bForWrap[hidden]{display:none}
@@ -651,6 +655,7 @@
     <p class="eyebrow">Committed</p>
     <p class="big" id="bTotal">–</p>
     <p class="hero-split" id="bSplit"></p>
+    <p class="hero-who" id="bWho"></p>
     <div class="split">
       <div class="splitbar"><div id="bBar" style="width:0;background:var(--ok)"></div></div>
       <div class="splitlegend"><span>Paid <b id="bPct">–</b></span><span>Booked <b id="bBookedN">–</b></span></div>
@@ -1652,7 +1657,7 @@
          { k: 'category', l: 'Category', t: 'select', o: 'categories', req: 1 },
          { k: 'event', l: 'For', t: 'seg', o: 'events' }],
         [{ k: 'stage', l: 'Stage', t: 'select', o: 'stages', req: 1 }, { k: 'cost', l: 'Total cost', t: 'money' },
-         { k: 'payer', l: 'Paid by', t: 'seg', o: 'payers' }],
+         { k: 'payer', l: 'Usually paid by', t: 'seg', o: 'payers', hint: 'New payments start with this. Change it on any payment that’s different.' }],
         [{ k: 'contact', l: 'Contact name', t: 'text', ph: 'Optional' }, { k: 'phone', l: 'Phone', t: 'tel', ph: 'Optional' },
          { k: 'email', l: 'Email', t: 'email', ph: 'Optional' }, { k: 'notes', l: 'Notes', t: 'area', ph: 'Optional' }]
       ] },
@@ -1665,11 +1670,12 @@
         [{ k: 'payer', l: 'Paid by', t: 'seg', o: 'payers' }, { k: 'notes', l: 'Notes', t: 'area', ph: 'Store, size, colour…' }]
       ] },
     installments: { noun: 'payment', addShort: 'Add payment', addTitle: 'Add a payment', key: 'booking', need: 'Pick which booking this is for.',
-      defaults: function () { return { paid: 'No', booking: bud.newFor || '' }; },
+      defaults: function () { var bk = bud.newFor ? bookingByRow(bud.newFor) : null; return { paid: 'No', booking: bud.newFor || '', payer: bk ? bk.payer || '' : '' }; },
       groups: [
         [{ k: 'booking', l: 'For', t: 'booking' }, { k: 'label', l: 'Payment', t: 'text', ph: 'e.g. Deposit, Final balance' }],
         [{ k: 'amount', l: 'Amount', t: 'money', half: 1 }, { k: 'due', l: 'Due date', t: 'date', half: 1 }],
-        [{ k: 'paid', l: 'Paid?', t: 'seg', o: 'paid' }, { k: 'paidDate', l: 'Paid on', t: 'date' }, { k: 'method', l: 'Method / reference', t: 'text', ph: 'Optional' }],
+        [{ k: 'paid', l: 'Paid?', t: 'seg', o: 'paid' }, { k: 'paidDate', l: 'Paid on', t: 'date' }, { k: 'payer', l: 'Paid by', t: 'seg', o: 'payers' },
+         { k: 'method', l: 'Method / reference', t: 'text', ph: 'Optional' }],
         [{ k: 'notes', l: 'Notes', t: 'area', ph: 'Optional' }]
       ] }
   };
@@ -1686,7 +1692,7 @@
   function todayIso() { return isoOf(new Date()); }
   function isoPlusDays(n) { var t = new Date(); t.setDate(t.getDate() + n); return isoOf(t); }
   function isPaid(v) { return String(v).toLowerCase() === 'yes'; }
-  function payerTag(v) { return v ? '<span class="tag ' + (v === 'Family' ? 'fam' : 'us') + '">' + (v === 'Family' ? 'Family' : 'Us') + '</span>' : ''; }
+  function payerTag(v) { return v ? '<span class="tag ' + (v === 'Family' ? 'fam' : v === 'Split' ? 'split' : 'us') + '">' + esc(v) + '</span>' : ''; }
   function stageTone(s) { return COMMITTED.indexOf(s) !== -1 ? 'ok' : s === 'Quoted' ? 'warn' : s === 'Not going ahead' ? 'bad' : 'neutral'; }
   function isCommitted(b) { return COMMITTED.indexOf(b.stage) !== -1 || (num(b.paid) > 0 && b.stage !== 'Not going ahead'); }
   function bookingByRow(r) { r = Number(r); for (var i = 0; i < bud.bookings.length; i++) if (bud.bookings[i].row === r) return bud.bookings[i]; return null; }
@@ -1746,6 +1752,10 @@
     });
     $('bTotal').textContent = money(committed);
     $('bSplit').innerHTML = '<b>' + money(paid) + '</b> paid · <b>' + money(owed) + '</b> owed';
+    var byUs = 0, byFam = 0;
+    bud.installments.forEach(function (p) { if (isPaid(p.paid)) { if (p.payer === 'Family') byFam += num(p.amount); else if (p.payer === 'Us') byUs += num(p.amount); } });
+    bud.purchases.forEach(function (p) { if (isBought(p)) { if (p.payer === 'Family') byFam += shopCost(p); else if (p.payer === 'Us') byUs += shopCost(p); } });
+    $('bWho').innerHTML = byFam ? 'Paid by us <b>' + money(byUs) + '</b> · family <b>' + money(byFam) + '</b>' : '';
     var pct = committed ? Math.min(100, paid / committed * 100) : 0;
     $('bBar').style.width = pct + '%';
     $('bPct').textContent = (pct < 1 && pct > 0 ? '<1' : Math.round(pct)) + '%';
@@ -1887,9 +1897,9 @@
           : (hasCost ? (b.stage === 'Quoted' ? 'quoted' : 'estimate') : 'no quote yet');
         html += '<div class="item' + (b._pending ? ' pending' : '') + (b.stage === 'Not going ahead' ? ' dropped' : '') + '" data-t="bookings" data-row="' + b.row + '">' +
           '<div class="who"><div class="avatar cat">' + esc(CAT_ICON[cat] || initials(b.name)) + '</div>' +
-          '<div class="meta"><div class="n">' + esc(b.name) + '</div><div class="s">' + tag + payerTag(b.payer) + esc(sub) + '</div></div></div>' +
+          '<div class="meta"><div class="n">' + esc(b.name) + '</div><div class="s">' + tag + payerTag(b.payerSummary || b.payer) + esc(sub) + '</div></div></div>' +
           '<div class="bcol">' + tag + (b.event ? '<span class="ev">' + esc(b.event) + '</span>' : '') + '</div>' +
-          '<div class="bcol">' + (payerTag(b.payer) || '<span style="color:var(--muted)">–</span>') + '</div>' +
+          '<div class="bcol">' + (payerTag(b.payerSummary || b.payer) || '<span style="color:var(--muted)">–</span>') + '</div>' +
           '<div class="bcol bnum' + (hasCost ? '' : ' dim') + '">' + (hasCost ? money(b.cost) : '–') + '</div>' +
           '<div class="bcol bnum' + (num(b.paid) ? '' : ' dim') + '">' + (num(b.paid) ? money(b.paid) : '–') + '</div>' +
           '<div class="bcol bnum' + (committedNow && num(b.owed) ? '' : ' dim') + '">' + (committedNow ? money(b.owed) : '–') + '</div>' +
@@ -1916,10 +1926,10 @@
             : over ? '<span class="tag bad">Overdue</span>' : '<span class="tag neutral">Upcoming</span>';
           var btn = paidNow ? '' : '<button type="button" class="quick" data-quick="' + p.row + '">Mark paid</button>';
           return '<div class="item' + (p._pending ? ' pending' : '') + '" data-t="installments" data-row="' + p.row + '">' +
-            '<div class="who">' + chip + '<div class="meta"><div class="n">' + esc(p.forName || 'Payment') + '</div><div class="s">' + tag + esc(p.label || '') +
+            '<div class="who">' + chip + '<div class="meta"><div class="n">' + esc(p.forName || 'Payment') + '</div><div class="s">' + tag + payerTag(p.payer) + esc(p.label || '') +
             (p.due && !paidNow ? ' · due ' + esc(fmtDate(p.due)) : '') + '</div></div></div>' +
             '<div class="bcol">' + (p.due ? esc(fmtDate(p.due)) : '<span style="color:var(--muted)">No date</span>') + '</div>' +
-            '<div class="bcol">' + tag + '</div>' +
+            '<div class="bcol">' + tag + payerTag(p.payer) + '</div>' +
             '<div class="bcol bnum">' + money(p.amount) + '</div>' +
             '<div class="bcol" style="text-align:right">' + btn + '</div>' +
             '<div class="amt"><b>' + money(p.amount) + '</b>' + (btn ? btn : '<span>' + esc(p.label || '') + '</span>') + '</div>' +
@@ -1939,7 +1949,8 @@
     if (f.t === 'seg') {
       var opts = o.slice(); if (val && opts.indexOf(val) === -1) opts.push(val);
       return '<div class="field"><label>' + esc(f.l) + '</label><div class="seg" id="' + id + '" data-value="' + esc(val) + '">' +
-        opts.map(function (x) { return '<button type="button" class="' + (x === val ? 'on' : '') + '" data-v="' + esc(x) + '">' + esc(x) + '</button>'; }).join('') + '</div></div>';
+        opts.map(function (x) { return '<button type="button" class="' + (x === val ? 'on' : '') + '" data-v="' + esc(x) + '">' + esc(x) + '</button>'; }).join('') + '</div>' +
+        (f.hint ? '<p class="fhint">' + esc(f.hint) + '</p>' : '') + '</div>';
     }
     if (f.t === 'select') {
       var so = o.slice(); if (val && so.indexOf(val) === -1) so.push(val);
@@ -1965,12 +1976,13 @@
     var ps = paymentsOf(row).slice().sort(function (a, b) { return (a.due || '9999') < (b.due || '9999') ? -1 : 1; });
     var b = bookingByRow(row), paidSum = 0; ps.forEach(function (p) { if (isPaid(p.paid)) paidSum += num(p.amount); });
     var head = b && b.cost !== '' ? money(paidSum) + ' of ' + money(b.cost) + ' paid' : (paidSum ? money(paidSum) + ' paid' : '');
+    if (b && b.byUs && b.byFamily) head += ' · us ' + money(b.byUs) + ' / family ' + money(b.byFamily);
     return '<div class="group-title">Payments <span class="hint">' + esc(head) + '</span></div><div class="group bp">' +
       ps.map(function (p) {
         var paidNow = isPaid(p.paid);
         return '<button type="button" class="bp-row" data-pay="' + p.row + '"><span><b>' + esc(p.label || 'Payment') + '</b><small>' +
           (paidNow ? 'Paid' + (p.paidDate ? ' ' + esc(fmtDate(p.paidDate)) : '') : p.due ? 'Due ' + esc(fmtDate(p.due)) : 'No date yet') + '</small></span>' +
-          '<span class="bp-amt' + (paidNow ? ' ok' : '') + '">' + money(p.amount) + '</span></button>';
+          '<span class="bp-right">' + payerTag(p.payer) + '<span class="bp-amt' + (paidNow ? ' ok' : '') + '">' + money(p.amount) + '</span></span></button>';
       }).join('') +
       '<button type="button" class="bp-add" data-addpay="' + row + '">+ Add a payment</button></div>';
   }
@@ -2425,7 +2437,7 @@
       readOnly: ['paid', 'owed', 'row'], money: ['cost', 'paid', 'owed'], dates: [] },
     installments: { key: 'booking', match: ['Booking #', 'Payment', 'Amount (CAD)'],
       fields: { booking: 'Booking #', forName: 'For', label: 'Payment', amount: 'Amount (CAD)', due: 'Due Date',
-        paid: 'Paid?', paidDate: 'Paid Date', method: 'Method / Ref', notes: 'Notes' },
+        paid: 'Paid?', paidDate: 'Paid Date', payer: 'Paid by', method: 'Method / Ref', notes: 'Notes' },
       readOnly: ['forName'], money: ['amount'], dates: ['due', 'paidDate'] },
     purchases: { key: 'item', match: ['Item', 'For', 'Status'],
       fields: { item: 'Item', forWho: 'For', type: 'Type', status: 'Status', actual: 'Cost (CAD)',
@@ -2532,6 +2544,7 @@
     if (cfg === BUDGET.installments) {
       out.booking = Number(out.booking) || '';
       if (!out.booking) throw new Error('Pick which booking this payment is for.');
+      out.payer = normPayer(out.payer);
       out.paid = out.paid === 'Yes' ? 'Yes' : 'No';
       return out;
     }
@@ -2755,11 +2768,29 @@
       data.budgetMeta = Object.assign({}, data.budgetMeta || {}, { migrated: true, purchasesMoved: true });
       return commit(b);
     }
+    /** A payment's Paid by: its own setting, or else its vendor's default. */
+    function withPayer(item) {
+      var bk = data.bookings[String(item.booking)];
+      item.payerOwn = normPayer(item.payer);
+      item.payer = item.payerOwn || normPayer(bk && bk.payer);
+      return item;
+    }
     function budgetOut() {
       var names = bookingNames();
+      var inst = rowsOf('installments').map(function (r) { return withPayer(budgetItem('installments', r.row, r, 0, names)); });
+      var split = {};
+      inst.forEach(function (p) {
+        var s = split[p.booking] = split[p.booking] || { Us: 0, Family: 0, n: 0 };
+        s.n++; if (p.payer) s[p.payer] += Number(p.amount) || 0;
+      });
       return {
-        bookings: rowsOf('bookings').map(function (r) { return budgetItem('bookings', r.row, r, paidFor(r.row)); }),
-        installments: rowsOf('installments').map(function (r) { return budgetItem('installments', r.row, r, 0, names); }),
+        bookings: rowsOf('bookings').map(function (r) {
+          var it = budgetItem('bookings', r.row, r, paidFor(r.row)), s = split[r.row];
+          it.byUs = s ? Math.round(s.Us * 100) / 100 : 0; it.byFamily = s ? Math.round(s.Family * 100) / 100 : 0;
+          it.payerSummary = !s || (!it.byUs && !it.byFamily) ? it.payer : it.byUs && it.byFamily ? 'Split' : it.byUs ? 'Us' : 'Family';
+          return it;
+        }),
+        installments: inst,
         purchases: rowsOf('purchases').map(function (r) { return budgetItem('purchases', r.row, r); }),
         options: mergeOptions(data.options).budget, url: ''
       };
@@ -2862,7 +2893,7 @@
           var b = fs.batch();
           b.set(table, String(row), stamp(Object.assign({}, clean)));
           return commit(b).then(function () {
-            var item = table === 'bookings' ? budgetItem('bookings', row, clean, paidFor(row)) : table === 'purchases' ? budgetItem('purchases', row, clean) : budgetItem('installments', row, clean, 0, bookingNames());
+            var item = table === 'bookings' ? budgetItem('bookings', row, clean, paidFor(row)) : table === 'purchases' ? budgetItem('purchases', row, clean) : withPayer(budgetItem('installments', row, clean, 0, bookingNames()));
             return { row: row, item: item, inserted: false };
           });
         });
