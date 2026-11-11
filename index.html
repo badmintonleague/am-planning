@@ -1656,7 +1656,7 @@
       groups: [
         [{ k: 'name', l: 'What / who', t: 'text', ph: 'e.g. Nantha Catering' },
          { k: 'category', l: 'Category', t: 'select', o: 'categories', req: 1 },
-         { k: 'event', l: 'For', t: 'seg', o: 'events' }],
+         { k: 'event', l: 'For', t: 'seg', o: 'events', clear: 1 }],
         [{ k: 'stage', l: 'Stage', t: 'select', o: 'stages', req: 1 }, { k: 'cost', l: 'Total cost', t: 'money' }],
         [{ k: 'contact', l: 'Contact name', t: 'text', ph: 'Optional' }, { k: 'phone', l: 'Phone', t: 'tel', ph: 'Optional' },
          { k: 'email', l: 'Email', t: 'email', ph: 'Optional' }, { k: 'notes', l: 'Notes', t: 'area', ph: 'Optional' }]
@@ -1664,17 +1664,17 @@
     purchases: { noun: 'item', addShort: 'Add item', addTitle: 'Add an item', key: 'item', need: 'Add an item name first.',
       defaults: function () { return { status: 'To buy', forWho: bud.forWho || '', type: 'Clothing' }; },
       groups: [
-        [{ k: 'item', l: 'Item', t: 'text', ph: 'e.g. Bridesmaids sarees' }, { k: 'forWho', l: 'For', t: 'seg', o: 'forWho' },
+        [{ k: 'item', l: 'Item', t: 'text', ph: 'e.g. Bridesmaids sarees' }, { k: 'forWho', l: 'For', t: 'seg', o: 'forWho', clear: 1 },
          { k: 'type', l: 'Type', t: 'select', o: 'types', req: 1 }],
         [{ k: 'status', l: 'Status', t: 'seg', o: 'shopStatus' }, { k: 'actual', l: 'Cost', t: 'money' }],
-        [{ k: 'payer', l: 'Paid by', t: 'seg', o: 'payers' }, { k: 'notes', l: 'Notes', t: 'area', ph: 'Store, size, colour…' }]
+        [{ k: 'payer', l: 'Paid by', t: 'seg', o: 'payers', clear: 1, hint: 'Tap a selected option again to clear it.' }, { k: 'notes', l: 'Notes', t: 'area', ph: 'Store, size, colour…' }]
       ] },
     installments: { noun: 'payment', addShort: 'Add payment', addTitle: 'Add a payment', key: 'booking', need: 'Pick which booking this is for.',
       defaults: function () { return { paid: 'No', booking: bud.newFor || '' }; },
       groups: [
         [{ k: 'booking', l: 'For', t: 'booking' }, { k: 'label', l: 'Payment', t: 'text', ph: 'e.g. Deposit, Final balance' }],
         [{ k: 'amount', l: 'Amount', t: 'money', half: 1 }, { k: 'due', l: 'Due date', t: 'date', half: 1 }],
-        [{ k: 'paid', l: 'Paid?', t: 'seg', o: 'paid' }, { k: 'paidDate', l: 'Paid on', t: 'date' }, { k: 'payer', l: 'Paid by', t: 'seg', o: 'payers' },
+        [{ k: 'paid', l: 'Paid?', t: 'seg', o: 'paid' }, { k: 'paidDate', l: 'Paid on', t: 'date' }, { k: 'payer', l: 'Paid by', t: 'seg', o: 'payers', clear: 1, hint: 'Not decided yet? Leave it blank — tap a selected option again to clear it.' },
          { k: 'method', l: 'Method / reference', t: 'text', ph: 'Optional' }],
         [{ k: 'notes', l: 'Notes', t: 'area', ph: 'Optional' }]
       ] }
@@ -1948,7 +1948,7 @@
     var label = '<label for="' + id + '">' + esc(f.l) + '</label>';
     if (f.t === 'seg') {
       var opts = o.slice(); if (val && opts.indexOf(val) === -1) opts.push(val);
-      return '<div class="field"><label>' + esc(f.l) + '</label><div class="seg" id="' + id + '" data-value="' + esc(val) + '">' +
+      return '<div class="field"><label>' + esc(f.l) + '</label><div class="seg' + (f.clear ? ' clearable' : '') + '" id="' + id + '" data-value="' + esc(val) + '">' +
         opts.map(function (x) { return '<button type="button" class="' + (x === val ? 'on' : '') + '" data-v="' + esc(x) + '">' + esc(x) + '</button>'; }).join('') + '</div>' +
         (f.hint ? '<p class="fhint">' + esc(f.hint) + '</p>' : '') + '</div>';
     }
@@ -2276,8 +2276,9 @@
   });
   $('bFields').addEventListener('click', function (e) {
     var b = e.target.closest('.seg [data-v]'); if (!b) return;
-    var seg = b.parentNode; seg.dataset.value = b.dataset.v;
-    Array.prototype.forEach.call(seg.children, function (x) { x.classList.toggle('on', x === b); });
+    var seg = b.parentNode, off = seg.classList.contains('clearable') && seg.dataset.value === b.dataset.v;
+    seg.dataset.value = off ? '' : b.dataset.v;
+    Array.prototype.forEach.call(seg.children, function (x) { x.classList.toggle('on', !off && x === b); });
   });
   $('bform').addEventListener('submit', saveBudget);
   $('bform').addEventListener('input', function () { if (bAuto) bAuto.schedule(700); });
@@ -2774,7 +2775,7 @@
     function withPayer(item) {
       var bk = data.bookings[String(item.booking)];
       item.payerOwn = normPayer(item.payer);
-      item.payer = item.payerOwn || normPayer(bk && bk.payer);
+      item.payer = item.payerOwn;
       return item;
     }
     function budgetOut() {
