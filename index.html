@@ -279,7 +279,8 @@
   .sumrow.total{border-top:1px solid var(--line);margin-top:4px;padding-top:12px;color:var(--ink);font-weight:500}
   .sumrow.total b{font-size:20px}
   .meta .n:has(.nm){display:flex;align-items:center;min-width:0}
-  .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+  .nm{min-width:0;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .meta .n:has(.nm){align-items:flex-start;gap:6px}
   .flag{display:inline-flex;align-items:center;margin-left:8px;flex:0 0 auto}
   .flag img{width:20px;height:14px;object-fit:cover;border-radius:3px;box-shadow:0 0 0 1px rgba(0,0,0,.08)}
   .flag .globe{font-size:14px;line-height:1}
@@ -316,7 +317,7 @@
     cursor:pointer;text-align:left;color:var(--ink)}
   .next-row:hover{background:#FAF8F4}
   .next-n{flex:1;min-width:0;display:flex;flex-direction:column}
-  .next-n b{font-weight:500;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .next-n b{font-weight:500;font-size:14px;line-height:1.3;overflow-wrap:anywhere}
   .next-n small{font-size:12px;color:var(--muted);margin-top:2px}
   .next-amt{font-family:var(--serif);font-size:17px}
   .next-empty,.bp-empty{font-size:13px;color:var(--muted);margin:2px 4px 8px;line-height:1.45}
@@ -364,7 +365,7 @@
     font-size:16px;font-family:var(--sans);color:var(--ink)}
   .search input::placeholder{color:var(--muted)}
   .search input:focus{outline:1.5px solid var(--ink)}
-  .pills{display:flex;gap:8px;overflow-x:auto;padding:12px 0 2px;scrollbar-width:none}
+  .pills{display:flex;flex-wrap:wrap;gap:8px;padding:12px 0 2px}
   .pills::-webkit-scrollbar{display:none}
   .pill{flex:0 0 auto;border:1px solid var(--line);background:transparent;border-radius:999px;
     padding:8px 14px;font-size:13.5px;color:var(--ink2);cursor:pointer;transition:all .15s}
@@ -381,14 +382,16 @@
   .avatar.Groom{background:var(--groom-soft);color:var(--groom)}
   .who{display:flex;align-items:center;gap:14px;flex:1;min-width:0}
   .meta{flex:1;min-width:0}
-  .meta .n{font-weight:500;font-size:15.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .meta .s{font-size:13px;color:var(--muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .meta .n{font-weight:500;font-size:15.5px;line-height:1.3;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .meta .s{font-size:13px;color:var(--muted);margin-top:4px;display:flex;flex-wrap:wrap;align-items:center;row-gap:4px;line-height:1.35}
   .tag{display:inline-block;font-size:11.5px;font-weight:500;padding:2px 8px;border-radius:999px;margin-right:4px}
   .tag.Confirmed{background:var(--ok-soft);color:var(--ok)}
   .tag.Declined{background:var(--no-soft);color:var(--no)}
   .tag.Maybe{background:var(--maybe-soft);color:var(--maybe)}
   .tag.Invited,.tag.sent{background:var(--gold-soft);color:#8A6A22}
-  .amt{text-align:right;flex:0 0 auto}
+  .amt{text-align:right;flex:0 0 auto;max-width:42%}
+  .amt span{white-space:nowrap}
+  .d-sub{display:none}
   .amt b{display:block;font-family:var(--serif);font-weight:400;font-size:20px;letter-spacing:-.3px}
   .amt span{font-size:11.5px;color:var(--muted)}
   .empty{padding:48px 20px;text-align:center;color:var(--muted)}
@@ -500,23 +503,26 @@
     .list-head{font-size:11.5px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);
       border-bottom:1px solid var(--line);padding-top:16px;padding-bottom:12px}
     .list-head .r,.col-num{text-align:right}
+    .list-head span{white-space:nowrap}
+    .d-sub{display:block;font-size:12.5px;color:var(--muted);margin-top:2px}
     .item{cursor:pointer}
     .item:hover{background:#FBF9F5}
     .item+.item{border-top:1px solid var(--line)}
     .who{display:flex;align-items:center;gap:14px;min-width:0}
     .item .meta .s{display:none}
     .item .amt{display:none}
-    .col-rel,.col-status{display:block;font-size:14px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .col-rel,.col-status{display:block;font-size:14px;color:var(--ink2);overflow-wrap:anywhere}
     .col-num{display:block;font-family:var(--serif);font-size:20px}
     .col-num.dim{color:var(--muted)}
     .col-status .tag{margin-right:0}
 
     /* Budget tables on desktop */
-    .bcol{display:block;font-size:14px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .bcol{display:flex;flex-wrap:wrap;gap:4px;align-items:center;font-size:14px;color:var(--ink2);min-width:0}
+    .bcol.bnum{display:block}
     .bnum{text-align:right;font-family:var(--serif);font-size:18px;color:var(--ink)}
     .bnum.dim{color:var(--muted)}
     #bList .item .amt,#bList .item .meta .s{display:none}
-    #bList.t-bookings .list-head,#bList.t-bookings .item{grid-template-columns:minmax(0,2.2fr) minmax(0,1.3fr) minmax(0,.8fr) 100px 100px 100px}
+    #bList.t-bookings .list-head,#bList.t-bookings .item{grid-template-columns:minmax(0,2.8fr) minmax(0,1fr) minmax(0,.9fr) 100px 80px 100px;column-gap:14px}
     #bList.t-purchases .list-head,#bList.t-purchases .item{grid-template-columns:minmax(0,2.3fr) minmax(0,1fr) 100px minmax(0,1fr) 130px;column-gap:28px}
     .grp{padding-left:22px;padding-right:22px}
     #bList.t-installments .list-head,#bList.t-installments .item{grid-template-columns:minmax(0,2.3fr) minmax(0,1fr) 120px 110px 110px}
@@ -536,6 +542,14 @@
     .list-head,.item{grid-template-columns:minmax(0,2.2fr) minmax(0,1.2fr) minmax(0,1.2fr) 70px}
   }
 
+  @media (min-width: 960px) and (max-width: 1199px){
+    #bList .list-head{display:none}
+    #bList .item{display:flex;align-items:center;gap:12px}
+    #bList .bcol{display:none!important}
+    #bList .item .amt{display:block}
+    #bList .item .meta .s{display:flex}
+    #bList .d-sub{display:none}
+  }
   @media (prefers-reduced-motion: reduce){
     *,*::before,*::after{animation-duration:.01ms!important;animation-delay:0s!important;transition-duration:.01ms!important}
     .ring circle{stroke-dashoffset:0}
@@ -885,7 +899,7 @@
   function summary(g, ev) { var a = adultsOf(g, ev), k = kidsOf(g, ev); return k ? a + ' + ' + k + (k === 1 ? ' kid' : ' kids') : String(a); }
   function isSent(g) { return !isNotInvited(g.weddingRsvp) || !isNotInvited(g.receptionRsvp); }
   function initials(name) {
-    var w = String(name).replace(/\(.*?\)/g, '').replace(/\b(family|mama|athe|periyamma)\b/ig, '').trim().split(/\s+/).filter(Boolean);
+    var w = String(name).replace(/\(.*?\)/g, '').replace(/\b(family|mama|athe|periyamma)\b/ig, '').trim().split(/\s+/).filter(function (x) { return /[A-Za-z]/.test(x); });
     if (!w.length) w = String(name).trim().split(/\s+/);
     return ((w[0] || '')[0] || '').toUpperCase() + ((w[1] || '')[0] || '').toUpperCase();
   }
@@ -1897,8 +1911,8 @@
           : (hasCost ? (b.stage === 'Quoted' ? 'quoted' : 'estimate') : 'no quote yet');
         html += '<div class="item' + (b._pending ? ' pending' : '') + (b.stage === 'Not going ahead' ? ' dropped' : '') + '" data-t="bookings" data-row="' + b.row + '">' +
           '<div class="who"><div class="avatar cat">' + esc(CAT_ICON[cat] || initials(b.name)) + '</div>' +
-          '<div class="meta"><div class="n">' + esc(b.name) + '</div><div class="s">' + tag + payerTag(b.payerSummary) + esc(sub) + '</div></div></div>' +
-          '<div class="bcol">' + tag + (b.event ? '<span class="ev">' + esc(b.event) + '</span>' : '') + '</div>' +
+          '<div class="meta"><div class="n">' + esc(b.name) + '</div>' + (b.event ? '<div class="d-sub">' + esc(b.event === 'Both' ? 'Ceremony + reception' : b.event) + '</div>' : '') + '<div class="s">' + tag + payerTag(b.payerSummary) + esc(sub) + '</div></div></div>' +
+          '<div class="bcol">' + tag + '</div>' +
           '<div class="bcol">' + (payerTag(b.payerSummary) || '<span style="color:var(--muted)">–</span>') + '</div>' +
           '<div class="bcol bnum' + (hasCost ? '' : ' dim') + '">' + (hasCost ? money(b.cost) : '–') + '</div>' +
           '<div class="bcol bnum' + (num(b.paid) ? '' : ' dim') + '">' + (num(b.paid) ? money(b.paid) : '–') + '</div>' +
