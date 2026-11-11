@@ -484,7 +484,9 @@
     .fab{display:none}
 
     .layout{display:grid;grid-template-columns:340px minmax(0,1fr);gap:48px;align-items:start}
-    .side{position:sticky;top:96px}
+    .side{position:sticky;top:88px;max-height:calc(100vh - 100px);overflow-y:auto;overscroll-behavior:contain;
+      padding:0 10px 24px 4px;margin:0 -10px 0 -4px;scrollbar-width:thin;scrollbar-color:rgba(0,0,0,.18) transparent}
+    .side::-webkit-scrollbar{width:6px}.side::-webkit-scrollbar-thumb{background:rgba(0,0,0,.18);border-radius:3px}
     .hero{padding-top:24px}
     .big{font-size:76px}
     .kpis{grid-template-columns:1fr;margin-top:28px}
