@@ -2974,7 +2974,7 @@
             });
           });
           ops.push(['set', 'meta', 'options', JSON.parse(JSON.stringify(DEFAULT_OPTIONS))]);
-          ops.push(['set', 'meta', 'budget', { migrated: true, purchasesMoved: true, at: new Date().toISOString() }]);
+          ops.push(['set', 'meta', 'budget', { migrated: true, purchasesMoved: true, willowContract: true, at: new Date().toISOString() }]);
           // A set after a delete of the same doc in one batch is fine; split into chunks Firestore accepts.
           var chunks = [];
           for (var i = 0; i < ops.length; i += 400) chunks.push(ops.slice(i, i + 400));
