@@ -714,14 +714,10 @@
     <button type="button" class="nav-act" id="navExport">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="M7.5 10.5L12 15l4.5-4.5"/><path d="M5 19h14"/></svg>
       <span>Export to Excel / Google Sheets</span></button>
-    <button type="button" class="nav-act" id="navImport">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4"/><path d="M7.5 8.5L12 4l4.5 4.5"/><path d="M5 19h14"/></svg>
-      <span>Import from spreadsheet</span></button>
     <button type="button" class="nav-act" id="navSignOut">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4"/><path d="M10 16l-4-4 4-4"/><path d="M6 12h10"/></svg>
       <span>Sign out</span></button>
     <div class="nav-who" id="navWho"></div>
-    <input type="file" id="importFile" accept=".xlsx,.xls,.csv" hidden>
   </div>
 </nav>
 
@@ -2348,10 +2344,6 @@
       document.head.appendChild(s);
     });
   }
-  function serialToIso(n) {
-    var d = XLSX.SSF.parse_date_code(n);
-    return d ? d.y + '-' + ('0' + d.m).slice(-2) + '-' + ('0' + d.d).slice(-2) : '';
-  }
   function todayStamp() { var d = new Date(); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
 
   $('navExport').addEventListener('click', function () {
@@ -2373,34 +2365,6 @@
       });
       XLSX.writeFile(wb, 'AM-Wedding-' + todayStamp() + '.xlsx');
     }).catch(function (e) { toast('Couldn’t export: ' + e.message, 5000); });
-  });
-
-  $('navImport').addEventListener('click', function () { closeNav(); $('importFile').value = ''; $('importFile').click(); });
-  $('importFile').addEventListener('change', function () {
-    var file = this.files && this.files[0]; if (!file) return;
-    toast('Reading ' + file.name + '…', 4000);
-    loadXlsx().then(function () { return file.arrayBuffer(); }).then(function (buf) {
-      var wb = XLSX.read(buf, { type: 'array' });
-      var sheets = wb.SheetNames.map(function (n) {
-        return { name: n, rows: XLSX.utils.sheet_to_json(wb.Sheets[n], { header: 1, raw: true, defval: '' }) };
-      });
-      var data = AMData.parseWorkbook(sheets, serialToIso);
-      var msg = 'Replace everything in the app with this file?\n\n' +
-        data.guests.length + ' households, ' + data.people.length + ' people, ' +
-        data.bookings.length + ' vendors, ' + data.installments.length + ' payments, ' + data.purchases.length + ' shopping items.' +
-        (data.warnings.length ? '\n\nHeads up:\n• ' + data.warnings.slice(0, 6).join('\n• ') : '') +
-        '\n\nWhat’s in the app now will be overwritten.';
-      if (!window.confirm(msg)) return;
-      syncStart();
-      return window.__api.importAll(data, function (done, total) {
-        $('sync').innerHTML = '<i></i>Importing ' + Math.round(100 * done / total) + '%';
-      }).then(function (n) {
-        syncEnd(true);
-        google.script.run.withSuccessHandler(function (d) { applyData(d); }).getData();
-        google.script.run.withSuccessHandler(function (d) { applyBudget(d); }).getBudget();
-        toast('Imported ' + n.households + ' households and ' + n.people + ' people', 4000);
-      }, function (e) { syncEnd(false); throw e; });
-    }).catch(function (e) { toast('Couldn’t import: ' + e.message, 6000); });
   });
 
   $('navSignOut').addEventListener('click', function () {
@@ -2791,39 +2755,6 @@
       data.budgetMeta = Object.assign({}, data.budgetMeta || {}, { migrated: true, purchasesMoved: true });
       return commit(b);
     }
-    /**
-     * One-time: the signed Willow Springs Winery contract (Nov 2026) and its payment schedule.
-     * Fixed document ids, so it's safe if you both open the app at the same moment.
-     */
-    function applyWillowContract() {
-      var b = fs.batch(), row = null;
-      Object.keys(data.bookings).forEach(function (id) { if (/willow\s*springs/i.test(data.bookings[id].name || '')) row = Number(data.bookings[id].row || id); });
-      if (row === null) { row = 0; Object.keys(data.bookings).forEach(function (id) { row = Math.max(row, Number(data.bookings[id].row || id) || 0); }); row++; }
-      var prev = data.bookings[String(row)] || {};
-      var booking = { row: row, name: 'Willow Springs Winery', category: 'Venue', event: 'Ceremony', stage: 'Booked', cost: 32205,
-        payer: prev.payer || '', contact: prev.contact || '', phone: prev.phone || '905-642-9463', email: prev.email || 'willowsprings@unitedentdj.com',
-        notes: 'Contract total $32,205 (+ $1,000 refundable security deposit = $33,205). Final payment is reconciled for guest count, rentals, seating, staffing, setup, catering/kitchen, extra services and taxes — may be higher or lower. Post-event charges (e.g. damage) invoiced separately. 5572 Bethesda Rd, Whitchurch-Stouffville.' };
-      b.set('bookings', String(row), stamp(Object.assign({}, booking))); data.bookings[String(row)] = booking;
-      // Replace any earlier placeholder payments for the venue with the contract schedule.
-      Object.keys(data.installments).forEach(function (id) {
-        if (Number(data.installments[id].booking) === row) { b.delete('installments', id); delete data.installments[id]; }
-      });
-      [['Initial booking deposit', 7000, '2026-11-15', 'Non-refundable. Secures the wedding date.'],
-       ['Installment 1 of 4', 5041, '2027-01-05', ''],
-       ['Installment 2 of 4', 5041, '2027-03-05', ''],
-       ['Installment 3 of 4', 5041, '2027-05-05', ''],
-       ['Installment 4 of 4', 5041, '2027-07-05', ''],
-       ['Final balance (estimate)', 5041, '2027-08-05', 'Reconciled to final guest count and approved extras — may change.'],
-       ['Security deposit (refundable)', 1000, '2027-08-05', 'Refundable. Paid with the final payment; not part of the $32,205 contract.']
-      ].forEach(function (p, i) {
-        var r = 9001 + i;
-        var inst = { row: r, booking: row, label: p[0], amount: p[1], due: p[2], paid: 'No', paidDate: '', method: '', notes: p[3] };
-        b.set('installments', String(r), stamp(Object.assign({}, inst))); data.installments[String(r)] = inst;
-      });
-      var meta = Object.assign({}, data.budgetMeta || {}, { migrated: true, purchasesMoved: true, willowContract: true });
-      b.set('meta', 'budget', meta); data.budgetMeta = meta;
-      return commit(b);
-    }
     function budgetOut() {
       var names = bookingNames();
       return {
@@ -2909,7 +2840,6 @@
           }
           var steps = Promise.resolve();
           if (!(data.budgetMeta && data.budgetMeta.purchasesMoved)) steps = steps.then(movePurchases);
-          if (!(data.budgetMeta && data.budgetMeta.willowContract)) steps = steps.then(applyWillowContract);
           return steps.then(budgetOut);
         });
       },
@@ -2951,47 +2881,6 @@
       /** Everything, for the Excel export. */
       exportAll: function () {
         return Promise.all([api.getData(), api.getBudget()]).then(function (r) { return { guests: r[0].guests, people: r[0].people, budget: r[1] }; });
-      },
-
-      /**
-       * Replaces everything with the imported data.
-       * payload = { guests:[{id,...}], people:[{pid,...}], vendors:[], payments:[], expenses:[] }
-       */
-      importAll: function (payload, progress) {
-        return ready.then(function () {
-          var ops = [];
-          COLLECTIONS.forEach(function (c) { Object.keys(data[c]).forEach(function (id) { ops.push(['delete', c, id]); }); });
-          payload.guests.forEach(function (g) {
-            var d = {}; GUEST_FIELDS.forEach(function (k) { d[k] = g[k]; }); ops.push(['set', 'households', g.id, stamp(d)]);
-          });
-          payload.people.forEach(function (p) {
-            var d = {}; PERSON_FIELDS.forEach(function (k) { d[k] = p[k]; }); ops.push(['set', 'people', p.pid, stamp(d)]);
-          });
-          Object.keys(BUDGET).forEach(function (t) {
-            (payload[t] || []).forEach(function (r) {
-              var d = {}; Object.keys(BUDGET[t].fields).forEach(function (k) { if (BUDGET[t].readOnly.indexOf(k) === -1) d[k] = r[k]; });
-              d.row = r.row; ops.push(['set', t, String(r.row), stamp(d)]);
-            });
-          });
-          ops.push(['set', 'meta', 'options', JSON.parse(JSON.stringify(DEFAULT_OPTIONS))]);
-          ops.push(['set', 'meta', 'budget', { migrated: true, purchasesMoved: true, willowContract: true, at: new Date().toISOString() }]);
-          // A set after a delete of the same doc in one batch is fine; split into chunks Firestore accepts.
-          var chunks = [];
-          for (var i = 0; i < ops.length; i += 400) chunks.push(ops.slice(i, i + 400));
-          var done = 0;
-          return chunks.reduce(function (p, chunk) {
-            return p.then(function () {
-              var b = fs.batch();
-              chunk.forEach(function (op) { if (op[0] === 'delete') b.delete(op[1], op[2]); else b.set(op[1], op[2], op[3]); });
-              return b.commit().catch(function (e) { throw friendly(e); }).then(function () {
-                done += chunk.length; if (progress) progress(done, ops.length);
-              });
-            });
-          }, Promise.resolve()).then(function () {
-            return { households: payload.guests.length, people: payload.people.length,
-              bookings: (payload.bookings || []).length, installments: (payload.installments || []).length, purchases: (payload.purchases || []).length };
-          });
-        });
       }
     };
     api._ready = ready;
@@ -3012,142 +2901,6 @@
       };
     });
     return new R(null, null);
-  }
-
-  /* ---------------- reading the old spreadsheet (.xlsx) ---------------- */
-  /**
-   * sheets: [{ name, rows: [[cell, ...], ...] }] with raw values (dates as Excel serial numbers).
-   * serialToIso: converts an Excel date serial to 'YYYY-MM-DD'.
-   * Finds each table by its header row, like the old app did.
-   */
-  function parseWorkbook(sheets, serialToIso) {
-    function norm(v) { return String(v === undefined || v === null ? '' : v).trim(); }
-    function findHeader(match) {
-      for (var s = 0; s < sheets.length; s++) {
-        var rows = sheets[s].rows;
-        for (var r = 0; r < rows.length; r++) {
-          var cells = rows[r].map(norm);
-          if (match.every(function (m) { return cells.indexOf(m) !== -1; })) return { rows: rows, r: r, cells: cells };
-        }
-      }
-      return null;
-    }
-    function colsFor(h, headers) {
-      var cols = {};
-      Object.keys(headers).forEach(function (k) { cols[k] = h.cells.indexOf(headers[k]); });
-      return cols;
-    }
-    function get(row, i) { return i === -1 || i === undefined ? '' : row[i]; }
-    function dateVal(v) {
-      if (v === '' || v === null || v === undefined) return '';
-      if (typeof v === 'number') return serialToIso(v);
-      if (v instanceof Date) return v.getFullYear() + '-' + ('0' + (v.getMonth() + 1)).slice(-2) + '-' + ('0' + v.getDate()).slice(-2);
-      var s = norm(v);
-      if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
-      var t = Date.parse(s);
-      if (isNaN(t)) return '';
-      var d = new Date(t);
-      return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
-    }
-    function moneyVal(v) {
-      if (typeof v === 'number') return Math.round(v * 100) / 100;
-      var s = norm(v).replace(/[$,\s]/g, '');
-      if (s === '') return '';
-      var n = Number(s); return isFinite(n) ? Math.round(n * 100) / 100 : '';
-    }
-    function countVal(v) {
-      var s = norm(v); if (s === '') return '';
-      var n = Math.round(Number(s)); return isFinite(n) && n > 0 ? n : '';
-    }
-    var allHeaders = [['Family / Household', 'Guest ID'], ['Person ID', 'Name']]
-      .concat(Object.keys(BUDGET).map(function (t) { return BUDGET[t].match; }), Object.keys(LEGACY).map(function (t) { return LEGACY[t].match; }));
-    function isHeaderRow(cells) { return allHeaders.some(function (m) { return m.every(function (x) { return cells.indexOf(x) !== -1; }); }); }
-
-    var warnings = [];
-    // Households
-    var gh = findHeader(['Family / Household', 'Guest ID']);
-    if (!gh) throw new Error('Couldn’t find the Guest List tab (a header row with “Family / Household” and “Guest ID”).');
-    var gc = colsFor(gh, GUEST_HEADERS), guests = [];
-    for (var r = gh.r + 1; r < gh.rows.length; r++) {
-      var row = gh.rows[r];
-      var hh = norm(get(row, gc.household)); if (!hh) continue;
-      var g = { id: norm(get(row, gc.id)) };
-      GUEST_FIELDS.forEach(function (k) { g[k] = NUM_FIELDS.indexOf(k) !== -1 ? countVal(get(row, gc[k])) : norm(get(row, gc[k])).slice(0, 500); });
-      guests.push(g);
-    }
-    var used = {}, nextG = maxNum(guests.map(function (g) { return g.id; }), 'G') + 1;
-    guests.forEach(function (g) {
-      if (!/^G\d+$/.test(g.id) || used[g.id]) { if (g.id && used[g.id]) warnings.push('Duplicate Guest ID ' + g.id + ' — gave “' + g.household + '” a new one.'); g.id = 'G' + pad3(nextG++); }
-      used[g.id] = true;
-    });
-
-    // People (optional tab)
-    var people = [], ph = findHeader(['Person ID', 'Name']);
-    if (ph) {
-      var pc = colsFor(ph, PERSON_HEADERS);
-      for (var i = ph.r + 1; i < ph.rows.length; i++) {
-        var prow = ph.rows[i], name = norm(get(prow, pc.name));
-        if (!name) continue;
-        var w = norm(get(prow, pc.wedding)), rc = norm(get(prow, pc.reception));
-        people.push({ pid: norm(get(prow, pc.pid)), guestId: norm(get(prow, pc.guestId)), name: name.slice(0, 120),
-          age: norm(get(prow, pc.age)) === 'Kid' ? 'Kid' : 'Adult',
-          wedding: RSVP_OPTIONS.indexOf(w) !== -1 ? w : '', reception: RSVP_OPTIONS.indexOf(rc) !== -1 ? rc : '',
-          dietary: norm(get(prow, pc.dietary)).slice(0, 60), notes: norm(get(prow, pc.notes)).slice(0, 500) });
-      }
-      var pused = {}, nextP = maxNum(people.map(function (p) { return p.pid; }), 'P') + 1;
-      people.forEach(function (p) { if (!/^P\d+$/.test(p.pid) || pused[p.pid]) p.pid = 'P' + pad3(nextP++); pused[p.pid] = true; });
-      people = people.filter(function (p) {
-        if (used[p.guestId]) return true;
-        warnings.push('Skipped “' + p.name + '” — no household with Guest ID ' + (p.guestId || '(blank)') + '.');
-        return false;
-      });
-      // Households with people get their counts and RSVPs from them, like the old app did.
-      var byGuest = {};
-      people.forEach(function (p) { (byGuest[p.guestId] = byGuest[p.guestId] || []).push(p); });
-      guests.forEach(function (g) { if (byGuest[g.id]) Object.assign(g, deriveFromPeople(byGuest[g.id])); });
-    }
-
-    var out = { guests: guests, people: people, warnings: warnings };
-    // Budget: the new Bookings/Payments tabs if present, otherwise convert the old planning tables.
-    function readTable(cfg, legacyRules) {
-      var h = findHeader(cfg.match), list = [];
-      if (!h) return null;
-      var c = colsFor(h, cfg.fields);
-      for (var r2 = h.r + 1; r2 < h.rows.length; r2++) {
-        var brow = h.rows[r2], cells = brow.map(norm);
-        if (isHeaderRow(cells)) break;                   // reached the next table
-        var key = norm(get(brow, c[cfg.key]));
-        if (!key) continue;
-        if (legacyRules) {
-          if (key === 'Item') continue;                  // the template placeholder
-          var others = Object.keys(cfg.fields).some(function (k) { return k !== cfg.key && c[k] !== -1 && norm(get(brow, c[k])) !== ''; });
-          if (!others) continue;                         // a note/heading line, not an entry
-        }
-        var item = { row: list.length + 1 };
-        Object.keys(cfg.fields).forEach(function (k) {
-          if (cfg.readOnly.indexOf(k) !== -1) return;
-          var v = get(brow, c[k]);
-          item[k] = cfg.money.indexOf(k) !== -1 ? moneyVal(v) : cfg.dates.indexOf(k) !== -1 ? dateVal(v) : norm(v).slice(0, 1000);
-        });
-        if (c.row !== undefined && c.row !== -1) { var n = Number(norm(get(brow, c.row))); if (n > 0) item.row = n; }
-        list.push(item);
-      }
-      return list;
-    }
-    var nb = readTable(BUDGET.bookings, false);
-    if (nb) {
-      out.bookings = nb;
-      out.installments = (readTable(BUDGET.installments, false) || []).map(function (p, i) {
-        p.row = i + 1; p.booking = Number(p.booking) || ''; p.paid = p.paid === 'Yes' ? 'Yes' : 'No'; return p;
-      }).filter(function (p) { return nb.some(function (b) { return b.row === p.booking; }); });
-      out.purchases = readTable(BUDGET.purchases, false) || [];
-    } else {
-      var legacy = {};
-      Object.keys(LEGACY).forEach(function (t) { legacy[t] = readTable(LEGACY[t], true) || []; });
-      var conv = legacyToBookings(legacy);
-      out.bookings = conv.bookings; out.installments = conv.installments; out.purchases = conv.purchases;
-    }
-    return out;
   }
 
   /** Rows for the Excel export, using the same headers so the file can be imported again. */
@@ -3171,7 +2924,7 @@
     return sheets;
   }
 
-  var exported = { makeBackend: makeBackend, makeRunner: makeRunner, parseWorkbook: parseWorkbook,
+  var exported = { makeBackend: makeBackend, makeRunner: makeRunner,
     exportSheets: exportSheets, deriveFromPeople: deriveFromPeople, legacyToBookings: legacyToBookings, DEFAULT_OPTIONS: DEFAULT_OPTIONS };
   root.AMData = exported;
   if (typeof module !== 'undefined' && module.exports) module.exports = exported;
