@@ -269,6 +269,29 @@
 
   /* ---------- Budget ---------- */
   .view[hidden]{display:none!important}
+  /* ---------- Venue ---------- */
+  .venue-wrap{padding-top:6px;padding-bottom:40px}
+  #viewVenue [hidden]{display:none!important}
+  .v-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:8px 0 14px}
+  .v-head h2{font-family:var(--serif);font-weight:400;font-size:28px;margin:2px 0 0;line-height:1.15}
+  .v-head .v-sub{margin:4px 0 0;color:var(--ink2);font-size:13.5px}
+  .v-acts{display:flex;gap:8px;flex-wrap:wrap}
+  .v-btn{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:999px;
+    padding:10px 16px;font-size:14px;cursor:pointer;text-decoration:none;font-family:inherit;white-space:nowrap}
+  .v-btn.primary{background:var(--ink);border-color:var(--ink);color:#fff}
+  .v-btn svg{width:16px;height:16px}
+  .v-frame{position:relative;border-radius:18px;overflow:hidden;border:1px solid var(--line);background:var(--soft);
+    height:calc(100vh - 230px);min-height:420px}
+  .v-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+  .v-note{margin:10px 2px 0;color:var(--muted);font-size:12.5px;line-height:1.5}
+  .v-card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:20px}
+  .v-card h3{margin:0 0 6px;font-size:16px;font-weight:500}
+  .v-card ol{margin:8px 0 14px;padding-left:20px;color:var(--ink2);font-size:14px;line-height:1.6}
+  .v-row{display:flex;gap:8px;flex-wrap:wrap}
+  .v-row input{flex:1 1 260px;min-width:0;border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:15px;font-family:inherit;background:#fff;color:var(--ink)}
+  .v-err{color:#B3261E;font-size:13px;margin:8px 2px 0}
+  .v-edit{margin-bottom:14px}
+
   .tabs{display:flex;background:var(--soft);border-radius:999px;padding:3px;gap:2px}
   .tabs button{flex:1;border:0;background:transparent;border-radius:999px;padding:9px 10px;font-size:14px;font-weight:500;
     color:var(--ink2);cursor:pointer;transition:all .2s;white-space:nowrap}
@@ -664,6 +687,43 @@
 </div>
 
 
+
+<!-- ================= VENUE VIEW ================= -->
+<div class="wrap view venue-wrap" id="viewVenue" hidden>
+  <div class="v-head">
+    <div>
+      <p class="eyebrow">Venue</p>
+      <h2>Willow Springs Winery</h2>
+      <p class="v-sub">Ceremony layout in Google Earth</p>
+    </div>
+    <div class="v-acts" id="vActs" hidden>
+      <a class="v-btn primary" id="vOpen" href="#" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6"/><path d="M20 4l-9 9"/><path d="M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4"/></svg>
+        Open in Google Earth</a>
+      <button type="button" class="v-btn" id="vChange">Change link</button>
+    </div>
+  </div>
+  <div class="v-card v-edit" id="vEdit" hidden>
+    <h3 id="vEditTitle">Add your Google Earth project</h3>
+    <ol id="vSteps">
+      <li>Open the project in Google Earth on a computer.</li>
+      <li>Tap <b>Share</b>, set it to <b>Anyone with the link can view</b>, and copy the link.</li>
+      <li>Paste it below. You'll both see it here.</li>
+    </ol>
+    <div class="v-row">
+      <input id="vUrl" type="url" inputmode="url" autocomplete="off" placeholder="https://earth.google.com/earth/d/…">
+      <button type="button" class="v-btn primary" id="vSave">Save</button>
+      <button type="button" class="v-btn" id="vCancel" hidden>Cancel</button>
+    </div>
+    <p class="v-err" id="vErr" hidden></p>
+  </div>
+  <div id="vShow" hidden>
+    <div class="v-frame"><iframe id="vFrame" title="Ceremony layout in Google Earth" allow="fullscreen; geolocation" allowfullscreen loading="lazy"></iframe></div>
+    <p class="v-note">If the map stays blank, Google may not allow it to load inside the app. Use <b>Open in Google Earth</b> instead. The 3D chairs and mandap show on a computer browser; the iPhone Earth app doesn't show imported models.</p>
+  </div>
+  <div class="skel" id="vSkel" style="height:300px;border-radius:18px"></div>
+</div>
+
 <!-- ================= BUDGET VIEW ================= -->
 <div class="wrap layout view" id="viewBudget" hidden>
   <aside class="side">
@@ -725,6 +785,10 @@
   <button type="button" class="nav-item" data-view="budget">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10h18"/><path d="M16 14.5h2"/></svg>
     <span><b>Budget</b><small id="navBudget">–</small></span>
+  </button>
+  <button type="button" class="nav-item" data-view="venue">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.4"/></svg>
+    <span><b>Venue</b><small id="navVenue">Layout map</small></span>
   </button>
   <div class="nav-item disabled" aria-disabled="true">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg>
@@ -1625,10 +1689,13 @@
     state.view = v;
     $('viewGuests').hidden = v !== 'guests';
     $('viewBudget').hidden = v !== 'budget';
+    $('viewVenue').hidden = v !== 'venue';
+    $('addBtnTop').style.display = $('addBtn').style.display = v === 'venue' ? 'none' : '';
     document.querySelectorAll('.nav-item[data-view]').forEach(function (b) { b.classList.toggle('on', b.dataset.view === v); });
     updateAddLabels();
     try { localStorage.setItem(VIEW_KEY, v); } catch (e) {}
     if (v === 'budget' && !bud.loaded && state.loadedAt) loadBudget(false);
+    if (v === 'venue' && !ven.loaded && window.google) loadVenue();
     if (!quiet) window.scrollTo(0, 0);
   }
   function openNav() { $('nav').classList.add('open'); $('navBack').classList.add('open'); $('nav').setAttribute('aria-hidden', 'false'); $('menuBtn').setAttribute('aria-expanded', 'true'); }
@@ -1639,6 +1706,56 @@
     $('addBtn').innerHTML = '<span style="font-size:20px;line-height:0">+</span> ' + label;
   }
   function shortMoney(n) { return n >= 1000 ? '$' + (Math.round(n / 100) / 10) + 'k' : money(n); }
+
+
+  /* ================= VENUE ================= */
+  var ven = { loaded: false, url: '', editing: false, busy: false };
+  function earthEmbed(u) {
+    try { var x = new URL(u); x.searchParams.set('embedded', 'true'); return x.toString(); } catch (e) { return u; }
+  }
+  function renderVenue() {
+    $('vSkel').hidden = ven.loaded;
+    if (!ven.loaded) return;
+    var has = !!ven.url, edit = ven.editing || !has;
+    $('vEdit').hidden = !edit;
+    $('vCancel').hidden = !has;
+    $('vSteps').hidden = has;
+    $('vEditTitle').textContent = has ? 'Change the Google Earth link' : 'Add your Google Earth project';
+    $('vActs').hidden = !has;
+    $('vShow').hidden = !has;
+    $('navVenue').textContent = has ? 'Layout map' : 'Add map link';
+    if (has) {
+      $('vOpen').href = ven.url;
+      var src = earthEmbed(ven.url);
+      if ($('vFrame').getAttribute('src') !== src) $('vFrame').setAttribute('src', src);
+    }
+  }
+  function applyVenue(d) {
+    ven.loaded = true; ven.url = (d && d.earthUrl) || '';
+    if (!ven.editing) $('vUrl').value = ven.url;
+    renderVenue();
+  }
+  function loadVenue() {
+    google.script.run.withSuccessHandler(applyVenue)
+      .withFailureHandler(function (e) { ven.loaded = true; renderVenue(); showVenueErr(e && e.message || String(e)); }).getVenue();
+  }
+  function showVenueErr(m) { $('vErr').textContent = m || ''; $('vErr').hidden = !m; }
+  function saveVenue() {
+    if (ven.busy) return;
+    var u = $('vUrl').value.trim();
+    if (!u) { showVenueErr('Paste the Google Earth link first.'); return; }
+    if (!/^https:\/\/earth\.google\.com\//i.test(u)) { showVenueErr('That doesn’t look like a Google Earth link. It should start with https://earth.google.com/'); return; }
+    ven.busy = true; $('vSave').textContent = 'Saving…'; showVenueErr('');
+    google.script.run.withSuccessHandler(function (d) {
+      ven.busy = false; $('vSave').textContent = 'Save'; ven.editing = false; applyVenue(d);
+    }).withFailureHandler(function (e) {
+      ven.busy = false; $('vSave').textContent = 'Save'; showVenueErr(e && e.message || String(e));
+    }).saveVenue({ earthUrl: u });
+  }
+  $('vSave').addEventListener('click', saveVenue);
+  $('vUrl').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); saveVenue(); } });
+  $('vChange').addEventListener('click', function () { ven.editing = true; $('vUrl').value = ven.url; showVenueErr(''); renderVenue(); $('vUrl').focus(); });
+  $('vCancel').addEventListener('click', function () { ven.editing = false; showVenueErr(''); renderVenue(); });
 
   /* ================= BUDGET =================
    * Bookings = anything you're spending on (vendors, venues, outfits…), grouped by category.
@@ -2239,7 +2356,7 @@
   $('pplWrap').addEventListener('input', onPeopleInput);
   $('pplWrap').addEventListener('change', onPeopleInput);
   $('f_household').addEventListener('input', function () { save._warned = false; $('formErr').textContent = ''; });
-  function onAdd() { if (state.view === 'budget') { if (bud.loaded) openBudgetForm(null); } else openForm(null); }
+  function onAdd() { if (state.view === 'venue') return; if (state.view === 'budget') { if (bud.loaded) openBudgetForm(null); } else openForm(null); }
   $('addBtn').addEventListener('click', onAdd);
   $('addBtnTop').addEventListener('click', onAdd);
 
@@ -2338,7 +2455,7 @@
 
   var savedView = 'guests';
   try { savedView = localStorage.getItem(VIEW_KEY) || 'guests'; } catch (e) {}
-  setView(savedView === 'budget' ? 'budget' : 'guests', true);
+  setView(savedView === 'budget' || savedView === 'venue' ? savedView : 'guests', true);
   /* ---------- Start (called once you're signed in) ---------- */
   window.__boot = function (email) {
     $('navWho').textContent = 'Signed in as ' + email;
@@ -2350,6 +2467,7 @@
       hideSplash();                       // open on the saved copy, refresh in the background
     }
     load(false);
+    if (state.view === 'venue' && !ven.loaded) loadVenue();
   };
 
   /* ---------- Live updates: when the other person saves, refresh quietly ---------- */
@@ -2362,6 +2480,7 @@
     }
     google.script.run.withSuccessHandler(function (d) { applyData(d); }).getData();
     if (bud.loaded) google.script.run.withSuccessHandler(function (d) { applyBudget(d); }).getBudget();
+    if (ven.loaded && !ven.editing) loadVenue();
   }
 
   /* ---------- Excel import / export ---------- */
@@ -2712,10 +2831,10 @@
   function makeBackend(fs, user, onRemoteChange, opts) {
     opts = opts || {};
     var COMMIT_WAIT = opts.commitWait || 6000;
-    var data = { households: {}, people: {}, bookings: {}, installments: {}, purchases: {}, vendors: {}, payments: {}, expenses: {}, options: null, budgetMeta: null };
+    var data = { households: {}, people: {}, bookings: {}, installments: {}, purchases: {}, vendors: {}, payments: {}, expenses: {}, options: null, budgetMeta: null, venue: null };
     var seen = {};
     var ready = new Promise(function (resolve, reject) {
-      var need = COLLECTIONS.length + 2;
+      var need = COLLECTIONS.length + 3;
       function arrived(k) { if (seen[k]) return false; seen[k] = true; if (--need === 0) resolve(); return true; }
       COLLECTIONS.forEach(function (c) {
         fs.onCollection(c, function (docs, meta) {
@@ -2725,6 +2844,10 @@
         }, function (e) { reject(friendly(e)); });
       });
       fs.onDoc('meta', 'budget', function (d) { data.budgetMeta = d || null; arrived('budgetMeta'); }, function (e) { reject(friendly(e)); });
+      fs.onDoc('meta', 'venue', function (d, meta) {
+        data.venue = d || null;
+        if (!arrived('venue') && !(meta && meta.hasPendingWrites) && onRemoteChange) onRemoteChange('venue');
+      }, function (e) { reject(friendly(e)); });
       fs.onDoc('meta', 'options', function (d, meta) {
         data.options = d || null;
         if (!arrived('options') && !(meta && meta.hasPendingWrites) && onRemoteChange) onRemoteChange('options');
@@ -2934,6 +3057,20 @@
       exportAll: function () {
         return Promise.all([api.getData(), api.getBudget()]).then(function (r) { return { guests: r[0].guests, people: r[0].people, budget: r[1] }; });
       }
+    };
+    /** Venue page: the shared Google Earth project link. */
+    api.getVenue = function () {
+      return ready.then(function () { var v = data.venue || {}; return { earthUrl: v.earthUrl || '', updatedBy: v.updatedBy || '', updatedAt: v.updatedAt || '' }; });
+    };
+    api.saveVenue = function (d) {
+      return ready.then(function () {
+        var url = String((d && d.earthUrl) || '').trim();
+        if (url && !/^https:\/\/earth\.google\.com\//i.test(url)) throw new Error('That doesn’t look like a Google Earth link. It should start with https://earth.google.com/');
+        var rec = stamp(Object.assign({}, data.venue || {}, { earthUrl: url }));
+        var b = fs.batch(); b.set('meta', 'venue', rec);
+        data.venue = rec;
+        return commit(b).then(function () { return { earthUrl: url, updatedBy: rec.updatedBy, updatedAt: rec.updatedAt }; });
+      });
     };
     api._ready = ready;
     return api;
