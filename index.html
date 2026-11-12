@@ -717,7 +717,7 @@
   </div>
   <div class="v-3d" id="v3d">
     <model-viewer id="vModel" camera-controls interaction-prompt="none" touch-action="pan-y" shadow-intensity="0.7" exposure="1.05"
-      environment-image="neutral" field-of-view="35deg" min-camera-orbit="auto 0deg 1m" max-camera-orbit="auto 88deg 90m"
+      environment-image="neutral" field-of-view="35deg" min-camera-orbit="auto 0deg 1m" max-camera-orbit="auto 88deg 420m"
       camera-target="2.2m 0.5m 9m" camera-orbit="15deg 70deg 30m" ar ar-modes="webxr scene-viewer quick-look" ar-scale="auto"
       alt="3D model of the ceremony: mandap between the willows, 400 chairs, umbrellas, pergola and gazebo">
       <button slot="ar-button" class="v-ar">AR</button>
@@ -728,6 +728,7 @@
       <button type="button" data-cam="top">Above</button>
       <button type="button" data-cam="stage">Mandap</button>
       <button type="button" data-cam="walk">Entrance</button>
+      <button type="button" data-cam="site">Site</button>
     </div>
   </div>
   <div class="v-card v-edit" id="vEdit" hidden>
@@ -1738,7 +1739,8 @@
     guest: ['2.2m 0.5m 9m', '15deg 70deg 30m'],
     top:   ['3.2m 0m 11m', '15deg 12deg 55m'],
     stage: ['3.97m 1.2m 14.46m', '195deg 85deg 9.4m'],
-    walk:  ['0.66m 1.4m 2.4m', '15deg 84deg 27m']
+    walk:  ['0.66m 1.4m 2.4m', '15deg 84deg 27m'],
+    site:  ['22.7m 0m 37.3m', '15deg 45deg 190m']
   };
   function camFor(n) {                    // narrow phones see less side-to-side, so pull the wide views back
     var c = VCAMS[n].slice(), k = window.innerWidth < 700 && (n === 'guest' || n === 'top' || n === 'walk') ? 1.7 : 1;
@@ -1756,7 +1758,7 @@
     document.head.appendChild(sc);
     customElements.whenDefined('model-viewer').then(function () {
       customElements.get('model-viewer').meshoptDecoderLocation = 'vendor/meshopt_decoder.js';
-      mv.setAttribute('src', 'venue-scene.glb?v=3');
+      mv.setAttribute('src', 'venue-scene.glb?v=4');
     });
   }
   $('vViews').addEventListener('click', function (e) {
