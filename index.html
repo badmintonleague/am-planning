@@ -1754,7 +1754,10 @@
     mv.addEventListener('error', function () { $('vLoad').textContent = 'Couldn’t load the 3D layout. Check your connection and refresh.'; });
     var sc = document.createElement('script'); sc.type = 'module'; sc.src = 'vendor/model-viewer.min.js';
     document.head.appendChild(sc);
-    mv.setAttribute('src', 'venue-scene.glb?v=2');
+    customElements.whenDefined('model-viewer').then(function () {
+      customElements.get('model-viewer').meshoptDecoderLocation = 'vendor/meshopt_decoder.js';
+      mv.setAttribute('src', 'venue-scene.glb?v=3');
+    });
   }
   $('vViews').addEventListener('click', function (e) {
     var b = e.target.closest('button[data-cam]'); if (!b) return;
