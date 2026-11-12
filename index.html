@@ -280,6 +280,15 @@
     padding:10px 16px;font-size:14px;cursor:pointer;text-decoration:none;font-family:inherit;white-space:nowrap}
   .v-btn.primary{background:var(--ink);border-color:var(--ink);color:#fff}
   .v-btn svg{width:16px;height:16px}
+  .v-3d{position:relative;border-radius:18px;overflow:hidden;border:1px solid var(--line);background:linear-gradient(#dfe9ef,#F7F4EE);margin-bottom:10px}
+  .v-3d model-viewer{display:block;width:100%;height:min(62vh,560px);min-height:340px;background:transparent;--poster-color:transparent}
+  .v-views{position:absolute;left:10px;right:10px;bottom:10px;display:flex;gap:6px;flex-wrap:wrap;pointer-events:none}
+  .v-views button{pointer-events:auto;border:0;border-radius:999px;padding:8px 13px;font-size:13px;font-family:inherit;cursor:pointer;
+    background:rgba(255,255,255,.88);color:var(--ink);box-shadow:0 1px 4px rgba(0,0,0,.12)}
+  .v-views button.on{background:var(--ink);color:#fff}
+  .v-ar{position:absolute;top:10px;right:10px;border:0;border-radius:999px;padding:8px 13px;font-size:13px;font-family:inherit;background:rgba(255,255,255,.9);box-shadow:0 1px 4px rgba(0,0,0,.12);cursor:pointer}
+  .v-load{position:absolute;inset:0;display:grid;place-items:center;color:var(--ink2);font-size:13.5px;pointer-events:none}
+  .v-sec{margin:22px 2px 8px;font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
   .v-launch{display:flex;align-items:center;gap:16px;text-decoration:none;color:var(--ink)}
   .v-launch:hover{border-color:var(--gold)}
   .v-globe{flex:none;width:52px;height:52px;border-radius:14px;background:var(--gold-soft);color:var(--gold);display:grid;place-items:center}
@@ -698,7 +707,7 @@
     <div>
       <p class="eyebrow">Venue</p>
       <h2>Willow Springs Winery</h2>
-      <p class="v-sub">Ceremony layout in Google Earth</p>
+      <p class="v-sub">Ceremony layout in 3D</p>
     </div>
     <div class="v-acts" id="vActs" hidden>
       <a class="v-btn primary" id="vOpen" href="#" target="_blank" rel="noopener">
@@ -707,6 +716,23 @@
       <button type="button" class="v-btn" id="vChange">Change link</button>
     </div>
   </div>
+  <div class="v-3d" id="v3d">
+    <model-viewer id="vModel" camera-controls interaction-prompt="none" touch-action="pan-y" shadow-intensity="0.7" exposure="1.05"
+      environment-image="neutral" field-of-view="35deg" min-camera-orbit="auto 0deg 1m" max-camera-orbit="auto 88deg 90m"
+      camera-target="2.2m 0.5m 9m" camera-orbit="15deg 70deg 30m" ar ar-modes="webxr scene-viewer quick-look" ar-scale="auto"
+      alt="3D model of the ceremony: mandap between the willows, 400 chairs, umbrellas, pergola and gazebo">
+      <button slot="ar-button" class="v-ar">View in your space</button>
+    </model-viewer>
+    <div class="v-load" id="vLoad">Loading 3D layout…</div>
+    <div class="v-views" id="vViews">
+      <button type="button" data-cam="guest" class="on">Guest view</button>
+      <button type="button" data-cam="top">From above</button>
+      <button type="button" data-cam="stage">From the mandap</button>
+      <button type="button" data-cam="walk">Walking in</button>
+    </div>
+  </div>
+  <p class="v-note" style="margin-top:0">Drag to look around, pinch or scroll to zoom. Sizes of the pergola and gazebo, and the gazebo's spot, are estimates.</p>
+  <p class="v-sec">Google Earth</p>
   <div class="v-card v-edit" id="vEdit" hidden>
     <h3 id="vEditTitle">Add your Google Earth project</h3>
     <ol id="vSteps">
@@ -726,7 +752,7 @@
     <span class="v-lt"><b>Ceremony layout</b><small>Mandap, 400 chairs, pergola and gazebo in 3D. Opens in Google Earth.</small></span>
     <span class="v-arrow">›</span>
   </a>
-  <p class="v-note" id="vNote" hidden>Best on a computer browser. The iPhone Earth app opens the project but doesn't show the 3D models.</p>
+  <p class="v-note" id="vNote" hidden>Your real project with the satellite and 3D imagery. Best on a computer browser; the iPhone Earth app doesn't show the 3D models.</p>
   <div class="skel" id="vSkel" style="height:300px;border-radius:18px"></div>
 </div>
 
@@ -1198,7 +1224,7 @@
       (state.yn ? ' · showing ' + ({ Confirmed: 'Yes', Declined: 'No', Maybe: 'Maybe' })[state.yn] : '');
 
     if (!shown.length) {
-      $('list').innerHTML = '<div class="empty"><b>No guests found</b>' + (houses ? 'Try a different search or filter.' :
+      $('list').innerHTML = '<div class="empty"><b>No guests found</b>' + (state.q || state.yn ? 'Try a different search or filter.' :
         'Nobody is invited to the ' + state.ev + ' yet.') + '</div>';
       return;
     }
@@ -1702,6 +1728,7 @@
     try { localStorage.setItem(VIEW_KEY, v); } catch (e) {}
     if (v === 'budget' && !bud.loaded && state.loadedAt) loadBudget(false);
     if (v === 'venue' && !ven.loaded && window.google) loadVenue();
+    if (v === 'venue') start3d();
     if (!quiet) window.scrollTo(0, 0);
   }
   function openNav() { $('nav').classList.add('open'); $('navBack').classList.add('open'); $('nav').setAttribute('aria-hidden', 'false'); $('menuBtn').setAttribute('aria-expanded', 'true'); }
@@ -1715,6 +1742,34 @@
 
 
   /* ================= VENUE ================= */
+  var VCAMS = {
+    guest: ['2.2m 0.5m 9m', '15deg 70deg 30m'],
+    top:   ['3.2m 0m 11m', '15deg 12deg 55m'],
+    stage: ['3.97m 1.2m 14.46m', '195deg 85deg 9.4m'],
+    walk:  ['0.66m 1.4m 2.4m', '15deg 84deg 27m']
+  };
+  function camFor(n) {                    // narrow phones see less side-to-side, so pull the wide views back
+    var c = VCAMS[n].slice(), k = window.innerWidth < 700 && (n === 'guest' || n === 'top' || n === 'walk') ? 1.7 : 1;
+    if (k !== 1) c[1] = c[1].replace(/([\d.]+)m$/, function (m, r) { return (parseFloat(r) * k).toFixed(1) + 'm'; });
+    return c;
+  }
+  var v3dStarted = false;
+  function start3d() {
+    if (v3dStarted) return; v3dStarted = true;
+    var mv = $('vModel'), c0 = camFor('guest');
+    mv.setAttribute('camera-target', c0[0]); mv.setAttribute('camera-orbit', c0[1]);
+    mv.addEventListener('load', function () { $('vLoad').hidden = true; });
+    mv.addEventListener('error', function () { $('vLoad').textContent = 'Couldn’t load the 3D layout. Check your connection and refresh.'; });
+    var sc = document.createElement('script'); sc.type = 'module'; sc.src = 'vendor/model-viewer.min.js';
+    document.head.appendChild(sc);
+    mv.setAttribute('src', 'venue-scene.glb?v=1');
+  }
+  $('vViews').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-cam]'); if (!b) return;
+    var c = camFor(b.dataset.cam), mv = $('vModel');
+    mv.cameraTarget = c[0]; mv.cameraOrbit = c[1];
+    document.querySelectorAll('#vViews button').forEach(function (x) { x.classList.toggle('on', x === b); });
+  });
   var ven = { loaded: false, url: '', editing: false, busy: false };
   function renderVenue() {
     $('vSkel').hidden = ven.loaded;
