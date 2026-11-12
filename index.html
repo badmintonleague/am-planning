@@ -707,13 +707,12 @@
     <div>
       <p class="eyebrow">Venue</p>
       <h2>Willow Springs Winery</h2>
-      <p class="v-sub">Ceremony layout in 3D</p>
     </div>
     <div class="v-acts" id="vActs" hidden>
       <a class="v-btn primary" id="vOpen" href="#" target="_blank" rel="noopener">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6"/><path d="M20 4l-9 9"/><path d="M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4"/></svg>
-        Open in Google Earth</a>
-      <button type="button" class="v-btn" id="vChange">Change link</button>
+        Google Earth</a>
+      <button type="button" class="v-btn" id="vChange" aria-label="Change Google Earth link">Edit</button>
     </div>
   </div>
   <div class="v-3d" id="v3d">
@@ -721,20 +720,18 @@
       environment-image="neutral" field-of-view="35deg" min-camera-orbit="auto 0deg 1m" max-camera-orbit="auto 88deg 90m"
       camera-target="2.2m 0.5m 9m" camera-orbit="15deg 70deg 30m" ar ar-modes="webxr scene-viewer quick-look" ar-scale="auto"
       alt="3D model of the ceremony: mandap between the willows, 400 chairs, umbrellas, pergola and gazebo">
-      <button slot="ar-button" class="v-ar">View in your space</button>
+      <button slot="ar-button" class="v-ar">AR</button>
     </model-viewer>
-    <div class="v-load" id="vLoad">Loading 3D layout…</div>
+    <div class="v-load" id="vLoad">Loading…</div>
     <div class="v-views" id="vViews">
-      <button type="button" data-cam="guest" class="on">Guest view</button>
-      <button type="button" data-cam="top">From above</button>
-      <button type="button" data-cam="stage">From the mandap</button>
-      <button type="button" data-cam="walk">Walking in</button>
+      <button type="button" data-cam="guest" class="on">Guests</button>
+      <button type="button" data-cam="top">Above</button>
+      <button type="button" data-cam="stage">Mandap</button>
+      <button type="button" data-cam="walk">Entrance</button>
     </div>
   </div>
-  <p class="v-note" style="margin-top:0">Drag to look around, pinch or scroll to zoom. Sizes of the pergola and gazebo, and the gazebo's spot, are estimates.</p>
-  <p class="v-sec">Google Earth</p>
   <div class="v-card v-edit" id="vEdit" hidden>
-    <h3 id="vEditTitle">Add your Google Earth project</h3>
+    <h3 id="vEditTitle">Google Earth link</h3>
     <ol id="vSteps">
       <li>Open the project in Google Earth on a computer.</li>
       <li>Tap <b>Share</b>, set it to <b>Anyone with the link can view</b>, and copy the link.</li>
@@ -747,12 +744,7 @@
     </div>
     <p class="v-err" id="vErr" hidden></p>
   </div>
-  <a class="v-card v-launch" id="vShow" href="#" target="_blank" rel="noopener" hidden>
-    <span class="v-globe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.6 2.6 3.9 5.6 3.9 9s-1.3 6.4-3.9 9c-2.6-2.6-3.9-5.6-3.9-9s1.3-6.4 3.9-9z"/></svg></span>
-    <span class="v-lt"><b>Ceremony layout</b><small>Mandap, 400 chairs, pergola and gazebo in 3D. Opens in Google Earth.</small></span>
-    <span class="v-arrow">›</span>
-  </a>
-  <p class="v-note" id="vNote" hidden>Your real project with the satellite and 3D imagery. Best on a computer browser; the iPhone Earth app doesn't show the 3D models.</p>
+  <span id="vShow" hidden></span><span id="vNote" hidden></span>
   <div class="skel" id="vSkel" style="height:300px;border-radius:18px"></div>
 </div>
 
@@ -820,7 +812,7 @@
   </button>
   <button type="button" class="nav-item" data-view="venue">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.4"/></svg>
-    <span><b>Venue</b><small id="navVenue">Layout map</small></span>
+    <span><b>Venue</b><small id="navVenue">3D layout</small></span>
   </button>
   <div class="nav-item disabled" aria-disabled="true">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg>
@@ -1762,7 +1754,7 @@
     mv.addEventListener('error', function () { $('vLoad').textContent = 'Couldn’t load the 3D layout. Check your connection and refresh.'; });
     var sc = document.createElement('script'); sc.type = 'module'; sc.src = 'vendor/model-viewer.min.js';
     document.head.appendChild(sc);
-    mv.setAttribute('src', 'venue-scene.glb?v=1');
+    mv.setAttribute('src', 'venue-scene.glb?v=2');
   }
   $('vViews').addEventListener('click', function (e) {
     var b = e.target.closest('button[data-cam]'); if (!b) return;
@@ -1778,10 +1770,9 @@
     $('vEdit').hidden = !edit;
     $('vCancel').hidden = !has;
     $('vSteps').hidden = has;
-    $('vEditTitle').textContent = has ? 'Change the Google Earth link' : 'Add your Google Earth project';
+    $('vEditTitle').textContent = 'Google Earth link';
     $('vActs').hidden = !has;
     $('vShow').hidden = !has;
-    $('navVenue').textContent = has ? 'Layout map' : 'Add map link';
     $('vNote').hidden = !has;
     if (has) { $('vOpen').href = ven.url; $('vShow').href = ven.url; }
   }
