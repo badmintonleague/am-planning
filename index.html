@@ -1790,7 +1790,7 @@
     setTimeout(function () { $('vWalkHint').style.opacity = 0; }, 5000);
     import('./vendor/walk.js?v=2').then(function (m) {
       if ($('vWalk').hidden) return;
-      walker = m.startWalk($('vWalkStage'), 'venue-scene.glb?v=5', {
+      walker = m.startWalk($('vWalkStage'), 'venue-scene.glb?v=6', {
         start: WALK_SPOTS.entrance[0], yaw: WALK_SPOTS.entrance[1], nub: $('vWalkNub'), base: $('vWalkBase'),
         onReady: function () { $('vWalkLoad').hidden = true; },
         onError: function () { $('vWalkLoad').textContent = 'Couldn’t load. Check your connection.'; },
@@ -1819,7 +1819,7 @@
     document.head.appendChild(sc);
     customElements.whenDefined('model-viewer').then(function () {
       customElements.get('model-viewer').meshoptDecoderLocation = 'vendor/meshopt_decoder.js';
-      mv.setAttribute('src', 'venue-scene.glb?v=5');
+      mv.setAttribute('src', 'venue-scene.glb?v=6');
     });
   }
   $('vViews').addEventListener('click', function (e) {
