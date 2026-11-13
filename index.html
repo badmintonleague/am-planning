@@ -302,6 +302,8 @@
   .walk-base{position:absolute;width:110px;height:110px;margin:-55px 0 0 -55px;border-radius:50%;background:rgba(255,255,255,.25);border:2px solid rgba(255,255,255,.7);opacity:0;pointer-events:none;transition:opacity .15s}
   .walk-base.on{opacity:1}
   .walk-nub{position:absolute;left:50%;top:50%;width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;background:rgba(255,255,255,.9)}
+  .walk-people{position:absolute;left:12px;bottom:calc(16px + env(safe-area-inset-bottom));display:flex;gap:6px;flex-wrap:wrap;max-width:60%}
+  .walk-people button{border:0;border-radius:999px;padding:7px 12px;font-size:13px;font-family:inherit;color:#fff;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.2)}
   .walk-load{position:absolute;inset:0;display:grid;place-items:center;color:#55524C;font-size:14px;pointer-events:none}
   .v-launch{display:flex;align-items:center;gap:16px;text-decoration:none;color:var(--ink)}
   .v-launch:hover{border-color:var(--gold)}
@@ -774,6 +776,7 @@
     </div>
     <button type="button" class="walk-x" id="vWalkX">Done</button>
     <div class="walk-hint" id="vWalkHint"></div>
+    <div class="walk-people" id="vWalkPeople"></div>
   </div>
   <div class="skel" id="vSkel" style="height:300px;border-radius:18px"></div>
 </div>
@@ -1780,7 +1783,26 @@
     entrance: [[6.07, 0, 23.22], 0.268], aisle: [[3.18, 0, 11.57], 0.268], mandap: [[1.11, 0, 4.05], -2.874],
     tent: [[40.69, 0, -2.88], -2.371], lot: [[-30.67, 0, 16.72], -1.42]
   };
-  var walker = null;
+  var walker = null, presUnsub = null, presTimer = null, presDocs = [];
+  var PEOPLE = { 'abbilash.u@gmail.com': ['Abb', '#2f6fb5'], 'musissha.jeganathan@gmail.com': ['Musi', '#c2417a'], 'abbilashandmusi@gmail.com': ['A & M', '#b8862f'] };
+  function personOf(d) { var p = PEOPLE[d.data.email] || [String(d.data.email || 'Guest').split('@')[0], '#5a7d4a']; return { name: p[0], color: p[1] }; }
+  function pushOthers() {
+    if (!walker) return;
+    var now = Date.now(), list = [];
+    presDocs.forEach(function (d) {
+      var v = d.data; if (!v || now - (v.t || 0) > 20000) return;
+      var who = personOf(d); list.push({ id: d.id, name: who.name, color: who.color, x: v.x, y: v.y, z: v.z, yaw: v.yaw });
+    });
+    walker.setOthers(list);
+    $('vWalkPeople').innerHTML = list.map(function (o) {
+      return '<button type="button" data-id="' + o.id + '" style="background:' + o.color + '">Go to ' + esc(o.name) + '</button>';
+    }).join('');
+  }
+  $('vWalkPeople').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-id]'); if (!b || !walker) return;
+    var o = walker.others().filter(function (q) { return q.id === b.dataset.id; })[0]; if (!o) return;
+    walker.teleport([o.x + Math.sin(o.yaw) * 2.5, o.y, o.z + Math.cos(o.yaw) * 2.5], o.yaw);   // just behind them, same direction
+  });
   function openWalk() {
     $('vWalk').hidden = false; $('vWalkLoad').hidden = false;
     document.documentElement.style.overflow = 'hidden';
@@ -1788,21 +1810,30 @@
     $('vWalkHint').textContent = touch ? 'Left thumb to walk · drag to look' : 'WASD or arrows to walk · drag to look · Shift to hurry';
     $('vWalkHint').style.opacity = 1;
     setTimeout(function () { $('vWalkHint').style.opacity = 0; }, 5000);
-    import('./vendor/walk.js?v=2').then(function (m) {
+    import('./vendor/walk.js?v=3').then(function (m) {
       if ($('vWalk').hidden) return;
+      if (window.__presence && !presUnsub) {
+        presUnsub = window.__presence.listen(function (docs) { presDocs = docs; pushOthers(); });
+        presTimer = setInterval(pushOthers, 4000);                 // drop people who stopped walking
+      }
       walker = m.startWalk($('vWalkStage'), 'venue-scene.glb?v=7', {
         start: WALK_SPOTS.entrance[0], yaw: WALK_SPOTS.entrance[1], nub: $('vWalkNub'), base: $('vWalkBase'),
         onReady: function () { $('vWalkLoad').hidden = true; },
         onError: function () { $('vWalkLoad').textContent = 'Couldn’t load. Check your connection.'; },
-        onExit: closeWalk
+        onExit: closeWalk,
+        onMove: function (st) { if (window.__presence) window.__presence.set(st); }
       });
     }).catch(function () { $('vWalkLoad').textContent = 'Couldn’t load. Check your connection.'; });
   }
   function closeWalk() {
     if (walker) { walker.stop(); walker = null; }
+    if (presUnsub) { presUnsub(); presUnsub = null; } if (presTimer) { clearInterval(presTimer); presTimer = null; }
+    if (window.__presence) window.__presence.clear();
+    $('vWalkPeople').innerHTML = '';
     $('vWalk').hidden = true; document.documentElement.style.overflow = '';
   }
   $('vWalkBtn').addEventListener('click', openWalk);
+  window.addEventListener('pagehide', function () { if (walker && window.__presence) window.__presence.clear(); });
   $('vWalkX').addEventListener('click', closeWalk);
   $('vWalkSpots').addEventListener('click', function (e) {
     var b = e.target.closest('button[data-spot]'); if (!b || !walker) return;
@@ -3306,6 +3337,14 @@
     const api = AMData.makeBackend(fsAdapter, email, () => window.__remote && window.__remote());
     window.__api = api;
     window.google = { script: { get run() { return AMData.makeRunner(api); } } };
+    // live presence for walk mode: who else is walking around the 3D venue, and where
+    const pKey = 'presence_' + email.replace(/[^a-z0-9]/gi, '_');
+    window.__presence = {
+      me: pKey,
+      listen(cb) { return fsAdapter.onCollection('meta', (docs) => cb(docs.filter((d) => d.id.indexOf('presence_') === 0 && d.id !== pKey)), () => {}); },
+      set(d) { const b = fsAdapter.batch(); b.set('meta', pKey, Object.assign({ email: email, t: Date.now() }, d)); return b.commit().catch(() => {}); },
+      clear() { const b = fsAdapter.batch(); b.delete('meta', pKey); return b.commit().catch(() => {}); }
+    };
     api._ready.catch((e) => { document.getElementById('gErrMsg').textContent = e.message; setGate('error'); });
     gate.classList.add('hide');
     window.__boot(email);
