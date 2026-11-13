@@ -1777,8 +1777,8 @@
     return c;
   }
   var WALK_SPOTS = {
-    entrance: [[8.74, 0, 31.82], 0.268], aisle: [[3.97, 0, 14.46], 0.268], mandap: [[1.11, 0, 4.05], -2.874],
-    tent: [[45.31, 0, 29.04], -1.594], lot: [[-19.93, 0, 40.73], -0.922]
+    entrance: [[6.07, 0, 23.22], 0.268], aisle: [[3.18, 0, 11.57], 0.268], mandap: [[1.11, 0, 4.05], -2.874],
+    tent: [[40.69, 0, -2.88], -2.371], lot: [[-30.67, 0, 16.72], -1.42]
   };
   var walker = null;
   function openWalk() {
@@ -1788,9 +1788,9 @@
     $('vWalkHint').textContent = touch ? 'Left thumb to walk · drag to look' : 'WASD or arrows to walk · drag to look · Shift to hurry';
     $('vWalkHint').style.opacity = 1;
     setTimeout(function () { $('vWalkHint').style.opacity = 0; }, 5000);
-    import('./vendor/walk.js?v=1').then(function (m) {
+    import('./vendor/walk.js?v=2').then(function (m) {
       if ($('vWalk').hidden) return;
-      walker = m.startWalk($('vWalkStage'), 'venue-scene.glb?v=4', {
+      walker = m.startWalk($('vWalkStage'), 'venue-scene.glb?v=5', {
         start: WALK_SPOTS.entrance[0], yaw: WALK_SPOTS.entrance[1], nub: $('vWalkNub'), base: $('vWalkBase'),
         onReady: function () { $('vWalkLoad').hidden = true; },
         onError: function () { $('vWalkLoad').textContent = 'Couldn’t load. Check your connection.'; },
@@ -1819,7 +1819,7 @@
     document.head.appendChild(sc);
     customElements.whenDefined('model-viewer').then(function () {
       customElements.get('model-viewer').meshoptDecoderLocation = 'vendor/meshopt_decoder.js';
-      mv.setAttribute('src', 'venue-scene.glb?v=4');
+      mv.setAttribute('src', 'venue-scene.glb?v=5');
     });
   }
   $('vViews').addEventListener('click', function (e) {
