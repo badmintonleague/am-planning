@@ -289,6 +289,20 @@
   .v-ar{position:absolute;top:10px;right:10px;border:0;border-radius:999px;padding:8px 13px;font-size:13px;font-family:inherit;background:rgba(255,255,255,.9);box-shadow:0 1px 4px rgba(0,0,0,.12);cursor:pointer}
   .v-load{position:absolute;inset:0;display:grid;place-items:center;color:var(--ink2);font-size:13.5px;pointer-events:none}
   .v-sec{margin:22px 2px 8px;font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
+  .v-walkbtn{position:absolute;top:10px;left:10px;border:0;border-radius:999px;padding:8px 14px;font-size:13px;font-family:inherit;cursor:pointer;
+    background:var(--ink);color:#fff;box-shadow:0 1px 4px rgba(0,0,0,.18);display:inline-flex;align-items:center;gap:6px}
+  .v-walkbtn svg{width:15px;height:15px}
+  .walk{position:fixed;inset:0;z-index:2000;background:#dbe7ee;overscroll-behavior:none}
+  .walk[hidden]{display:none!important}
+  .walk-stage{position:absolute;inset:0}
+  .walk-x{position:absolute;top:calc(12px + env(safe-area-inset-top));right:12px;border:0;border-radius:999px;padding:9px 16px;font-size:14px;font-family:inherit;background:rgba(255,255,255,.92);box-shadow:0 1px 4px rgba(0,0,0,.15);cursor:pointer}
+  .walk-spots{position:absolute;top:calc(12px + env(safe-area-inset-top));left:12px;right:90px;display:flex;gap:6px;flex-wrap:wrap}
+  .walk-spots button{border:0;border-radius:999px;padding:8px 12px;font-size:13px;font-family:inherit;background:rgba(255,255,255,.88);box-shadow:0 1px 4px rgba(0,0,0,.12);cursor:pointer}
+  .walk-hint{position:absolute;left:50%;bottom:calc(28px + env(safe-area-inset-bottom));transform:translateX(-50%);background:rgba(20,20,20,.62);color:#fff;font-size:13px;padding:8px 14px;border-radius:999px;transition:opacity .6s;pointer-events:none;white-space:nowrap}
+  .walk-base{position:absolute;width:110px;height:110px;margin:-55px 0 0 -55px;border-radius:50%;background:rgba(255,255,255,.25);border:2px solid rgba(255,255,255,.7);opacity:0;pointer-events:none;transition:opacity .15s}
+  .walk-base.on{opacity:1}
+  .walk-nub{position:absolute;left:50%;top:50%;width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;background:rgba(255,255,255,.9)}
+  .walk-load{position:absolute;inset:0;display:grid;place-items:center;color:#55524C;font-size:14px;pointer-events:none}
   .v-launch{display:flex;align-items:center;gap:16px;text-decoration:none;color:var(--ink)}
   .v-launch:hover{border-color:var(--gold)}
   .v-globe{flex:none;width:52px;height:52px;border-radius:14px;background:var(--gold-soft);color:var(--gold);display:grid;place-items:center}
@@ -723,6 +737,7 @@
       <button slot="ar-button" class="v-ar">AR</button>
     </model-viewer>
     <div class="v-load" id="vLoad">Loading…</div>
+    <button type="button" class="v-walkbtn" id="vWalkBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="13" cy="4" r="2"/><path d="M10 21l2-6 3 3v3M8 12l2-4 4 1 2 4M12 9l-1 6"/></svg>Walk</button>
     <div class="v-views" id="vViews">
       <button type="button" data-cam="guest" class="on">Guests</button>
       <button type="button" data-cam="top">Above</button>
@@ -746,6 +761,20 @@
     <p class="v-err" id="vErr" hidden></p>
   </div>
   <span id="vShow" hidden></span><span id="vNote" hidden></span>
+  <div class="walk" id="vWalk" hidden>
+    <div class="walk-stage" id="vWalkStage"></div>
+    <div class="walk-load" id="vWalkLoad">Loading…</div>
+    <div class="walk-base" id="vWalkBase"><div class="walk-nub" id="vWalkNub"></div></div>
+    <div class="walk-spots" id="vWalkSpots">
+      <button type="button" data-spot="entrance">Pergola</button>
+      <button type="button" data-spot="aisle">Aisle</button>
+      <button type="button" data-spot="mandap">Mandap</button>
+      <button type="button" data-spot="lot">Parking</button>
+      <button type="button" data-spot="tent">Tent</button>
+    </div>
+    <button type="button" class="walk-x" id="vWalkX">Done</button>
+    <div class="walk-hint" id="vWalkHint"></div>
+  </div>
   <div class="skel" id="vSkel" style="height:300px;border-radius:18px"></div>
 </div>
 
@@ -1747,6 +1776,38 @@
     if (k !== 1) c[1] = c[1].replace(/([\d.]+)m$/, function (m, r) { return (parseFloat(r) * k).toFixed(1) + 'm'; });
     return c;
   }
+  var WALK_SPOTS = {
+    entrance: [[8.74, 0, 31.82], 0.268], aisle: [[3.97, 0, 14.46], 0.268], mandap: [[1.11, 0, 4.05], -2.874],
+    tent: [[45.31, 0, 29.04], -1.594], lot: [[-19.93, 0, 40.73], -0.922]
+  };
+  var walker = null;
+  function openWalk() {
+    $('vWalk').hidden = false; $('vWalkLoad').hidden = false;
+    document.documentElement.style.overflow = 'hidden';
+    var touch = matchMedia('(pointer: coarse)').matches;
+    $('vWalkHint').textContent = touch ? 'Left thumb to walk · drag to look' : 'WASD or arrows to walk · drag to look · Shift to hurry';
+    $('vWalkHint').style.opacity = 1;
+    setTimeout(function () { $('vWalkHint').style.opacity = 0; }, 5000);
+    import('./vendor/walk.js?v=1').then(function (m) {
+      if ($('vWalk').hidden) return;
+      walker = m.startWalk($('vWalkStage'), 'venue-scene.glb?v=4', {
+        start: WALK_SPOTS.entrance[0], yaw: WALK_SPOTS.entrance[1], nub: $('vWalkNub'), base: $('vWalkBase'),
+        onReady: function () { $('vWalkLoad').hidden = true; },
+        onError: function () { $('vWalkLoad').textContent = 'Couldn’t load. Check your connection.'; },
+        onExit: closeWalk
+      });
+    }).catch(function () { $('vWalkLoad').textContent = 'Couldn’t load. Check your connection.'; });
+  }
+  function closeWalk() {
+    if (walker) { walker.stop(); walker = null; }
+    $('vWalk').hidden = true; document.documentElement.style.overflow = '';
+  }
+  $('vWalkBtn').addEventListener('click', openWalk);
+  $('vWalkX').addEventListener('click', closeWalk);
+  $('vWalkSpots').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-spot]'); if (!b || !walker) return;
+    var sp = WALK_SPOTS[b.dataset.spot]; walker.teleport(sp[0], sp[1]);
+  });
   var v3dStarted = false;
   function start3d() {
     if (v3dStarted) return; v3dStarted = true;
