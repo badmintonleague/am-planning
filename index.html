@@ -745,6 +745,7 @@
       <button type="button" data-cam="top">Above</button>
       <button type="button" data-cam="stage">Mandap</button>
       <button type="button" data-cam="walk">Entrance</button>
+      <button type="button" data-cam="tent">Tent</button>
       <button type="button" data-cam="site">Site</button>
     </div>
   </div>
@@ -1772,7 +1773,8 @@
     top:   ['3.2m 0m 11m', '15deg 12deg 55m'],
     stage: ['3.97m 1.2m 14.46m', '195deg 85deg 9.4m'],
     walk:  ['0.66m 1.4m 2.4m', '15deg 84deg 27m'],
-    site:  ['22.7m 0m 37.3m', '15deg 45deg 190m']
+    site:  ['22.7m 0m 37.3m', '15deg 45deg 190m'],
+    tent:  ['63.19m 1.8m 26.2m', '-165deg 84deg 11m']
   };
   function camFor(n) {                    // narrow phones see less side-to-side, so pull the wide views back
     var c = VCAMS[n].slice(), k = window.innerWidth < 700 && (n === 'guest' || n === 'top' || n === 'walk') ? 1.7 : 1;
@@ -1781,7 +1783,7 @@
   }
   var WALK_SPOTS = {
     entrance: [[6.07, 0, 23.22], 0.268], aisle: [[3.18, 0, 11.57], 0.268], mandap: [[1.11, 0, 4.05], -2.874],
-    tent: [[40.69, 0, -2.88], -2.371], lot: [[-30.67, 0, 16.72], -1.42]
+    tent: [[59.84, 0, 13.28], -2.936], lot: [[-30.67, 0, 16.72], -1.42]
   };
   var walker = null, presUnsub = null, presTimer = null, presDocs = [];
   var PEOPLE = { 'abbilash.u@gmail.com': ['Abb', '#2f6fb5'], 'musissha.jeganathan@gmail.com': ['Musi', '#c2417a'], 'abbilashandmusi@gmail.com': ['A & M', '#b8862f'] };
@@ -1810,13 +1812,13 @@
     $('vWalkHint').textContent = touch ? 'Left thumb to walk · drag to look' : 'WASD or arrows to walk · drag to look · Shift to hurry';
     $('vWalkHint').style.opacity = 1;
     setTimeout(function () { $('vWalkHint').style.opacity = 0; }, 5000);
-    import('./vendor/walk.js?v=3').then(function (m) {
+    import('./vendor/walk.js?v=5').then(function (m) {
       if ($('vWalk').hidden) return;
       if (window.__presence && !presUnsub) {
         presUnsub = window.__presence.listen(function (docs) { presDocs = docs; pushOthers(); });
         presTimer = setInterval(pushOthers, 4000);                 // drop people who stopped walking
       }
-      walker = m.startWalk($('vWalkStage'), 'venue-scene.glb?v=14', {
+      walker = m.startWalk($('vWalkStage'), 'venue-scene.glb?v=15', {
         start: WALK_SPOTS.entrance[0], yaw: WALK_SPOTS.entrance[1], nub: $('vWalkNub'), base: $('vWalkBase'),
         onReady: function () { $('vWalkLoad').hidden = true; },
         onError: function () { $('vWalkLoad').textContent = 'Couldn’t load. Check your connection.'; },
@@ -1850,7 +1852,7 @@
     document.head.appendChild(sc);
     customElements.whenDefined('model-viewer').then(function () {
       customElements.get('model-viewer').meshoptDecoderLocation = 'vendor/meshopt_decoder.js';
-      mv.setAttribute('src', 'venue-scene.glb?v=14');
+      mv.setAttribute('src', 'venue-scene.glb?v=15');
     });
   }
   $('vViews').addEventListener('click', function (e) {
