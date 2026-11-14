@@ -619,7 +619,7 @@
     .bnum{text-align:right;font-family:var(--serif);font-size:18px;color:var(--ink)}
     .bnum.dim{color:var(--muted)}
     #bList .item .amt,#bList .item .meta .s{display:none}
-    #bList.t-bookings .list-head,#bList.t-bookings .item{grid-template-columns:minmax(0,2.8fr) minmax(0,1fr) minmax(0,.9fr) 100px 80px 100px;column-gap:14px}
+    #bList.t-bookings .list-head,#bList.t-bookings .item{grid-template-columns:minmax(0,2.8fr) minmax(0,1.1fr) 110px 100px 110px;column-gap:14px}
     #bList.t-purchases .list-head,#bList.t-purchases .item{grid-template-columns:minmax(0,2.3fr) minmax(0,1fr) 100px minmax(0,1fr) 130px;column-gap:28px}
     .grp{padding-left:22px;padding-right:22px}
     #bList.t-installments .list-head,#bList.t-installments .item{grid-template-columns:minmax(0,2.3fr) minmax(0,1fr) 120px 110px 110px}
@@ -2349,7 +2349,7 @@
       var tot = 0; rows.forEach(function (b) { tot += b._eff; });
       $('bCount').textContent = rows.length + (rows.length === 1 ? ' vendor · ' : ' vendors · ') + money(tot);
       var lastCat = null;
-      html = '<div class="list-head"><span>Vendor</span><span>Stage</span><span>Paid by</span><span class="r">Cost</span><span class="r">Paid</span><span class="r">Still owed</span></div>';
+      html = '<div class="list-head"><span>Vendor</span><span>Stage</span><span class="r">Cost</span><span class="r">Paid</span><span class="r">Still owed</span></div>';
       rows.forEach(function (b) {
         var cat = b.category || 'Other';
         if (cat !== lastCat) {
@@ -2372,9 +2372,8 @@
           : '';
         html += '<div class="item' + (b._pending ? ' pending' : '') + (b.stage === 'Not going ahead' ? ' dropped' : '') + '" data-t="bookings" data-row="' + b.row + '">' +
           '<div class="who"><div class="avatar cat">' + esc(CAT_ICON[cat] || initials(b.name)) + '</div>' +
-          '<div class="meta"><div class="n">' + esc(b.name) + '</div>' + (b.event ? '<div class="d-sub">' + esc(b.event === 'Both' ? 'Ceremony + reception' : b.event) + '</div>' : '') + '<div class="s">' + tag + payerTag(b.payerSummary) + esc(sub) + '</div></div></div>' +
+          '<div class="meta"><div class="n">' + esc(b.name) + '</div>' + (b.event ? '<div class="d-sub">' + esc(b.event === 'Both' ? 'Ceremony + reception' : b.event) + '</div>' : '') + '<div class="s">' + tag + esc(sub) + '</div></div></div>' +
           '<div class="bcol">' + tag + '</div>' +
-          '<div class="bcol">' + (payerTag(b.payerSummary) || '<span style="color:var(--muted)">–</span>') + '</div>' +
           '<div class="bcol bnum' + (hasCost ? '' : ' dim') + '">' + (hasCost ? money(b._eff) : '–') + '</div>' +
           '<div class="bcol bnum' + (num(b.paid) ? '' : ' dim') + '">' + (num(b.paid) ? money(b.paid) : '–') + '</div>' +
           '<div class="bcol bnum' + (committedNow && b._owed ? '' : ' dim') + '">' + (committedNow ? money(b._owed) : '–') + '</div>' +
