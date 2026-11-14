@@ -269,6 +269,15 @@
 
   /* ---------- Budget ---------- */
   .view[hidden]{display:none!important}
+  .kpis:has(.kyn){grid-template-columns:repeat(5,1fr)}
+  .kpis:has(.kyn) .kpi{padding-left:10px;padding-right:6px}
+  .kyn[data-yn="Invited"] b{color:#8A6A22} .kyn[data-yn="Not invited yet"] b{color:var(--muted)}
+  @media (min-width:960px){ .kpis:has(.kyn){grid-template-columns:1fr} .kpis:has(.kyn) .kpi{padding-left:20px} }
+  .stp{display:inline-flex;flex-wrap:wrap;gap:4px}
+  .tag.Notsent{background:var(--soft);color:var(--muted)}
+  .part{color:var(--muted)}
+  .stp-note{display:block;font-size:12px;margin-top:4px}
+
   /* clean: no helper text */
   .fhint, .group-title .hint, #formSub, #bSub, #pplHint, #countLine, #bCount { display:none !important }
   .kpi:has(#bkShort) { display:none !important }
@@ -702,8 +711,10 @@
     </div>
     <div class="kpis">
       <button type="button" class="kpi kyn" data-yn="Confirmed"><b id="kYes">–</b><span>Yes</span></button>
-      <button type="button" class="kpi kyn" data-yn="Declined"><b id="kNo">–</b><span>No</span></button>
       <button type="button" class="kpi kyn" data-yn="Maybe"><b id="kMaybe">–</b><span>Maybe</span></button>
+      <button type="button" class="kpi kyn" data-yn="Invited"><b id="kWait">–</b><span>Waiting</span></button>
+      <button type="button" class="kpi kyn" data-yn="Declined"><b id="kNo">–</b><span>No</span></button>
+      <button type="button" class="kpi kyn" data-yn="Not invited yet"><b id="kNot">–</b><span>Not sent</span></button>
     </div>
     <div class="rel">
       <div class="rel-h"><span>By relationship</span><button type="button" id="relClear" class="rel-clear">Show all</button></div>
@@ -1033,11 +1044,27 @@
     return state.people.some(function (p) { return p.guestId === g.id && p[ev]; });
   }
   /** Headcount by answer for this event: people's own answers if listed, otherwise the household's. */
+  var ST = ['Confirmed', 'Maybe', 'Invited', 'Declined', 'Not invited yet'];
+  var ST_LABEL = { Confirmed: 'Yes', Maybe: 'Maybe', Invited: 'Waiting', Declined: 'No', 'Not invited yet': 'Not sent' };
+  function normSt(v) { return isNotInvited(v) ? 'Not invited yet' : ST.indexOf(v) !== -1 ? v : 'Invited'; }
   function ynCounts(g, ev) {
-    var out = { Confirmed: 0, Declined: 0, Maybe: 0 }, ppl = peopleOf(g.id);
-    if (ppl.length) ppl.forEach(function (p) { if (out[p[ev]] !== undefined) out[p[ev]]++; });
-    else { var s = g[ev + 'Rsvp']; if (out[s] !== undefined) out[s] += Math.max(countOf(g, ev), s === 'Declined' ? 1 : 0); }
+    var out = { Confirmed: 0, Maybe: 0, Invited: 0, Declined: 0, 'Not invited yet': 0 }, ppl = peopleOf(g.id);
+    if (ppl.length) ppl.forEach(function (p) { if (p[ev]) out[normSt(p[ev])]++; });
+    else { var s = normSt(g[ev + 'Rsvp']); out[s] += Math.max(countOf(g, ev), s === 'Declined' ? 1 : 0); }
     return out;
+  }
+  function statusPills(g, ev) {
+    var c = ynCounts(g, ev), on = ST.filter(function (s) { return c[s]; });
+    if (!on.length) return '';
+    return '<span class="stp">' + on.map(function (s) {
+      return '<span class="tag ' + (s === 'Not invited yet' ? 'Notsent' : s) + '">' + (on.length > 1 ? c[s] + ' ' : '') + ST_LABEL[s] + '</span>';
+    }).join('') + '</span>';
+  }
+  /** "3 of 5" when only some of a listed household is part of this event. */
+  function partNote(g, ev) {
+    var ppl = peopleOf(g.id); if (!ppl.length) return '';
+    var inIt = ppl.filter(function (p) { return p[ev]; }).length;
+    return inIt && inIt < ppl.length ? inIt + ' of ' + ppl.length + ' invited' : '';
   }
   function summary(g, ev) { var a = adultsOf(g, ev), k = kidsOf(g, ev); return k ? a + ' + ' + k + (k === 1 ? ' kid' : ' kids') : String(a); }
   function isSent(g) { return !isNotInvited(g.weddingRsvp) || !isNotInvited(g.receptionRsvp); }
@@ -1134,9 +1161,9 @@
       value: function (g) { return g.side || ''; },
       label: function (v) { return v === 'Bride' ? 'Bride’s side' : v === 'Groom' ? 'Groom’s side' : v; } },
     rsvp: { name: 'Status', title: 'Filter by RSVP status',
-      options: function () { return (state.ev === 'wedding' ? state.options.weddingRsvp : state.options.receptionRsvp) || []; },
-      value: function (g) { var v = g[state.ev === 'wedding' ? 'weddingRsvp' : 'receptionRsvp']; return isNotInvited(v) ? 'Not invited yet' : v; },
-      label: function (v) { return v; } },
+      options: function () { return ST; },
+      value: function (g) { var c = ynCounts(g, state.ev); return ST.filter(function (s) { return c[s]; }); },
+      label: function (v) { return ST_LABEL[v] || v; } },
     from: { name: 'Location', title: 'Filter by where guests live',
       options: function () { return ['Local', 'International']; },
       value: function (g) { return g.country ? 'International' : 'Local'; },
@@ -1156,7 +1183,8 @@
     if (state.yn && !ynCounts(g, state.ev)[state.yn]) return false;
     for (var k in FACETS) {
       if (k === skip || !state.f[k].length) continue;
-      if (state.f[k].indexOf(FACETS[k].value(g)) === -1) return false;
+      var fv = FACETS[k].value(g);
+      if (Array.isArray(fv) ? !fv.some(function (x) { return state.f[k].indexOf(x) !== -1; }) : state.f[k].indexOf(fv) === -1) return false;
     }
     if (state.q) {
       var hay = [g.household, g.relationship, g.contact, g.phoneEmail, g.notes, g.country].concat(peopleOf(g.id).map(function (p) { return p.name; })).join(' ').toLowerCase();
@@ -1205,7 +1233,7 @@
     var k = state.openFacet; if (!k) return;
     var F = FACETS[k], sel = state.f[k];
     var counts = {};
-    state.guests.forEach(function (g) { if (passes(g, k)) { var v = F.value(g); counts[v] = (counts[v] || 0) + 1; } });
+    state.guests.forEach(function (g) { if (passes(g, k)) { var v = F.value(g); (Array.isArray(v) ? v : [v]).forEach(function (x) { counts[x] = (counts[x] || 0) + 1; }); } });
     $('fTitle').textContent = F.title;
     $('fpClear').style.visibility = sel.length ? 'visible' : 'hidden';
     $('fpList').innerHTML = F.options().map(function (v) {
@@ -1241,12 +1269,12 @@
     renderChips();
     var all = state.guests;
     var rk = state.ev === 'wedding' ? 'weddingRsvp' : 'receptionRsvp';
-    var total = 0, bride = 0, groom = 0, kidsTotal = 0, yn = { Confirmed: 0, Declined: 0, Maybe: 0 };
+    var total = 0, bride = 0, groom = 0, kidsTotal = 0, yn = { Confirmed: 0, Maybe: 0, Invited: 0, Declined: 0, 'Not invited yet': 0 };
     all.forEach(function (g) {
       if (!inEvent(g)) return;
       var c = countOf(g); total += c; kidsTotal += kidsOf(g);
       if (g.side === 'Bride') bride += c; else if (g.side === 'Groom') groom += c;
-      var y = ynCounts(g, state.ev); yn.Confirmed += y.Confirmed; yn.Declined += y.Declined; yn.Maybe += y.Maybe;
+      var y = ynCounts(g, state.ev); ST.forEach(function (s) { yn[s] += y[s]; });
     });
     $('heroLabel').textContent = state.ev === 'wedding' ? 'Guests at the wedding' : 'Guests at the reception';
     $('heroNum').innerHTML = total + '<small>guests</small>';
@@ -1256,6 +1284,7 @@
     $('barGroom').style.width = (groom / denom * 100) + '%';
     $('lgBride').textContent = bride; $('lgGroom').textContent = groom;
     $('kYes').textContent = yn.Confirmed; $('kNo').textContent = yn.Declined; $('kMaybe').textContent = yn.Maybe;
+    $('kWait').textContent = yn.Invited; $('kNot').textContent = yn['Not invited yet'];
     document.querySelectorAll('.kyn').forEach(function (b) { b.classList.toggle('on', state.yn === b.dataset.yn); b.setAttribute('aria-pressed', state.yn === b.dataset.yn); });
     var wedTotal = 0; all.forEach(function (g) { wedTotal += countOf(g, 'wedding'); });
     $('navGuests').textContent = wedTotal + ' at the wedding · ' + all.length + ' households';
@@ -1274,20 +1303,18 @@
       return;
     }
     var head = '<div class="list-head"><span>Household</span><span>Relationship</span><span>' +
-      (state.ev === 'wedding' ? 'Wedding RSVP' : 'Reception RSVP') + '</span><span class="r">Guests</span></div>';
+      'Status</span><span class="r">Guests</span></div>';
     $('list').innerHTML = head + shown.map(function (g) {
-      var rsvp = g[rk];
-      var tags = '';
-      if (!isNotInvited(rsvp)) tags += '<span class="tag ' + esc(rsvp) + '">' + esc(rsvp) + '</span>';
-      var sub = [g.relationship, g.contact].filter(Boolean).join(' · ');
-      if (!sub) sub = g.side === 'Bride' ? 'Bride’s side' : g.side === 'Groom' ? 'Groom’s side' : (g.side || '');
+      var pills = statusPills(g, state.ev), part = partNote(g, state.ev);
+      var tags = pills;
+      var sub = [part ? '<span class="part">' + esc(part) + '</span>' : '', esc([g.relationship, g.contact].filter(Boolean).join(' · '))].filter(Boolean).join(' · ');
+      if (!sub) sub = esc(g.side === 'Bride' ? 'Bride’s side' : g.side === 'Groom' ? 'Groom’s side' : (g.side || ''));
       var c = countOf(g), k = kidsOf(g);
       var sideLabel = g.side === 'Bride' ? 'Bride’s side' : g.side === 'Groom' ? 'Groom’s side' : (g.side || '');
-      var status = !isNotInvited(rsvp) ? '<span class="tag ' + esc(rsvp) + '">' + esc(rsvp) + '</span>'
-        : '<span style="color:var(--muted)">' + esc(rsvp || 'Not invited yet') + '</span>';
+      var status = pills + (part ? '<span class="part stp-note">' + esc(part) + '</span>' : '');
       return '<div class="item' + (g._pending ? ' pending' : '') + '" data-id="' + esc(g.id) + '">' +
         '<div class="who"><div class="avatar ' + esc(g.side) + '">' + esc(initials(g.household)) + '</div>' +
-        '<div class="meta"><div class="n"><span class="nm">' + esc(g.household) + '</span>' + flagHtml(g.country) + pplBadge(g.id) + '</div><div class="s">' + tags + esc(sub) + '</div></div></div>' +
+        '<div class="meta"><div class="n"><span class="nm">' + esc(g.household) + '</span>' + flagHtml(g.country) + pplBadge(g.id) + '</div><div class="s">' + tags + sub + '</div></div></div>' +
         '<div class="col-rel">' + (g.relationship ? esc(g.relationship) : '<span style="color:var(--muted)">' + esc(sideLabel) + '</span>') + '</div>' +
         '<div class="col-status">' + status + '</div>' +
         '<div class="col-num">' + c + (k ? '<span class="kidnote">' + k + (k === 1 ? ' kid' : ' kids') + '</span>' : '') + '</div>' +
