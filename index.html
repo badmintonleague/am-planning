@@ -320,6 +320,18 @@
   .walk-people{position:absolute;left:12px;bottom:calc(16px + env(safe-area-inset-bottom));display:flex;gap:6px;flex-wrap:wrap;max-width:60%}
   .walk-people button{border:0;border-radius:999px;padding:7px 12px;font-size:13px;font-family:inherit;color:#fff;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.2)}
   .walk-load{position:absolute;inset:0;display:grid;place-items:center;color:#55524C;font-size:14px;pointer-events:none}
+  .v-layers-btn{position:absolute;top:10px;right:64px;border:0;border-radius:999px;padding:8px 13px;font-size:13px;font-family:inherit;background:rgba(255,255,255,.9);box-shadow:0 1px 4px rgba(0,0,0,.12);cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+  .v-layers-btn svg{width:15px;height:15px}
+  .v-layers{position:absolute;top:50px;right:10px;width:230px;max-height:calc(100% - 64px);overflow:auto;background:rgba(255,255,255,.97);border-radius:16px;box-shadow:0 8px 28px rgba(0,0,0,.18);padding:10px 12px;z-index:3}
+  .v-layers[hidden]{display:none}
+  .v-layers label{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 2px;font-size:14px;border-bottom:1px solid var(--line);cursor:pointer}
+  .v-layers label:last-of-type{border-bottom:0}
+  .v-layers input{width:18px;height:18px;accent-color:var(--ink)}
+  .v-lh{font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin:6px 2px 4px}
+  .v-cc{display:flex;gap:6px;margin:4px 0 6px}
+  .v-cc button{flex:1;border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 0;font:inherit;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+  .v-cc button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .v-cc i{width:10px;height:10px;border-radius:50%;display:inline-block;border:1px solid rgba(0,0,0,.15)}
   .v-launch{display:flex;align-items:center;gap:16px;text-decoration:none;color:var(--ink)}
   .v-launch:hover{border-color:var(--gold)}
   .v-globe{flex:none;width:52px;height:52px;border-radius:14px;background:var(--gold-soft);color:var(--gold);display:grid;place-items:center}
@@ -768,6 +780,13 @@
       <button slot="ar-button" class="v-ar">AR</button>
     </model-viewer>
     <div class="v-load" id="vLoad">Loading…</div>
+    <button type="button" class="v-layers-btn" id="vLayersBtn" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/></svg>Layers</button>
+    <div class="v-layers" id="vLayers" hidden>
+      <p class="v-lh">Chairs</p>
+      <div class="v-cc" id="vChairCol"><button type="button" data-c="brown"><i style="background:#46241f"></i>Brown</button><button type="button" data-c="white"><i style="background:#f4f4f2"></i>White</button></div>
+      <p class="v-lh">Show</p>
+      <div id="vLayerList"></div>
+    </div>
     <button type="button" class="v-walkbtn" id="vWalkBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="13" cy="4" r="2"/><path d="M10 21l2-6 3 3v3M8 12l2-4 4 1 2 4M12 9l-1 6"/></svg>Walk</button>
     <div class="v-views" id="vViews">
       <button type="button" data-cam="guest" class="on">Guests</button>
@@ -1858,14 +1877,15 @@
     $('vWalkHint').textContent = touch ? 'Left thumb to walk · drag to look' : 'WASD or arrows to walk · drag to look · Shift to hurry';
     $('vWalkHint').style.opacity = 1;
     setTimeout(function () { $('vWalkHint').style.opacity = 0; }, 5000);
-    import('./vendor/walk.js?v=5').then(function (m) {
+    import('./vendor/walk.js?v=6').then(function (m) {
       if ($('vWalk').hidden) return;
       if (window.__presence && !presUnsub) {
         presUnsub = window.__presence.listen(function (docs) { presDocs = docs; pushOthers(); });
         presTimer = setInterval(pushOthers, 4000);                 // drop people who stopped walking
       }
-      walker = m.startWalk($('vWalkStage'), 'venue-scene.glb?v=15', {
+      walker = m.startWalk($('vWalkStage'), 'venue-scene.glb?v=16', {
         start: WALK_SPOTS.entrance[0], yaw: WALK_SPOTS.entrance[1], nub: $('vWalkNub'), base: $('vWalkBase'),
+        hidden: vprefs.hidden.slice(), chairColor: vprefs.chairs,
         onReady: function () { $('vWalkLoad').hidden = true; },
         onError: function () { $('vWalkLoad').textContent = 'Couldn’t load. Check your connection.'; },
         onExit: closeWalk,
@@ -1887,18 +1907,51 @@
     var b = e.target.closest('button[data-spot]'); if (!b || !walker) return;
     var sp = WALK_SPOTS[b.dataset.spot]; walker.teleport(sp[0], sp[1]);
   });
+  var LAYERS = [['chairs', 'Chairs'], ['mandap', 'Mandap'], ['umbrellas', 'Umbrellas'], ['decor', 'Aisle decor & welcome table'],
+                ['structures', 'Pergola & gazebo'], ['fence', 'Barrel fence'], ['tent', 'Tent'], ['tables', 'Tent tables & chairs'], ['trees', 'Trees']];
+  var vprefs = (function () { try { return JSON.parse(localStorage.getItem('am.venue3d') || '{}'); } catch (e) { return {}; } })();
+  vprefs.hidden = vprefs.hidden || []; vprefs.chairs = vprefs.chairs || 'brown';
+  function saveVprefs() { try { localStorage.setItem('am.venue3d', JSON.stringify(vprefs)); } catch (e) {} }
+  var vOrig = null;
+  function applyLayers() {
+    var mv = $('vModel'); if (!mv || !mv.model) return;
+    if (!vOrig) { vOrig = mv.model.materials.map(function (m) { return m.pbrMetallicRoughness.baseColorFactor.slice(); }); }
+    mv.model.materials.forEach(function (m, i) {
+      var layer = String(m.name || '').split(':')[0], hide = vprefs.hidden.indexOf(layer) !== -1;
+      var c = vOrig[i].slice();
+      if (/chair_wood$/.test(m.name || '') && vprefs.chairs === 'white') c = [0.86, 0.86, 0.84, 1];
+      if (hide) { m.setAlphaMode('BLEND'); c[3] = 0; } else m.setAlphaMode('OPAQUE');
+      m.pbrMetallicRoughness.setBaseColorFactor(c);
+    });
+  }
+  function renderLayerUi() {
+    $('vLayerList').innerHTML = LAYERS.map(function (l) {
+      return '<label><span>' + esc(l[1]) + '</span><input type="checkbox" data-l="' + l[0] + '"' + (vprefs.hidden.indexOf(l[0]) === -1 ? ' checked' : '') + '></label>';
+    }).join('');
+    document.querySelectorAll('#vChairCol button').forEach(function (b) { b.classList.toggle('on', b.dataset.c === vprefs.chairs); });
+  }
+  renderLayerUi();
+  $('vLayersBtn').addEventListener('click', function () { var p = $('vLayers'); p.hidden = !p.hidden; $('vLayersBtn').setAttribute('aria-expanded', String(!p.hidden)); });
+  $('vLayerList').addEventListener('change', function (e) {
+    var l = e.target.dataset.l; if (!l) return;
+    vprefs.hidden = vprefs.hidden.filter(function (x) { return x !== l; }); if (!e.target.checked) vprefs.hidden.push(l);
+    saveVprefs(); applyLayers();
+  });
+  $('vChairCol').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-c]'); if (!b) return; vprefs.chairs = b.dataset.c; saveVprefs(); renderLayerUi(); applyLayers();
+  });
   var v3dStarted = false;
   function start3d() {
     if (v3dStarted) return; v3dStarted = true;
     var mv = $('vModel'), c0 = camFor('guest');
     mv.setAttribute('camera-target', c0[0]); mv.setAttribute('camera-orbit', c0[1]);
-    mv.addEventListener('load', function () { $('vLoad').hidden = true; });
+    mv.addEventListener('load', function () { $('vLoad').hidden = true; vOrig = null; applyLayers(); });
     mv.addEventListener('error', function () { $('vLoad').textContent = 'Couldn’t load the 3D layout. Check your connection and refresh.'; });
     var sc = document.createElement('script'); sc.type = 'module'; sc.src = 'vendor/model-viewer.min.js';
     document.head.appendChild(sc);
     customElements.whenDefined('model-viewer').then(function () {
       customElements.get('model-viewer').meshoptDecoderLocation = 'vendor/meshopt_decoder.js';
-      mv.setAttribute('src', 'venue-scene.glb?v=15');
+      mv.setAttribute('src', 'venue-scene.glb?v=16');
     });
   }
   $('vViews').addEventListener('click', function (e) {
