@@ -797,7 +797,7 @@
     <div class="kpis">
       <div class="kpi"><b id="bkDue">–</b><span>Due in 60 days</span></div>
       <div class="kpi"><b id="bkOver">–</b><span>Overdue</span></div>
-      <div class="kpi"><b id="bkShort">–</b><span>Still to book</span></div>
+      <div class="kpi"><b id="bkShort">–</b><span>Considering</span></div>
     </div>
     <div class="rel" id="bNext"></div>
     <div class="rel">
@@ -1910,11 +1910,11 @@
               sfilter: 'all', forWho: '',
               editing: null, busy: false, loadedAt: 0 };
   var COMMITTED = ['Booked', 'Paid in full'];
-  var SHORTLIST = ['Considering', 'Quoted'];   // 'Quoted' is legacy: a quote is now just the price on a Considering vendor
+  var SHORTLIST = ['Considering'];             // counted in the plan; 'Quote only' is just a price on file, not counted
   var BUD_DEFAULTS = {
     categories: ['Venue', 'Catering', 'Photo & Video', 'Decor & Mandap', 'Priest & Music', 'Attire & Beauty', 'Rentals', 'Stationery & Favours', 'Other'],
     events: ['Ceremony', 'Reception', 'Both', 'Pre-wedding'],
-    stages: ['Considering', 'Booked', 'Paid in full', 'Not going ahead'],
+    stages: ['Quote only', 'Considering', 'Booked', 'Paid in full', 'Not going ahead'],
     paid: ['No', 'Yes'],
     forWho: ['Bride', 'Groom', 'Bridal party', 'Family', 'Guests', 'Other'],
     types: ['Clothing', 'Jewellery', 'Accessories', 'Gifts & favours', 'DIY decor', 'Other'],
@@ -1924,13 +1924,13 @@
   var TYPE_ICON = { 'Clothing': 'CL', 'Jewellery': 'JW', 'Accessories': 'AC', 'Gifts & favours': 'GF', 'DIY decor': 'DY', 'Other': '•' };
   function isBought(p) { return p.status === 'Bought' || p.status === 'Ordered'; }
   function shopCost(p) { return num(p.actual); }
-  function bOpt(k) { var o = bud.options && bud.options[k]; o = o && o.length ? o : BUD_DEFAULTS[k]; return k === 'stages' ? o.filter(function (x) { return x !== 'Quoted'; }) : o; }
+  function bOpt(k) { var o = bud.options && bud.options[k]; o = o && o.length ? o : BUD_DEFAULTS[k]; if (k === 'stages') { o = o.filter(function (x) { return x !== 'Quoted'; }); if (o.indexOf('Quote only') === -1) o = ['Quote only'].concat(o); } return o; }
   var CAT_ICON = { 'Venue': 'VN', 'Catering': 'CT', 'Photo & Video': 'PV', 'Decor & Mandap': 'DM', 'Priest & Music': 'PM',
                    'Attire & Beauty': 'AB', 'Rentals': 'RN', 'Stationery & Favours': 'SF', 'Other': '•' };
 
   var BFORM = {
     bookings: { noun: 'booking', addShort: 'Add vendor', addTitle: 'Add a vendor', key: 'name', need: 'Add a name first.',
-      defaults: function () { return { category: bud.cat || 'Other', stage: 'Considering', event: '' }; },
+      defaults: function () { return { category: bud.cat || 'Other', stage: 'Quote only', event: '' }; },
       groups: [
         [{ k: 'name', l: 'What / who', t: 'text', ph: 'e.g. Nantha Catering' },
          { k: 'category', l: 'Category', t: 'select', o: 'categories', req: 1 },
@@ -1997,7 +1997,7 @@
     google.script.run.withSuccessHandler(function (d) { if (!pendingSaves) applyBudget(d); }).getBudget();
   }
   function applyBudget(data, fromCache) {
-    bud.bookings = (data.bookings || []).map(function (b) { if (b.stage === 'Quoted') b.stage = 'Considering'; return b; }); bud.installments = data.installments || []; bud.purchases = data.purchases || [];
+    bud.bookings = (data.bookings || []).map(function (b) { if (b.stage === 'Quoted' || !b.stage) b.stage = 'Quote only'; return b; }); bud.installments = data.installments || []; bud.purchases = data.purchases || [];
     bud.options = data.options || {}; bud.loaded = true; bud.loadedAt = Date.now(); bud.fromCache = !!fromCache;
     renderBudget();
     if (!fromCache) writeCache();
@@ -2013,17 +2013,8 @@
       var cost = num(b.cost); cats[c].n++;
       paid += num(b.paid); cats[c].paid += num(b.paid);
       if (isCommitted(b)) { var v = Math.max(cost, num(b.paid)); committed += v; cats[c].committed += v; nBooked++; owed += num(b.owed); }
-      else if (SHORTLIST.indexOf(b.stage) !== -1) {
-        nShort++; cats[c].opts = (cats[c].opts || 0) + 1;
-        if (cost > 0) { cats[c].lo = cats[c].lo === undefined ? cost : Math.min(cats[c].lo, cost); cats[c].hi = Math.max(cats[c].hi || 0, cost); }
-      }
+      else if (SHORTLIST.indexOf(b.stage) !== -1) { shortlist += cost; cats[c].shortlist += cost; nShort++; }
     });
-    var shortLo = 0, shortHi = 0;
-    Object.keys(cats).forEach(function (c) {             // a category still being shopped counts once, as its cheapest-to-dearest quote
-      var x = cats[c]; if (x.committed || x.lo === undefined) return;
-      x.shortlist = x.lo; shortLo += x.lo; shortHi += x.hi;
-    });
-    shortlist = shortLo;
     var shopBought = 0, shopPlanned = 0, fors = {};
     bOpt('forWho').forEach(function (f) { fors[f] = { bought: 0, planned: 0, n: 0 }; });
     bud.purchases.forEach(function (p) {
@@ -2038,7 +2029,7 @@
       else if (p.due && p.due <= soon) due60 += num(p.amount);
     });
     $('bTotal').textContent = money(committed);
-    $('bSplit').innerHTML = '<b>' + money(paid) + '</b> paid · <b>' + money(owed) + '</b> owed';
+    $('bSplit').innerHTML = '<b>' + money(paid) + '</b> paid · <b>' + money(owed) + '</b> owed' + (shortlist ? '<br><b>' + money(committed + shortlist) + '</b> with what we\'re considering' : '');
     var byUs = 0, byFam = 0;
     bud.installments.forEach(function (p) { if (isPaid(p.paid)) { if (p.payer === 'Family') byFam += num(p.amount); else if (p.payer === 'Us') byUs += num(p.amount); } });
     bud.purchases.forEach(function (p) { if (isBought(p)) { if (p.payer === 'Family') byFam += shopCost(p); else if (p.payer === 'Us') byUs += shopCost(p); } });
@@ -2050,7 +2041,7 @@
     $('bkDue').textContent = money(due60);
     $('bkOver').textContent = money(overdue);
     $('bkOver').parentNode.classList.toggle('alert', overdue > 0);
-    $('bkShort').textContent = shortLo ? (shortHi > shortLo ? shortMoney(shortLo) + '–' + shortMoney(shortHi) : shortMoney(shortLo)) : '–';
+    $('bkShort').textContent = shortlist ? shortMoney(shortlist) : '–';
     $('navBudget').textContent = shortMoney(committed) + ' committed · ' + shortMoney(owed) + ' owed';
 
     // Coming up: the next few unpaid payments
@@ -2072,7 +2063,7 @@
         '<span class="rel-name">' + esc(c) + '</span>' +
         '<span class="rel-bar cat-bar"><i style="width:' + w1 + '%"></i><i class="sl" style="width:' + w2 + '%"></i></span>' +
         '<span class="cat-amt">' + (x.committed ? shortMoney(x.committed) : '<em>' + (x.shortlist ? '~' + shortMoney(x.shortlist) : '–') + '</em>') + '</span></button>';
-    }).join('') + '<p class="cat-key"><i></i>Committed <i class="sl"></i>Considering (cheapest quote)</p>';
+    }).join('') + '<p class="cat-key"><i></i>Committed <i class="sl"></i>Considering</p>';
 
     // Shopping by person
     var fmax = 0; Object.keys(fors).forEach(function (f) { fmax = Math.max(fmax, fors[f].bought + fors[f].planned); });
@@ -2095,13 +2086,14 @@
     if (!bud.q) return true;
     return Object.keys(row).some(function (k) { return k !== 'row' && String(row[k]).toLowerCase().indexOf(bud.q) !== -1; });
   }
-  var STAGE_FILTERS = [['all', 'All'], ['booked', 'Booked'], ['short', 'Considering'], ['owed', 'Still owed'], ['dropped', 'Not going ahead']];
+  var STAGE_FILTERS = [['all', 'All'], ['booked', 'Booked'], ['short', 'Considering'], ['quote', 'Quotes'], ['owed', 'Still owed'], ['dropped', 'Not going ahead']];
   function passesStage(b) {
     var f = bud.filter;
     if (f === 'booked') return isCommitted(b);
     if (f === 'short') return !isCommitted(b) && SHORTLIST.indexOf(b.stage) !== -1;
     if (f === 'owed') return isCommitted(b) && num(b.owed) > 0;
     if (f === 'dropped') return b.stage === 'Not going ahead';
+    if (f === 'quote') return b.stage === 'Quote only';
     return b.stage !== 'Not going ahead';
   }
 
@@ -2157,7 +2149,7 @@
       $('bPills').innerHTML = (bud.cat ? '<button type="button" class="pill on" data-clearcat="1">' + esc(bud.cat) + ' ✕</button>' : '') +
         STAGE_FILTERS.map(function (f) { return '<button type="button" class="pill' + (bud.filter === f[0] ? ' on' : '') + '" data-filter="' + f[0] + '">' + f[1] + '</button>'; }).join('');
       var rows = bud.bookings.filter(function (b) { return bMatches(b) && passesStage(b) && (!bud.cat || (b.category || 'Other') === bud.cat); });
-      var order = bOpt('categories'), stageOrder = bOpt('stages');
+      var order = bOpt('categories'), stageOrder = ['Considering', 'Quote only', 'Not going ahead'];
       rows.sort(function (a, b) {
         var ca = order.indexOf(a.category || 'Other'), cb = order.indexOf(b.category || 'Other');
         if (ca !== cb) return (ca === -1 ? 99 : ca) - (cb === -1 ? 99 : cb);
@@ -2173,19 +2165,21 @@
         if (cat !== lastCat) {
           var inCat = rows.filter(function (x) { return (x.category || 'Other') === cat; }), cc = 0;
           inCat.forEach(function (x) { if (isCommitted(x)) cc += Math.max(num(x.cost), num(x.paid)); });
-          var qs = inCat.filter(function (x) { return !isCommitted(x) && x.stage !== 'Not going ahead' && num(x.cost) > 0; }).map(function (x) { return num(x.cost); });
-          var range = qs.length ? ' · ' + (qs.length > 1 && Math.max.apply(null, qs) > Math.min.apply(null, qs) ? shortMoney(Math.min.apply(null, qs)) + '–' + shortMoney(Math.max.apply(null, qs)) : shortMoney(qs[0])) : '';
-          var nOpt = inCat.filter(function (x) { return !isCommitted(x) && x.stage !== 'Not going ahead'; }).length;
-          html += '<div class="grp"><span>' + esc(cat) + '</span><span>' + (cc ? money(cc) + ' booked' + (nOpt ? ' · ' + nOpt + ' still considering' : '')
-            : nOpt + (nOpt === 1 ? ' option' : ' options') + range) + '</span></div>';
+          var cons = 0, nCons = 0, nQ = 0;
+          inCat.forEach(function (x) { if (isCommitted(x) || x.stage === 'Not going ahead') return; if (x.stage === 'Considering') { cons += num(x.cost); nCons++; } else nQ++; });
+          var bits = [];
+          if (cc) bits.push(money(cc) + ' booked');
+          if (nCons) bits.push(shortMoney(cons) + ' considering');
+          if (nQ) bits.push(nQ + (nQ === 1 ? ' quote' : ' quotes'));
+          html += '<div class="grp"><span>' + esc(cat) + '</span><span>' + (bits.join(' · ') || '–') + '</span></div>';
           lastCat = cat;
         }
         var hasCost = b.cost !== '', committedNow = isCommitted(b);
-        var tag = '<span class="tag ' + stageTone(b.stage) + '">' + esc(b.stage || 'Considering') + '</span>';
+        var tag = '<span class="tag ' + stageTone(b.stage) + '">' + esc(b.stage === 'Quote only' ? 'Quote' : b.stage) + '</span>';
         var sub = [b.event ? (b.event === 'Both' ? 'Ceremony + reception' : b.event) : ''].filter(Boolean).join(' · ');
         var right = committedNow
           ? (num(b.owed) > 0 ? money(b.owed) + ' owed' : hasCost ? 'paid in full' : 'no cost yet')
-          : (b.stage === 'Not going ahead' ? 'not going ahead' : hasCost ? 'quote · not counted' : 'no quote yet');
+          : (b.stage === 'Not going ahead' ? 'not going ahead' : b.stage === 'Considering' ? (hasCost ? 'considering · counted' : 'no price yet') : hasCost ? 'quote · not counted' : 'no quote yet');
         html += '<div class="item' + (b._pending ? ' pending' : '') + (b.stage === 'Not going ahead' ? ' dropped' : '') + '" data-t="bookings" data-row="' + b.row + '">' +
           '<div class="who"><div class="avatar cat">' + esc(CAT_ICON[cat] || initials(b.name)) + '</div>' +
           '<div class="meta"><div class="n">' + esc(b.name) + '</div>' + (b.event ? '<div class="d-sub">' + esc(b.event === 'Both' ? 'Ceremony + reception' : b.event) + '</div>' : '') + '<div class="s">' + tag + payerTag(b.payerSummary) + esc(sub) + '</div></div></div>' +
@@ -2705,7 +2699,7 @@
       categories: ['Venue', 'Catering', 'Photo & Video', 'Decor & Mandap', 'Priest & Music', 'Attire & Beauty',
                    'Rentals', 'Stationery & Favours', 'Other'],
       events: ['Ceremony', 'Reception', 'Both', 'Pre-wedding'],
-      stages: ['Considering', 'Booked', 'Paid in full', 'Not going ahead'],
+      stages: ['Quote only', 'Considering', 'Booked', 'Paid in full', 'Not going ahead'],
       paid: ['No', 'Yes'],
       forWho: ['Bride', 'Groom', 'Bridal party', 'Family', 'Guests', 'Other'],
       types: ['Clothing', 'Jewellery', 'Accessories', 'Gifts & favours', 'DIY decor', 'Other'],
