@@ -327,6 +327,10 @@
   .v-layers label{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 2px;font-size:14px;border-bottom:1px solid var(--line);cursor:pointer}
   .v-layers label:last-of-type{border-bottom:0}
   .v-layers input{width:18px;height:18px;accent-color:var(--ink)}
+  .v-layers label > span:first-child{flex:1}
+  .v-dots{display:inline-flex;gap:6px}
+  .v-dots button{width:18px;height:18px;border-radius:50%;border:1px solid rgba(0,0,0,.18);padding:0;cursor:pointer}
+  .v-dots button.on{box-shadow:0 0 0 2px #fff,0 0 0 3.5px var(--ink)}
   .v-lh{font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin:6px 2px 4px}
   .v-cc{display:flex;gap:6px;margin:4px 0 6px}
   .v-cc button{flex:1;border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 0;font:inherit;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px}
@@ -782,9 +786,6 @@
     <div class="v-load" id="vLoad">Loading…</div>
     <button type="button" class="v-layers-btn" id="vLayersBtn" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/></svg>Layers</button>
     <div class="v-layers" id="vLayers" hidden>
-      <p class="v-lh">Chairs</p>
-      <div class="v-cc" id="vChairCol"><button type="button" data-c="brown"><i style="background:#46241f"></i>Brown</button><button type="button" data-c="white"><i style="background:#f4f4f2"></i>White</button></div>
-      <p class="v-lh">Show</p>
       <div id="vLayerList"></div>
     </div>
     <button type="button" class="v-walkbtn" id="vWalkBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="13" cy="4" r="2"/><path d="M10 21l2-6 3 3v3M8 12l2-4 4 1 2 4M12 9l-1 6"/></svg>Walk</button>
@@ -1926,9 +1927,10 @@
   }
   function renderLayerUi() {
     $('vLayerList').innerHTML = LAYERS.map(function (l) {
-      return '<label><span>' + esc(l[1]) + '</span><input type="checkbox" data-l="' + l[0] + '"' + (vprefs.hidden.indexOf(l[0]) === -1 ? ' checked' : '') + '></label>';
+      var dots = l[0] === 'chairs' ? '<span class="v-dots" id="vChairCol">' + [['brown', '#46241f'], ['white', '#f4f4f2']].map(function (c) {
+        return '<button type="button" data-c="' + c[0] + '" aria-label="' + c[0] + ' chairs" class="' + (vprefs.chairs === c[0] ? 'on' : '') + '" style="background:' + c[1] + '"></button>'; }).join('') + '</span>' : '';
+      return '<label><span>' + esc(l[1]) + '</span>' + dots + '<input type="checkbox" data-l="' + l[0] + '"' + (vprefs.hidden.indexOf(l[0]) === -1 ? ' checked' : '') + '></label>';
     }).join('');
-    document.querySelectorAll('#vChairCol button').forEach(function (b) { b.classList.toggle('on', b.dataset.c === vprefs.chairs); });
   }
   renderLayerUi();
   $('vLayersBtn').addEventListener('click', function () { var p = $('vLayers'); p.hidden = !p.hidden; $('vLayersBtn').setAttribute('aria-expanded', String(!p.hidden)); });
@@ -1937,8 +1939,9 @@
     vprefs.hidden = vprefs.hidden.filter(function (x) { return x !== l; }); if (!e.target.checked) vprefs.hidden.push(l);
     saveVprefs(); applyLayers();
   });
-  $('vChairCol').addEventListener('click', function (e) {
-    var b = e.target.closest('button[data-c]'); if (!b) return; vprefs.chairs = b.dataset.c; saveVprefs(); renderLayerUi(); applyLayers();
+  $('vLayerList').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-c]'); if (!b) return; e.preventDefault();
+    vprefs.chairs = b.dataset.c; saveVprefs(); renderLayerUi(); applyLayers();
   });
   var v3dStarted = false;
   function start3d() {
