@@ -269,6 +269,12 @@
 
   /* ---------- Budget ---------- */
   .view[hidden]{display:none!important}
+  /* clean: no helper text */
+  .fhint, .group-title .hint, #formSub, #bSub, #pplHint, #countLine, #bCount { display:none !important }
+  .kpi:has(#bkShort) { display:none !important }
+  #viewBudget .kpis { grid-template-columns:repeat(2,1fr) }
+  @media (min-width:960px){ #viewBudget .kpis { grid-template-columns:1fr } }
+
   /* ---------- Venue ---------- */
   .venue-wrap{padding-top:6px;padding-bottom:40px}
   #viewVenue [hidden]{display:none!important}
@@ -397,6 +403,7 @@
   #bPills[hidden]{display:none}
   .tag.us{background:#ECEAF6;color:#4B4785}
   .tag.split{background:linear-gradient(90deg,#ECEAF6 50%,var(--gold-soft) 50%);color:#5d4f6e}
+  .bleg{justify-content:flex-start;gap:14px;flex-wrap:wrap}.bleg i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px;vertical-align:1px}
   .hero-who{font-size:13px;color:var(--muted);margin:4px 0 0}.hero-who:empty{display:none}.hero-who b{color:var(--ink2);font-weight:500}
   .fhint{font-size:12px;color:var(--muted);margin:6px 2px 0;line-height:1.4}
   .bp-right{display:flex;flex-direction:row!important;align-items:center;gap:8px}
@@ -788,11 +795,11 @@
   <section class="hero">
     <p class="eyebrow">Committed</p>
     <p class="big" id="bTotal">–</p>
-    <p class="hero-split" id="bSplit"></p>
-    <p class="hero-who" id="bWho"></p>
+    <p class="hero-split" id="bSplit" hidden></p>
+    <p class="hero-who" id="bWho" hidden></p>
     <div class="split">
-      <div class="splitbar"><div id="bBar" style="width:0;background:var(--ok)"></div></div>
-      <div class="splitlegend"><span>Paid <b id="bPct">–</b></span><span>Booked <b id="bBookedN">–</b></span></div>
+      <div class="splitbar"><div id="bBar" style="width:0;background:var(--ok)"></div><div id="bBarOwed" style="width:0;background:var(--gold)"></div><div id="bBarCons" style="width:0;background:#E7D9B3"></div></div>
+      <div class="splitlegend bleg"><span><i style="background:var(--ok)"></i>Paid <b id="bPct">–</b></span><span><i style="background:var(--gold)"></i>Owed <b id="bOwedL">–</b></span><span><i style="background:#E7D9B3"></i>Considering <b id="bConsL">–</b></span></div>
     </div>
     <div class="kpis">
       <div class="kpi"><b id="bkDue">–</b><span>Due in 60 days</span></div>
@@ -846,11 +853,11 @@
   </button>
   <button type="button" class="nav-item" data-view="venue">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.4"/></svg>
-    <span><b>Venue</b><small id="navVenue">3D layout</small></span>
+    <span><b>Venue</b><small id="navVenue"></small></span>
   </button>
   <div class="nav-item disabled" aria-disabled="true">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg>
-    <span><b>Checklist</b><small>Coming soon</small></span>
+    <span><b>Checklist</b><small>Soon</small></span>
   </div>
   <a id="navSheet" href="#" hidden></a>
   <div class="nav-foot">
@@ -926,7 +933,7 @@
         <div class="field"><label>Adults</label>
           <div class="step"><button type="button" data-step="weddingAdults" data-d="-1" aria-label="Fewer adults">−</button>
             <input id="f_weddingAdults" inputmode="numeric" pattern="[0-9]*"><button type="button" data-step="weddingAdults" data-d="1" aria-label="More adults">+</button></div></div>
-        <div class="field"><label>Kids <span class="hint">under 12</span></label>
+        <div class="field"><label>Kids (under 12)</label>
           <div class="step"><button type="button" data-step="weddingKids" data-d="-1" aria-label="Fewer kids">−</button>
             <input id="f_weddingKids" inputmode="numeric" pattern="[0-9]*"><button type="button" data-step="weddingKids" data-d="1" aria-label="More kids">+</button></div></div>
       </div>
@@ -935,7 +942,7 @@
         <div class="field"><label>Adults</label>
           <div class="step"><button type="button" data-step="receptionAdults" data-d="-1" aria-label="Fewer adults">−</button>
             <input id="f_receptionAdults" inputmode="numeric" pattern="[0-9]*"><button type="button" data-step="receptionAdults" data-d="1" aria-label="More adults">+</button></div></div>
-        <div class="field"><label>Kids <span class="hint">under 12</span></label>
+        <div class="field"><label>Kids (under 12)</label>
           <div class="step"><button type="button" data-step="receptionKids" data-d="-1" aria-label="Fewer kids">−</button>
             <input id="f_receptionKids" inputmode="numeric" pattern="[0-9]*"><button type="button" data-step="receptionKids" data-d="1" aria-label="More kids">+</button></div></div>
       </div>
@@ -1387,7 +1394,7 @@
    */
   function setSaveStatus(el, s) {
     el.className = 'autosave' + (s ? ' ' + s : '');
-    el.innerHTML = s === 'saving' ? '<i></i>Saving…' : s === 'saved' ? '<i></i>Saved' : s === 'err' ? '<i></i>Not saved' : s === 'idle' ? 'Autosaves' : '';
+    el.innerHTML = s === 'saving' ? '<i></i>Saving…' : s === 'saved' ? '<i></i>Saved' : s === 'err' ? '<i></i>Not saved' : s === 'idle' ? '' : '';
   }
   function makeAuto(build, send, statusEl, errEl) {
     var a = { timer: null, inflight: false, queued: null, dead: false, ctx: {} };
@@ -1936,8 +1943,8 @@
          { k: 'category', l: 'Category', t: 'select', o: 'categories', req: 1 },
          { k: 'event', l: 'For', t: 'seg', o: 'events', clear: 1 }],
         [{ k: 'stage', l: 'Status', t: 'select', o: 'stages', req: 1 }, { k: 'cost', l: 'Quote / price', t: 'money' }],
-        [{ k: 'contact', l: 'Contact name', t: 'text', ph: 'Optional' }, { k: 'phone', l: 'Phone', t: 'tel', ph: 'Optional' },
-         { k: 'email', l: 'Email', t: 'email', ph: 'Optional' }, { k: 'notes', l: 'Notes', t: 'area', ph: 'Optional' }]
+        [{ k: 'contact', l: 'Contact name', t: 'text' }, { k: 'phone', l: 'Phone', t: 'tel' },
+         { k: 'email', l: 'Email', t: 'email' }, { k: 'notes', l: 'Notes', t: 'area' }]
       ] },
     purchases: { noun: 'item', addShort: 'Add item', addTitle: 'Add an item', key: 'item', need: 'Add an item name first.',
       defaults: function () { return { status: 'To buy', forWho: bud.forWho || '', type: 'Clothing' }; },
@@ -1945,16 +1952,16 @@
         [{ k: 'item', l: 'Item', t: 'text', ph: 'e.g. Bridesmaids sarees' }, { k: 'forWho', l: 'For', t: 'seg', o: 'forWho', clear: 1 },
          { k: 'type', l: 'Type', t: 'select', o: 'types', req: 1 }],
         [{ k: 'status', l: 'Status', t: 'seg', o: 'shopStatus' }, { k: 'actual', l: 'Cost', t: 'money' }],
-        [{ k: 'payer', l: 'Paid by', t: 'seg', o: 'payers', clear: 1, hint: 'Tap a selected option again to clear it.' }, { k: 'notes', l: 'Notes', t: 'area', ph: 'Store, size, colour…' }]
+        [{ k: 'payer', l: 'Paid by', t: 'seg', o: 'payers', clear: 1 }, { k: 'notes', l: 'Notes', t: 'area', ph: 'Store, size, colour…' }]
       ] },
     installments: { noun: 'payment', addShort: 'Add payment', addTitle: 'Add a payment', key: 'booking', need: 'Pick which booking this is for.',
       defaults: function () { return { paid: 'No', booking: bud.newFor || '' }; },
       groups: [
         [{ k: 'booking', l: 'For', t: 'booking' }, { k: 'label', l: 'Payment', t: 'text', ph: 'e.g. Deposit, Final balance' }],
         [{ k: 'amount', l: 'Amount', t: 'money', half: 1 }, { k: 'due', l: 'Due date', t: 'date', half: 1 }],
-        [{ k: 'paid', l: 'Paid?', t: 'seg', o: 'paid' }, { k: 'paidDate', l: 'Paid on', t: 'date' }, { k: 'payer', l: 'Paid by', t: 'seg', o: 'payers', clear: 1, hint: 'Not decided yet? Leave it blank — tap a selected option again to clear it.' },
-         { k: 'method', l: 'Method / reference', t: 'text', ph: 'Optional' }],
-        [{ k: 'notes', l: 'Notes', t: 'area', ph: 'Optional' }]
+        [{ k: 'paid', l: 'Paid?', t: 'seg', o: 'paid' }, { k: 'paidDate', l: 'Paid on', t: 'date' }, { k: 'payer', l: 'Paid by', t: 'seg', o: 'payers', clear: 1 },
+         { k: 'method', l: 'Method / reference', t: 'text' }],
+        [{ k: 'notes', l: 'Notes', t: 'area' }]
       ] }
   };
 
@@ -2034,10 +2041,11 @@
     bud.installments.forEach(function (p) { if (isPaid(p.paid)) { if (p.payer === 'Family') byFam += num(p.amount); else if (p.payer === 'Us') byUs += num(p.amount); } });
     bud.purchases.forEach(function (p) { if (isBought(p)) { if (p.payer === 'Family') byFam += shopCost(p); else if (p.payer === 'Us') byUs += shopCost(p); } });
     $('bWho').innerHTML = byFam ? 'Paid by us <b>' + money(byUs) + '</b> · family <b>' + money(byFam) + '</b>' : '';
-    var pct = committed ? Math.min(100, paid / committed * 100) : 0;
-    $('bBar').style.width = pct + '%';
-    $('bPct').textContent = (pct < 1 && pct > 0 ? '<1' : Math.round(pct)) + '%';
-    $('bBookedN').textContent = nBooked + ' of ' + (nBooked + nShort);
+    var whole = Math.max(committed + shortlist, 1), owedNow = Math.max(0, committed - paid);
+    $('bBar').style.width = (paid / whole * 100) + '%';
+    $('bBarOwed').style.width = (owedNow / whole * 100) + '%';
+    $('bBarCons').style.width = (shortlist / whole * 100) + '%';
+    $('bPct').textContent = shortMoney(paid); $('bOwedL').textContent = shortMoney(owedNow); $('bConsL').textContent = shortMoney(shortlist);
     $('bkDue').textContent = money(due60);
     $('bkOver').textContent = money(overdue);
     $('bkOver').parentNode.classList.toggle('alert', overdue > 0);
@@ -2052,7 +2060,7 @@
         (d ? '<b>' + d.d + '</b><span>' + MONTHS[d.m - 1] + '</span>' : '<b>–</b>') + '</div>' +
         '<span class="next-n"><b>' + esc(p.forName || 'Payment') + '</b><small>' + esc(p.label || 'Payment') + (over ? ' · overdue' : '') + '</small></span>' +
         '<span class="next-amt">' + money(p.amount) + '</span></button>';
-    }).join('') : '<p class="next-empty">No payments scheduled. Add deposits and instalments to a booking to see them here.</p>');
+    }).join('') : '<p class="next-empty">Nothing due</p>');
 
     // By category
     var max = 0; Object.keys(cats).forEach(function (c) { max = Math.max(max, cats[c].committed + cats[c].shortlist); });
@@ -2063,7 +2071,7 @@
         '<span class="rel-name">' + esc(c) + '</span>' +
         '<span class="rel-bar cat-bar"><i style="width:' + w1 + '%"></i><i class="sl" style="width:' + w2 + '%"></i></span>' +
         '<span class="cat-amt">' + (x.committed ? shortMoney(x.committed) : '<em>' + (x.shortlist ? '~' + shortMoney(x.shortlist) : '–') + '</em>') + '</span></button>';
-    }).join('') + '<p class="cat-key"><i></i>Committed <i class="sl"></i>Considering</p>';
+    }).join('');
 
     // Shopping by person
     var fmax = 0; Object.keys(fors).forEach(function (f) { fmax = Math.max(fmax, fors[f].bought + fors[f].planned); });
@@ -2075,7 +2083,7 @@
         '<span class="rel-name">' + esc(f) + '</span>' +
         '<span class="rel-bar cat-bar"><i style="width:' + w1 + '%"></i><i class="sl" style="width:' + w2 + '%"></i></span>' +
         '<span class="cat-amt">' + (x.bought + x.planned ? shortMoney(x.bought + x.planned) : '<em>–</em>') + '</span></button>';
-    }).join('') + '<p class="cat-key"><i></i>Bought <i class="sl"></i>Still to buy</p>';
+    }).join('');
 
     $('tcB').textContent = bud.bookings.length; $('tcP').textContent = bud.installments.length; $('tcS').textContent = bud.purchases.length;
     document.querySelectorAll('#bTabs button').forEach(function (b) { b.classList.toggle('on', b.dataset.t === bud.tab); });
@@ -2144,7 +2152,7 @@
           '<div class="amt"><b>' + amt + '</b>' + (btn || '<span>' + (status === 'Ordered' ? 'ordered' : 'bought') + '</span>') + '</div></div>';
       });
       if (!items.length) html = '<div class="empty"><b>' + (bud.q || bud.forWho || bud.sfilter !== 'all' ? 'Nothing matches' : 'Nothing on the shopping list') + '</b>' +
-        (bud.q || bud.forWho || bud.sfilter !== 'all' ? 'Try a different filter.' : 'Add outfits, jewellery, gifts and other things you’re buying yourselves.') + '</div>';
+        '</div>';
     } else if (t === 'bookings') {
       $('bPills').innerHTML = (bud.cat ? '<button type="button" class="pill on" data-clearcat="1">' + esc(bud.cat) + ' ✕</button>' : '') +
         STAGE_FILTERS.map(function (f) { return '<button type="button" class="pill' + (bud.filter === f[0] ? ' on' : '') + '" data-filter="' + f[0] + '">' + f[1] + '</button>'; }).join('');
@@ -2178,8 +2186,8 @@
         var tag = '<span class="tag ' + stageTone(b.stage) + '">' + esc(b.stage === 'Quote only' ? 'Quote' : b.stage) + '</span>';
         var sub = [b.event ? (b.event === 'Both' ? 'Ceremony + reception' : b.event) : ''].filter(Boolean).join(' · ');
         var right = committedNow
-          ? (num(b.owed) > 0 ? money(b.owed) + ' owed' : hasCost ? 'paid in full' : 'no cost yet')
-          : (b.stage === 'Not going ahead' ? 'not going ahead' : b.stage === 'Considering' ? (hasCost ? 'considering · counted' : 'no price yet') : hasCost ? 'quote · not counted' : 'no quote yet');
+          ? (num(b.owed) > 0 ? money(b.owed) + ' owed' : hasCost ? 'paid' : '')
+          : '';
         html += '<div class="item' + (b._pending ? ' pending' : '') + (b.stage === 'Not going ahead' ? ' dropped' : '') + '" data-t="bookings" data-row="' + b.row + '">' +
           '<div class="who"><div class="avatar cat">' + esc(CAT_ICON[cat] || initials(b.name)) + '</div>' +
           '<div class="meta"><div class="n">' + esc(b.name) + '</div>' + (b.event ? '<div class="d-sub">' + esc(b.event === 'Both' ? 'Ceremony + reception' : b.event) + '</div>' : '') + '<div class="s">' + tag + payerTag(b.payerSummary) + esc(sub) + '</div></div></div>' +
@@ -2191,7 +2199,7 @@
           '<div class="amt"><b>' + (hasCost ? money(b.cost) : '–') + '</b><span>' + right + '</span></div></div>';
       });
       if (!rows.length) html = '<div class="empty"><b>' + (bud.q || bud.cat || bud.filter !== 'all' ? 'Nothing matches' : 'No vendors yet') + '</b>' +
-        (bud.q || bud.cat || bud.filter !== 'all' ? 'Try a different filter.' : 'Tap “Add vendor” to add a vendor or venue.') + '</div>';
+        '</div>';
     } else {
       var today = todayIso();
       var prow = bud.installments.filter(bMatches).slice().sort(function (a, b) {
@@ -2221,7 +2229,7 @@
             '</div>';
         }).join('');
       if (!prow.length) html = '<div class="empty"><b>' + (bud.q ? 'No matches' : 'No payments yet') + '</b>' +
-        (bud.q ? 'Try a different search.' : 'Add deposits and instalments here, or from inside a booking.') + '</div>';
+        '</div>';
     }
     list.innerHTML = html;
   }
