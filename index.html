@@ -403,6 +403,17 @@
   #bPills[hidden]{display:none}
   .tag.us{background:#ECEAF6;color:#4B4785}
   .tag.split{background:linear-gradient(90deg,#ECEAF6 50%,var(--gold-soft) 50%);color:#5d4f6e}
+  .pg-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:4px 6px 10px}
+  .pg-in{display:flex;align-items:baseline;gap:6px;color:var(--ink2);font-size:14px}
+  .pg-in input{width:78px;border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:18px;font-family:inherit;background:#fff;color:var(--ink)}
+  .pg-big{text-align:right}.pg-big b{display:block;font-family:var(--serif);font-weight:400;font-size:26px;line-height:1}.pg-big span{font-size:12px;color:var(--muted)}
+  .pg-reset{border:0;background:none;color:var(--gold);font:inherit;font-size:13px;padding:0 6px 8px;cursor:pointer}
+  .pg-chart{width:100%;height:110px;display:block;margin:4px 0 6px}
+  .pg-chart text{font-size:10px;fill:var(--muted)}
+  .pg-line{fill:none;stroke:var(--gold);stroke-width:2}.pg-dot{fill:var(--ink)}.pg-k{stroke:var(--line);stroke-dasharray:3 3}
+  .pg-rows{margin:0 6px 4px}.pg-row{display:flex;justify-content:space-between;font-size:14px;padding:7px 0;border-top:1px solid var(--line)}
+  .pg-row span{color:var(--ink2)}.pg-row b{font-weight:500}
+  .pg-none{font-size:13px;color:var(--muted);margin:0 6px 8px}
   .bleg{justify-content:flex-start;gap:14px;flex-wrap:wrap}.bleg i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px;vertical-align:1px}
   .hero-who{font-size:13px;color:var(--muted);margin:4px 0 0}.hero-who:empty{display:none}.hero-who b{color:var(--ink2);font-weight:500}
   .fhint{font-size:12px;color:var(--muted);margin:6px 2px 0;line-height:1.4}
@@ -811,6 +822,7 @@
       <div class="rel-h"><span>By category</span><button type="button" class="rel-clear" id="bCatClear" hidden>Show all</button></div>
       <div id="bCats"></div>
     </div>
+    <div class="rel" id="bPer"></div>
     <div class="rel" id="bForWrap" hidden>
       <div class="rel-h"><span>Shopping by person</span><button type="button" class="rel-clear" id="bForClear" hidden>Show all</button></div>
       <div id="bFor"></div>
@@ -1922,6 +1934,7 @@
     categories: ['Venue', 'Catering', 'Photo & Video', 'Decor & Mandap', 'Priest & Music', 'Attire & Beauty', 'Rentals', 'Stationery & Favours', 'Other'],
     events: ['Ceremony', 'Reception', 'Both', 'Pre-wedding'],
     stages: ['Quote only', 'Considering', 'Booked', 'Paid in full', 'Not going ahead'],
+    pricing: ['Flat', 'Per guest', 'Flat + extra guests'],
     paid: ['No', 'Yes'],
     forWho: ['Bride', 'Groom', 'Bridal party', 'Family', 'Guests', 'Other'],
     types: ['Clothing', 'Jewellery', 'Accessories', 'Gifts & favours', 'DIY decor', 'Other'],
@@ -1931,18 +1944,20 @@
   var TYPE_ICON = { 'Clothing': 'CL', 'Jewellery': 'JW', 'Accessories': 'AC', 'Gifts & favours': 'GF', 'DIY decor': 'DY', 'Other': '•' };
   function isBought(p) { return p.status === 'Bought' || p.status === 'Ordered'; }
   function shopCost(p) { return num(p.actual); }
-  function bOpt(k) { var o = bud.options && bud.options[k]; o = o && o.length ? o : BUD_DEFAULTS[k]; if (k === 'stages') { o = o.filter(function (x) { return x !== 'Quoted'; }); if (o.indexOf('Quote only') === -1) o = ['Quote only'].concat(o); } return o; }
+  function bOpt(k) { if (k === 'pricing') return BUD_DEFAULTS.pricing; var o = bud.options && bud.options[k]; o = o && o.length ? o : BUD_DEFAULTS[k]; if (k === 'stages') { o = o.filter(function (x) { return x !== 'Quoted'; }); if (o.indexOf('Quote only') === -1) o = ['Quote only'].concat(o); } return o; }
   var CAT_ICON = { 'Venue': 'VN', 'Catering': 'CT', 'Photo & Video': 'PV', 'Decor & Mandap': 'DM', 'Priest & Music': 'PM',
                    'Attire & Beauty': 'AB', 'Rentals': 'RN', 'Stationery & Favours': 'SF', 'Other': '•' };
 
   var BFORM = {
     bookings: { noun: 'booking', addShort: 'Add vendor', addTitle: 'Add a vendor', key: 'name', need: 'Add a name first.',
-      defaults: function () { return { category: bud.cat || 'Other', stage: 'Quote only', event: '' }; },
+      defaults: function () { return { category: bud.cat || 'Other', stage: 'Quote only', event: '', pricing: 'Flat', tax: '13' }; },
       groups: [
         [{ k: 'name', l: 'What / who', t: 'text', ph: 'e.g. Nantha Catering' },
          { k: 'category', l: 'Category', t: 'select', o: 'categories', req: 1 },
          { k: 'event', l: 'For', t: 'seg', o: 'events', clear: 1 }],
-        [{ k: 'stage', l: 'Status', t: 'select', o: 'stages', req: 1 }, { k: 'cost', l: 'Quote / price', t: 'money' }],
+        [{ k: 'stage', l: 'Status', t: 'select', o: 'stages', req: 1 }, { k: 'pricing', l: 'Pricing', t: 'seg', o: 'pricing' },
+         { k: 'cost', l: 'Quote / price', t: 'money' }, { k: 'included', l: 'Guests included', t: 'number' },
+         { k: 'rate', l: 'Per extra guest', t: 'money' }, { k: 'tax', l: 'Tax %', t: 'number' }],
         [{ k: 'contact', l: 'Contact name', t: 'text' }, { k: 'phone', l: 'Phone', t: 'tel' },
          { k: 'email', l: 'Email', t: 'email' }, { k: 'notes', l: 'Notes', t: 'area' }]
       ] },
@@ -1979,6 +1994,85 @@
   function isPaid(v) { return String(v).toLowerCase() === 'yes'; }
   function payerTag(v) { return v ? '<span class="tag ' + (v === 'Family' ? 'fam' : v === 'Split' ? 'split' : 'us') + '">' + esc(v) + '</span>' : ''; }
   function stageTone(s) { return COMMITTED.indexOf(s) !== -1 ? 'ok' : s === 'Considering' ? 'warn' : s === 'Not going ahead' ? 'bad' : 'neutral'; }
+  /* ---------- per-guest pricing ---------- */
+  function pricingOf(b) { return b.pricing === 'Per guest' || b.pricing === 'Flat + extra guests' ? b.pricing : 'Flat'; }
+  function effCost(b, n) {
+    var pr = pricingOf(b), tax = 1 + (b.tax === '' || b.tax === undefined ? 0 : num(b.tax)) / 100, rate = num(b.rate);
+    if (pr === 'Per guest') return Math.round(rate * n * tax * 100) / 100;
+    if (pr === 'Flat + extra guests') return num(b.cost) + Math.round(Math.max(0, n - num(b.included)) * rate * tax * 100) / 100;
+    return num(b.cost);
+  }
+  function guestListCount() {
+    if (typeof state === 'undefined' || !state.guests) return 0;
+    var w = 0, r = 0;
+    state.guests.forEach(function (g) {
+      if (g.weddingRsvp !== 'Declined') w += num(g.weddingAdults) + num(g.weddingKids);
+      if (g.receptionRsvp !== 'Declined') r += num(g.receptionAdults) + num(g.receptionKids);
+    });
+    return Math.max(w, r);
+  }
+  function planGuests() { var p = bud.plan && bud.plan.guests; return p !== '' && p !== undefined && p !== null ? num(p) : guestListCount(); }
+  function counted(b) { return isCommitted(b) || SHORTLIST.indexOf(b.stage) !== -1; }
+  function projectedAt(n) {                 // committed + considering, if n people came
+    var t = bud.fixedOther || 0;
+    bud.bookings.forEach(function (b) { if (!counted(b)) return; var e = effCost(b, n); t += isCommitted(b) ? Math.max(e, num(b.paid)) : e; });
+    return t;
+  }
+  function pricingVis() {
+    var wrap = $('bFields'); if (!wrap) return;
+    var seg = wrap.querySelector('#b_pricing'); if (!seg) return;
+    var pr = seg.dataset.value || 'Flat';
+    function show(k, on, label) {
+      var f = wrap.querySelector('.field[data-k="' + k + '"]'); if (!f) return;
+      f.style.display = on ? '' : 'none'; if (label) f.querySelector('label').textContent = label;
+    }
+    show('cost', pr !== 'Per guest', pr === 'Flat + extra guests' ? 'Base price' : 'Quote / price');
+    show('included', pr === 'Flat + extra guests');
+    show('rate', pr !== 'Flat', pr === 'Per guest' ? 'Per guest' : 'Per extra guest');
+    show('tax', pr !== 'Flat');
+  }
+  function renderPer(H) {
+    var el = $('bPer'); if (!el) return;
+    var perVendors = bud.bookings.filter(function (b) { return counted(b) && pricingOf(b) !== 'Flat'; });
+    var listN = guestListCount(), own = bud.plan && bud.plan.guests !== '' && bud.plan.guests !== undefined && bud.plan.guests !== null;
+    var tot = projectedAt(H), per = H ? tot / H : 0;
+    var lo = Math.max(50, Math.round(Math.min(H || 300, 300) * 0.5 / 10) * 10), hi = Math.max(500, Math.ceil((H || 0) * 1.3 / 10) * 10);
+    var steps = [], n;
+    for (n = lo; n <= hi; n += 5) steps.push([n, projectedAt(n)]);
+    var ymin = steps[0][1], ymax = steps[steps.length - 1][1]; if (ymax - ymin < 1) ymax = ymin + 1;
+    var Wd = 300, Ht = 90;
+    function X(v) { return (v - lo) / (hi - lo) * Wd; } function Y(v) { return Ht - 6 - (v - ymin) / (ymax - ymin) * (Ht - 14); }
+    var path = steps.map(function (p, i) { return (i ? 'L' : 'M') + X(p[0]).toFixed(1) + ' ' + Y(p[1]).toFixed(1); }).join(' ');
+    var kinks = []; perVendors.forEach(function (b) { if (pricingOf(b) === 'Flat + extra guests' && num(b.included) > lo && num(b.included) < hi && kinks.indexOf(num(b.included)) === -1) kinks.push(num(b.included)); });
+    kinks.sort(function (a, b) { return a - b; });
+    // what one more guest costs, in each stretch between contract limits
+    var edges = [lo].concat(kinks).concat([hi]), stretches = [];
+    for (var i = 0; i < edges.length - 1; i++) { var m = (edges[i] + edges[i + 1]) / 2; stretches.push([edges[i], edges[i + 1], projectedAt(Math.floor(m) + 1) - projectedAt(Math.floor(m))]); }
+    el.innerHTML = '<div class="rel-h"><span>Per guest</span></div>' +
+      '<div class="pg-top"><label class="pg-in"><input id="bPlanN" type="number" inputmode="numeric" min="0" value="' + (own ? num(bud.plan.guests) : '') + '" placeholder="' + listN + '"><span>guests</span></label>' +
+      '<div class="pg-big"><b>' + (H ? money(Math.round(per)) : '–') + '</b><span>per guest</span></div></div>' +
+      (own && listN !== H ? '<button type="button" class="pg-reset" id="bPlanReset">Use guest list (' + listN + ')</button>' : '') +
+      (perVendors.length ? '<svg class="pg-chart" viewBox="-4 0 ' + (Wd + 8) + ' ' + (Ht + 16) + '" preserveAspectRatio="none">' +
+        kinks.map(function (k) { return '<line x1="' + X(k) + '" x2="' + X(k) + '" y1="2" y2="' + (Ht - 2) + '" class="pg-k"/><text x="' + X(k) + '" y="' + (Ht + 13) + '" text-anchor="middle">' + k + '</text>'; }).join('') +
+        '<path d="' + path + '" class="pg-line"/>' +
+        (H >= lo && H <= hi ? '<circle cx="' + X(H) + '" cy="' + Y(tot) + '" r="4" class="pg-dot"/>' : '') +
+        '<text x="0" y="' + (Ht + 13) + '">' + lo + '</text><text x="' + Wd + '" y="' + (Ht + 13) + '" text-anchor="end">' + hi + '</text></svg>' +
+        '<div class="pg-rows">' + stretches.map(function (st) {
+          return '<div class="pg-row"><span>' + (stretches.length === 1 ? 'Each extra guest' : st[0] === lo ? 'Up to ' + st[1] : st[1] === hi ? 'Over ' + st[0] : st[0] + '–' + st[1]) + '</span><b>+' + money(Math.round(st[2])) + '</b></div>';
+        }).join('') + '<div class="pg-row"><span>Total at ' + H + '</span><b>' + money(Math.round(tot)) + '</b></div></div>'
+      : '<p class="pg-none">Set a vendor to per-guest pricing to see how cost changes with guest count.</p>');
+    var inp = $('bPlanN');
+    inp.addEventListener('input', function () {
+      clearTimeout(renderPer._t);
+      var v = inp.value.trim(); bud.plan = { guests: v === '' ? '' : Math.max(0, Math.round(num(v))) };
+      renderPer._t = setTimeout(function () {
+        renderBudget(); var again = $('bPlanN'); if (again) { again.focus(); var l = again.value.length; try { again.setSelectionRange(l, l); } catch (e) {} }
+        google.script.run.withSuccessHandler(function () {}).withFailureHandler(function () {}).saveBudgetPlanning(bud.plan);
+      }, 500);
+    });
+    var rs = $('bPlanReset');
+    if (rs) rs.addEventListener('click', function () { bud.plan = { guests: '' }; renderBudget(); google.script.run.withSuccessHandler(function () {}).withFailureHandler(function () {}).saveBudgetPlanning(bud.plan); });
+  }
   function isCommitted(b) { return COMMITTED.indexOf(b.stage) !== -1 || (num(b.paid) > 0 && b.stage !== 'Not going ahead'); }
   function bookingByRow(r) { r = Number(r); for (var i = 0; i < bud.bookings.length; i++) if (bud.bookings[i].row === r) return bud.bookings[i]; return null; }
   function paymentsOf(r) { return bud.installments.filter(function (p) { return Number(p.booking) === Number(r); }); }
@@ -2005,7 +2099,7 @@
   }
   function applyBudget(data, fromCache) {
     bud.bookings = (data.bookings || []).map(function (b) { if (b.stage === 'Quoted' || !b.stage) b.stage = 'Quote only'; return b; }); bud.installments = data.installments || []; bud.purchases = data.purchases || [];
-    bud.options = data.options || {}; bud.loaded = true; bud.loadedAt = Date.now(); bud.fromCache = !!fromCache;
+    bud.options = data.options || {}; bud.plan = data.planning || {}; bud.loaded = true; bud.loadedAt = Date.now(); bud.fromCache = !!fromCache;
     renderBudget();
     if (!fromCache) writeCache();
   }
@@ -2015,11 +2109,13 @@
     var committed = 0, paid = 0, owed = 0, shortlist = 0, nBooked = 0, nShort = 0, due60 = 0, overdue = 0;
     var today = todayIso(), soon = isoPlusDays(60), cats = {};
     bOpt('categories').forEach(function (c) { cats[c] = { committed: 0, paid: 0, shortlist: 0, n: 0 }; });
+    var H = planGuests();
+    bud.bookings.forEach(function (b) { b._eff = effCost(b, H); b._owed = isCommitted(b) ? Math.max(0, b._eff - num(b.paid)) : 0; });
     bud.bookings.forEach(function (b) {
       var c = b.category || 'Other'; if (!cats[c]) cats[c] = { committed: 0, paid: 0, shortlist: 0, n: 0 };
-      var cost = num(b.cost); cats[c].n++;
+      var cost = b._eff; cats[c].n++;
       paid += num(b.paid); cats[c].paid += num(b.paid);
-      if (isCommitted(b)) { var v = Math.max(cost, num(b.paid)); committed += v; cats[c].committed += v; nBooked++; owed += num(b.owed); }
+      if (isCommitted(b)) { var v = Math.max(cost, num(b.paid)); committed += v; cats[c].committed += v; nBooked++; owed += b._owed; }
       else if (SHORTLIST.indexOf(b.stage) !== -1) { shortlist += cost; cats[c].shortlist += cost; nShort++; }
     });
     var shopBought = 0, shopPlanned = 0, fors = {};
@@ -2030,6 +2126,9 @@
       else { shopPlanned += shopCost(p); fors[f].planned += shopCost(p); }
     });
     committed += shopBought; paid += shopBought;
+    var countedNow = 0; bud.bookings.forEach(function (b) { if (counted(b)) countedNow += isCommitted(b) ? Math.max(b._eff, num(b.paid)) : b._eff; });
+    bud.fixedOther = committed + shortlist - countedNow;
+    renderPer(H);
     var upcoming = bud.installments.filter(function (p) { return !isPaid(p.paid); });
     upcoming.forEach(function (p) {
       if (p.due && p.due < today) overdue += num(p.amount);
@@ -2099,7 +2198,7 @@
     var f = bud.filter;
     if (f === 'booked') return isCommitted(b);
     if (f === 'short') return !isCommitted(b) && SHORTLIST.indexOf(b.stage) !== -1;
-    if (f === 'owed') return isCommitted(b) && num(b.owed) > 0;
+    if (f === 'owed') return isCommitted(b) && b._owed > 0;
     if (f === 'dropped') return b.stage === 'Not going ahead';
     if (f === 'quote') return b.stage === 'Quote only';
     return b.stage !== 'Not going ahead';
@@ -2162,9 +2261,9 @@
         var ca = order.indexOf(a.category || 'Other'), cb = order.indexOf(b.category || 'Other');
         if (ca !== cb) return (ca === -1 ? 99 : ca) - (cb === -1 ? 99 : cb);
         var sa = isCommitted(a) ? 0 : stageOrder.indexOf(a.stage) + 1, sb = isCommitted(b) ? 0 : stageOrder.indexOf(b.stage) + 1;
-        return sa - sb || num(b.cost) - num(a.cost) || String(a.name).localeCompare(b.name);
+        return sa - sb || b._eff - a._eff || String(a.name).localeCompare(b.name);
       });
-      var tot = 0; rows.forEach(function (b) { tot += num(b.cost); });
+      var tot = 0; rows.forEach(function (b) { tot += b._eff; });
       $('bCount').textContent = rows.length + (rows.length === 1 ? ' vendor · ' : ' vendors · ') + money(tot);
       var lastCat = null;
       html = '<div class="list-head"><span>Vendor</span><span>Stage</span><span>Paid by</span><span class="r">Cost</span><span class="r">Paid</span><span class="r">Still owed</span></div>';
@@ -2172,9 +2271,9 @@
         var cat = b.category || 'Other';
         if (cat !== lastCat) {
           var inCat = rows.filter(function (x) { return (x.category || 'Other') === cat; }), cc = 0;
-          inCat.forEach(function (x) { if (isCommitted(x)) cc += Math.max(num(x.cost), num(x.paid)); });
+          inCat.forEach(function (x) { if (isCommitted(x)) cc += Math.max(x._eff, num(x.paid)); });
           var cons = 0, nCons = 0, nQ = 0;
-          inCat.forEach(function (x) { if (isCommitted(x) || x.stage === 'Not going ahead') return; if (x.stage === 'Considering') { cons += num(x.cost); nCons++; } else nQ++; });
+          inCat.forEach(function (x) { if (isCommitted(x) || x.stage === 'Not going ahead') return; if (x.stage === 'Considering') { cons += x._eff; nCons++; } else nQ++; });
           var bits = [];
           if (cc) bits.push(money(cc) + ' booked');
           if (nCons) bits.push(shortMoney(cons) + ' considering');
@@ -2182,21 +2281,21 @@
           html += '<div class="grp"><span>' + esc(cat) + '</span><span>' + (bits.join(' · ') || '–') + '</span></div>';
           lastCat = cat;
         }
-        var hasCost = b.cost !== '', committedNow = isCommitted(b);
+        var hasCost = b.cost !== '' || b._eff > 0, committedNow = isCommitted(b);
         var tag = '<span class="tag ' + stageTone(b.stage) + '">' + esc(b.stage === 'Quote only' ? 'Quote' : b.stage) + '</span>';
         var sub = [b.event ? (b.event === 'Both' ? 'Ceremony + reception' : b.event) : ''].filter(Boolean).join(' · ');
         var right = committedNow
-          ? (num(b.owed) > 0 ? money(b.owed) + ' owed' : hasCost ? 'paid' : '')
+          ? (b._owed > 0 ? money(b._owed) + ' owed' : hasCost ? 'paid' : '')
           : '';
         html += '<div class="item' + (b._pending ? ' pending' : '') + (b.stage === 'Not going ahead' ? ' dropped' : '') + '" data-t="bookings" data-row="' + b.row + '">' +
           '<div class="who"><div class="avatar cat">' + esc(CAT_ICON[cat] || initials(b.name)) + '</div>' +
           '<div class="meta"><div class="n">' + esc(b.name) + '</div>' + (b.event ? '<div class="d-sub">' + esc(b.event === 'Both' ? 'Ceremony + reception' : b.event) + '</div>' : '') + '<div class="s">' + tag + payerTag(b.payerSummary) + esc(sub) + '</div></div></div>' +
           '<div class="bcol">' + tag + '</div>' +
           '<div class="bcol">' + (payerTag(b.payerSummary) || '<span style="color:var(--muted)">–</span>') + '</div>' +
-          '<div class="bcol bnum' + (hasCost ? '' : ' dim') + '">' + (hasCost ? money(b.cost) : '–') + '</div>' +
+          '<div class="bcol bnum' + (hasCost ? '' : ' dim') + '">' + (hasCost ? money(b._eff) : '–') + '</div>' +
           '<div class="bcol bnum' + (num(b.paid) ? '' : ' dim') + '">' + (num(b.paid) ? money(b.paid) : '–') + '</div>' +
-          '<div class="bcol bnum' + (committedNow && num(b.owed) ? '' : ' dim') + '">' + (committedNow ? money(b.owed) : '–') + '</div>' +
-          '<div class="amt"><b>' + (hasCost ? money(b.cost) : '–') + '</b><span>' + right + '</span></div></div>';
+          '<div class="bcol bnum' + (committedNow && b._owed ? '' : ' dim') + '">' + (committedNow ? money(b._owed) : '–') + '</div>' +
+          '<div class="amt"><b>' + (hasCost ? money(b._eff) : '–') + '</b><span>' + right + '</span></div></div>';
       });
       if (!rows.length) html = '<div class="empty"><b>' + (bud.q || bud.cat || bud.filter !== 'all' ? 'Nothing matches' : 'No vendors yet') + '</b>' +
         '</div>';
@@ -2238,37 +2337,38 @@
   function bField(f, v) {
     var o = f.o ? bOpt(f.o) : [];
     var id = 'b_' + f.k, val = v === undefined || v === null ? '' : v;
+    if (f.k === 'pricing' && !val) val = 'Flat';
     var label = '<label for="' + id + '">' + esc(f.l) + '</label>';
     if (f.t === 'seg') {
       var opts = o.slice(); if (val && opts.indexOf(val) === -1) opts.push(val);
-      return '<div class="field"><label>' + esc(f.l) + '</label><div class="seg' + (f.clear ? ' clearable' : '') + '" id="' + id + '" data-value="' + esc(val) + '">' +
+      return '<div class="field" data-k="' + f.k + '"><label>' + esc(f.l) + '</label><div class="seg' + (f.clear ? ' clearable' : '') + '" id="' + id + '" data-value="' + esc(val) + '">' +
         opts.map(function (x) { return '<button type="button" class="' + (x === val ? 'on' : '') + '" data-v="' + esc(x) + '">' + esc(x) + '</button>'; }).join('') + '</div>' +
         (f.hint ? '<p class="fhint">' + esc(f.hint) + '</p>' : '') + '</div>';
     }
     if (f.t === 'select') {
       var so = o.slice(); if (val && so.indexOf(val) === -1) so.push(val);
-      return '<div class="field">' + label + '<select id="' + id + '">' + (f.req ? '' : '<option value="">Not set</option>') +
+      return '<div class="field" data-k="' + f.k + '">' + label + '<select id="' + id + '">' + (f.req ? '' : '<option value="">Not set</option>') +
         so.map(function (x) { return '<option' + (x === val ? ' selected' : '') + '>' + esc(x) + '</option>'; }).join('') + '</select></div>';
     }
     if (f.t === 'booking') {
       var list = bud.bookings.filter(function (b) { return b.stage !== 'Not going ahead' || String(b.row) === String(val); })
         .slice().sort(function (a, b) { return String(a.name).localeCompare(b.name); });
-      return '<div class="field">' + label + '<select id="' + id + '"><option value="">Choose a booking…</option>' +
+      return '<div class="field" data-k="' + f.k + '">' + label + '<select id="' + id + '"><option value="">Choose a booking…</option>' +
         list.map(function (b) { return '<option value="' + b.row + '"' + (String(b.row) === String(val) ? ' selected' : '') + '>' + esc(b.name) + '</option>'; }).join('') + '</select></div>';
     }
     if (f.t === 'money') {
-      return '<div class="field">' + label + '<div class="money-in"><span>$</span><input id="' + id + '" inputmode="decimal" placeholder="0" value="' +
+      return '<div class="field" data-k="' + f.k + '">' + label + '<div class="money-in"><span>$</span><input id="' + id + '" inputmode="decimal" placeholder="0" value="' +
         esc(val === '' ? '' : String(val)) + '"></div></div>';
     }
-    if (f.t === 'date') return '<div class="field">' + label + '<input id="' + id + '" type="date" value="' + esc(val) + '"></div>';
-    if (f.t === 'area') return '<div class="field">' + label + '<textarea id="' + id + '" maxlength="1000" placeholder="' + esc(f.ph || '') + '">' + esc(val) + '</textarea></div>';
-    return '<div class="field">' + label + '<input id="' + id + '" type="' + f.t + '" maxlength="300" placeholder="' + esc(f.ph || '') + '" value="' + esc(val) + '"></div>';
+    if (f.t === 'date') return '<div class="field" data-k="' + f.k + '">' + label + '<input id="' + id + '" type="date" value="' + esc(val) + '"></div>';
+    if (f.t === 'area') return '<div class="field" data-k="' + f.k + '">' + label + '<textarea id="' + id + '" maxlength="1000" placeholder="' + esc(f.ph || '') + '">' + esc(val) + '</textarea></div>';
+    return '<div class="field" data-k="' + f.k + '">' + label + '<input id="' + id + '" type="' + f.t + '" maxlength="300" placeholder="' + esc(f.ph || '') + '" value="' + esc(val) + '"></div>';
   }
   function bookingPaymentsHtml(row) {
     if (!row) return '<div class="group-title">Payments</div><p class="bp-empty">Give it a name first, then add deposits and instalments here.</p>';
     var ps = paymentsOf(row).slice().sort(function (a, b) { return (a.due || '9999') < (b.due || '9999') ? -1 : 1; });
     var b = bookingByRow(row), paidSum = 0; ps.forEach(function (p) { if (isPaid(p.paid)) paidSum += num(p.amount); });
-    var head = b && b.cost !== '' ? money(paidSum) + ' of ' + money(b.cost) + ' paid' : (paidSum ? money(paidSum) + ' paid' : '');
+    var head = b && (b.cost !== '' || b._eff) ? money(paidSum) + ' of ' + money(b._eff !== undefined ? b._eff : num(b.cost)) + ' paid' : (paidSum ? money(paidSum) + ' paid' : '');
     if (b && b.byUs && b.byFamily) head += ' · us ' + money(b.byUs) + ' / family ' + money(b.byFamily);
     return '<div class="group-title">Payments <span class="hint">' + esc(head) + '</span></div><div class="group bp">' +
       ps.map(function (p) {
@@ -2302,6 +2402,7 @@
       var half = g.every(function (f) { return f.half; });
       return '<div class="group' + (half ? ' counts' : '') + '">' + g.map(function (f) { return bField(f, data[f.k]); }).join('') + '</div>';
     }).join('') + (t === 'bookings' ? '<div id="bPays">' + bookingPaymentsHtml(row ? row.row : null) + '</div>' : '');
+    pricingVis();
     $('bErr').textContent = '';
     $('bDel').style.display = isNew ? 'none' : '';
     $('bDel').textContent = t === 'bookings' ? 'Remove vendor' : t === 'purchases' ? 'Remove item' : 'Remove payment';
@@ -2449,6 +2550,7 @@
     else fn();
   }
 
+  $('bFields').addEventListener('click', function (e) { if (e.target.closest('#b_pricing [data-v]')) setTimeout(pricingVis, 0); });
   /* ---------- Events ---------- */
   $('q').addEventListener('input', function (e) { state.q = e.target.value.trim().toLowerCase(); render(); });
   $('filters').addEventListener('click', function (e) {
@@ -2731,8 +2833,9 @@
   var BUDGET = {
     bookings: { key: 'name', match: ['Booking', 'Category', 'Stage'],
       fields: { name: 'Booking', category: 'Category', event: 'Event', stage: 'Stage', cost: 'Cost (CAD)',
-        paid: 'Paid (CAD)', owed: 'Still owed (CAD)', payer: 'Paid by', contact: 'Contact Name', phone: 'Phone', email: 'Email', notes: 'Notes', row: 'Booking #' },
-      readOnly: ['paid', 'owed', 'row'], money: ['cost', 'paid', 'owed'], dates: [] },
+        paid: 'Paid (CAD)', owed: 'Still owed (CAD)', payer: 'Paid by', contact: 'Contact Name', phone: 'Phone', email: 'Email', notes: 'Notes', row: 'Booking #',
+        pricing: 'Pricing', rate: 'Per guest (CAD)', included: 'Guests included', tax: 'Tax %' },
+      readOnly: ['paid', 'owed', 'row'], money: ['cost', 'paid', 'owed', 'rate'], dates: [] },
     installments: { key: 'booking', match: ['Booking #', 'Payment', 'Amount (CAD)'],
       fields: { booking: 'Booking #', forName: 'For', label: 'Payment', amount: 'Amount (CAD)', due: 'Due Date',
         paid: 'Paid?', paidDate: 'Paid Date', payer: 'Paid by', method: 'Method / Ref', notes: 'Notes' },
@@ -3003,7 +3106,7 @@
           if (!arrived(c) && !(meta && meta.hasPendingWrites) && onRemoteChange) onRemoteChange(c);
         }, function (e) { reject(friendly(e)); });
       });
-      fs.onDoc('meta', 'budget', function (d) { data.budgetMeta = d || null; arrived('budgetMeta'); }, function (e) { reject(friendly(e)); });
+      fs.onDoc('meta', 'budget', function (d, meta) { data.budgetMeta = d || null; if (!arrived('budgetMeta') && !(meta && meta.hasPendingWrites) && onRemoteChange) onRemoteChange('budget'); }, function (e) { reject(friendly(e)); });
       fs.onDoc('meta', 'venue', function (d, meta) {
         data.venue = d || null;
         if (!arrived('venue') && !(meta && meta.hasPendingWrites) && onRemoteChange) onRemoteChange('venue');
@@ -3094,7 +3197,8 @@
         }),
         installments: inst,
         purchases: rowsOf('purchases').map(function (r) { return budgetItem('purchases', r.row, r); }),
-        options: mergeOptions(data.options).budget, url: ''
+        options: mergeOptions(data.options).budget, url: '',
+        planning: (data.budgetMeta && data.budgetMeta.planning) || {}
       };
     }
 
@@ -3230,6 +3334,15 @@
         var b = fs.batch(); b.set('meta', 'venue', rec);
         data.venue = rec;
         return commit(b).then(function () { return { earthUrl: url, updatedBy: rec.updatedBy, updatedAt: rec.updatedAt }; });
+      });
+    };
+    /** Budget planning settings (the guest count used for per-guest pricing). */
+    api.saveBudgetPlanning = function (p) {
+      return ready.then(function () {
+        var plan = { guests: p && p.guests !== '' && p.guests !== undefined && p.guests !== null ? Math.max(0, Math.min(5000, Math.round(Number(p.guests) || 0))) : '' };
+        var rec = Object.assign({}, data.budgetMeta || {}, { planning: plan });
+        var b = fs.batch(); b.set('meta', 'budget', stamp(rec)); data.budgetMeta = rec;
+        return commit(b).then(function () { return plan; });
       });
     };
     api._ready = ready;
