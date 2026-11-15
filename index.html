@@ -428,6 +428,8 @@
   #bPills[hidden]{display:none}
   .tag.us{background:#ECEAF6;color:#4B4785}
   .tag.split{background:linear-gradient(90deg,#ECEAF6 50%,var(--gold-soft) 50%);color:#5d4f6e}
+  .bp-gap{cursor:default;background:var(--gold-soft)}.bp-gap b{color:#8A6A22}.bp-gap.over{background:var(--no-soft)}.bp-gap.over b{color:var(--no)}
+  .unsched{display:block;font-size:12px;color:#8A6A22;margin-top:2px}
   .pg-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:4px 6px 10px}
   .pg-in{display:flex;align-items:baseline;gap:6px;color:var(--ink2);font-size:14px}
   .pg-in input{width:78px;border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:18px;font-family:inherit;background:#fff;color:var(--ink)}
@@ -2372,11 +2374,11 @@
           : '';
         html += '<div class="item' + (b._pending ? ' pending' : '') + (b.stage === 'Not going ahead' ? ' dropped' : '') + '" data-t="bookings" data-row="' + b.row + '">' +
           '<div class="who"><div class="avatar cat">' + esc(CAT_ICON[cat] || initials(b.name)) + '</div>' +
-          '<div class="meta"><div class="n">' + esc(b.name) + '</div>' + (b.event ? '<div class="d-sub">' + esc(b.event === 'Both' ? 'Ceremony + reception' : b.event) + '</div>' : '') + '<div class="s">' + tag + esc(sub) + '</div></div></div>' +
+          '<div class="meta"><div class="n">' + esc(b.name) + '</div>' + (b.event ? '<div class="d-sub">' + esc(b.event === 'Both' ? 'Ceremony + reception' : b.event) + '</div>' : '') + '<div class="s">' + tag + esc(sub) + (committedNow && unscheduledOf(b) > 0.5 ? '<span class="unsched">' + money(unscheduledOf(b)) + ' not scheduled</span>' : '') + '</div></div></div>' +
           '<div class="bcol">' + tag + '</div>' +
           '<div class="bcol bnum' + (hasCost ? '' : ' dim') + '">' + (hasCost ? money(b._eff) : '–') + '</div>' +
           '<div class="bcol bnum' + (num(b.paid) ? '' : ' dim') + '">' + (num(b.paid) ? money(b.paid) : '–') + '</div>' +
-          '<div class="bcol bnum' + (committedNow && b._owed ? '' : ' dim') + '">' + (committedNow ? money(b._owed) : '–') + '</div>' +
+          '<div class="bcol bnum' + (committedNow && b._owed ? '' : ' dim') + '">' + (committedNow ? money(b._owed) : '–') + (committedNow && unscheduledOf(b) > 0.5 ? '<span class="unsched">' + money(unscheduledOf(b)) + ' not scheduled</span>' : '') + '</div>' +
           '<div class="amt"><b>' + (hasCost ? money(b._eff) : '–') + '</b><span>' + right + '</span></div></div>';
       });
       if (!rows.length) html = '<div class="empty"><b>' + (bud.q || bud.cat || bud.filter !== 'all' ? 'Nothing matches' : 'No vendors yet') + '</b>' +
@@ -2446,6 +2448,21 @@
     if (f.t === 'area') return '<div class="field" data-k="' + f.k + '">' + label + '<textarea id="' + id + '" maxlength="1000" placeholder="' + esc(f.ph || '') + '">' + esc(val) + '</textarea></div>';
     return '<div class="field" data-k="' + f.k + '">' + label + '<input id="' + id + '" type="' + f.t + '" maxlength="300" placeholder="' + esc(f.ph || '') + '" value="' + esc(val) + '"></div>';
   }
+  function isRefundable(p) { return /refundable/i.test(p.label || ''); }
+  /** Price not yet covered by any scheduled payment (refundable deposits don't count toward the price). */
+  function unscheduledOf(b) {
+    if (!b) return 0;
+    var sched = 0; paymentsOf(b.row).forEach(function (p) { if (!isRefundable(p)) sched += num(p.amount); });
+    var eff = b._eff !== undefined ? b._eff : num(b.cost);
+    return Math.round((eff - sched) * 100) / 100;
+  }
+  function extraGuestNote(b) {
+    if (!b || pricingOf(b) === 'Flat') return '';
+    var H = planGuests(), tax = 1 + num(b.tax) / 100, rate = num(b.rate) * tax;
+    if (pricingOf(b) === 'Per guest') return H + ' guests × ' + money(Math.round(rate * 100) / 100);
+    var extra = Math.max(0, H - num(b.included));
+    return extra ? 'Extra guests: ' + extra + ' × ' + money(Math.round(rate * 100) / 100) : '';
+  }
   function bookingPaymentsHtml(row) {
     if (!row) return '<div class="group-title">Payments</div><p class="bp-empty">Give it a name first, then add deposits and instalments here.</p>';
     var ps = paymentsOf(row).slice().sort(function (a, b) { return (a.due || '9999') < (b.due || '9999') ? -1 : 1; });
@@ -2458,7 +2475,14 @@
         return '<button type="button" class="bp-row" data-pay="' + p.row + '"><span><b>' + esc(p.label || 'Payment') + '</b><small>' +
           (paidNow ? 'Paid' + (p.paidDate ? ' ' + esc(fmtDate(p.paidDate)) : '') : p.due ? 'Due ' + esc(fmtDate(p.due)) : 'No date yet') + '</small></span>' +
           '<span class="bp-right">' + payerTag(p.payer) + '<span class="bp-amt' + (paidNow ? ' ok' : '') + '">' + money(p.amount) + '</span></span></button>';
-      }).join('') +
+      }).join('') + (function () {
+        var u = b && (b.cost !== '' || b._eff) && ps.length ? unscheduledOf(b) : 0;
+        if (u > 0.5) return '<div class="bp-row bp-gap"><span><b>Not scheduled yet</b><small>' + esc(extraGuestNote(b) || 'Price is more than the payments above') + '</small></span>' +
+          '<span class="bp-right"><span class="bp-amt">' + money(u) + '</span></span></div>';
+        if (u < -0.5) return '<div class="bp-row bp-gap over"><span><b>Payments add up to more than the price</b><small>Check the amounts or the price</small></span>' +
+          '<span class="bp-right"><span class="bp-amt">' + money(-u) + '</span></span></div>';
+        return '';
+      })() +
       '<button type="button" class="bp-add" data-addpay="' + row + '">+ Add a payment</button></div>';
   }
 
