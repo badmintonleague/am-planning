@@ -464,6 +464,10 @@
   .ib-bar{height:8px;background:var(--soft);border-radius:4px;overflow:hidden}.ib-bar i{display:block;height:100%;background:var(--gold);border-radius:4px}
   .ib-bar i.bad{background:var(--no)}.ib-bar i.soft{background:#D9C79B}.ib-bar i.soft2{background:#E7D9B3}
   .ib-row b{font-weight:500;white-space:nowrap}
+  .pg-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:wrap}.pg-head h3{margin:0}
+  .pg-evs{display:inline-flex;background:var(--soft);border-radius:999px;padding:3px}
+  .pg-evs button{border:0;background:none;font:inherit;font-size:13px;padding:6px 12px;border-radius:999px;cursor:pointer;color:var(--ink2)}
+  .pg-evs button.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
   .pg-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:4px 6px 10px}
   .pg-in{display:flex;align-items:baseline;gap:6px;color:var(--ink2);font-size:14px}
   .pg-in input{width:78px;border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:18px;font-family:inherit;background:#fff;color:var(--ink)}
@@ -2140,7 +2144,40 @@
     });
     return Math.max(w, r);
   }
-  function planGuests() { var p = bud.plan && bud.plan.guests; return p !== '' && p !== undefined && p !== null ? num(p) : guestListCount(); }
+  function setv(v) { return v !== '' && v !== undefined && v !== null; }
+  function listCount(ev) {
+    if (typeof state === 'undefined' || !state.guests) return 0;
+    if (ev !== 'Ceremony' && ev !== 'Reception') return guestListCount();
+    var key = ev === 'Ceremony' ? 'wedding' : 'reception', n = 0;
+    state.guests.forEach(function (g) { if (g[key + 'Rsvp'] !== 'Declined') n += num(g[key + 'Adults']) + num(g[key + 'Kids']); });
+    return n;
+  }
+  /** Headcount used for an event's pricing: your planning number for that event, otherwise the guest list. */
+  function planFor(ev) { var p = bud.plan || {}; return setv(p[ev]) ? num(p[ev]) : setv(p.guests) ? num(p.guests) : listCount(ev); }
+  function planGuests() { return Math.max(planFor('Ceremony'), planFor('Reception')); }
+  /** A vendor's cost at the planned headcounts (ov overrides one event's count, for the what-if chart). */
+  function vendorCost(b, ov) {
+    var g = function (ev) { return ov && ov[ev] !== undefined ? ov[ev] : planFor(ev); };
+    var o = evpOf(b), L = evList(b);
+    if (o) { var t = 0; L.forEach(function (ev) { if (o[ev]) t += effCost(o[ev], g(ev)); }); return t; }
+    if (L.length === 1) return effCost(b, g(L[0]));
+    if (!L.length) return effCost(b, g('Reception'));             // no event set: priced on the reception headcount
+    return effCost(b, Math.max(g('Ceremony'), g('Reception')));
+  }
+  /** What one event costs (counted vendors only) if that event had n guests. */
+  function eventCostAt(ev, n) {
+    var t = 0, ov = {}; ov[ev] = n;
+    bud.bookings.forEach(function (b) {
+      if (!counted(b)) return;
+      var o = evpOf(b), L = evList(b), e = 0;
+      if (o) { if (o[ev] && L.indexOf(ev) !== -1) e = effCost(o[ev], n); }
+      else if (L.length === 1 && L[0] === ev) e = vendorCost(b, ov);
+      else if (!L.length && ev === 'Reception') e = vendorCost(b, ov);   // vendors with no event set count toward the reception
+      else return;
+      t += e;
+    });
+    return t;
+  }
   function counted(b) { return isCommitted(b) || SHORTLIST.indexOf(b.stage) !== -1; }
   function projectedAt(n) {                 // committed + considering, if n people came
     var t = bud.fixedOther || 0;
@@ -2157,13 +2194,7 @@
     return EV_NAMES.filter(function (e) { return parts.indexOf(e) !== -1; }).concat(parts.filter(function (p) { return EV_NAMES.indexOf(p) === -1; }));
   }
   function evpOf(b) { if (!b || evList(b).length < 2 || !b.evPricing) return null; try { var o = typeof b.evPricing === 'string' ? JSON.parse(b.evPricing) : b.evPricing; return o && Object.keys(o).length ? o : null; } catch (e) { return null; } }
-  function guestsFor(ev) {                       // each event priced on its own headcount (unless you've typed a planning number)
-    var own = bud.plan && bud.plan.guests !== '' && bud.plan.guests !== undefined && bud.plan.guests !== null;
-    if (own || typeof state === 'undefined' || !state.guests || ev === 'Pre-wedding') return planGuests();
-    var key = ev === 'Ceremony' ? 'wedding' : 'reception', n = 0;
-    state.guests.forEach(function (g) { if (g[key + 'Rsvp'] !== 'Declined') n += num(g[key + 'Adults']) + num(g[key + 'Kids']); });
-    return n;
-  }
+  function guestsFor(ev) { return planFor(ev); }
   /** Split of a vendor's cost by event. */
   function byEvent(b, eff) {
     var out = {}, o = evpOf(b);
@@ -2241,20 +2272,7 @@
       '<div class="ins-t"><span>Projected total</span><b>' + money(Math.round(projected)) + '</b></div>' +
       '<div class="ins-t"><span>Left to pay</span><b>' + money(Math.round(left)) + '</b><small>' + money(Math.round(paid)) + ' paid so far</small></div>' +
       '<div class="ins-t"><span>Set aside each month</span><b>' + money(Math.round(left / months)) + '</b><small>' + months + ' months to the wedding</small></div>' +
-      '<div class="ins-t"><span>Per guest</span><b>' + (H ? money(Math.round(projected / H)) : '–') + '</b><small>at ' + H + ' guests</small></div></div>';
-    // cash flow: scheduled payments by month
-    var byM = {}, now = new Date(); now.setDate(1);
-    bud.installments.forEach(function (p) {
-      if (p.paid === 'Yes' || !p.due) return;
-      var d = new Date(p.due + 'T12:00'); if (isNaN(d)) return;
-      var k = d < now ? 'Overdue' : d.toLocaleDateString('en-CA', { month: 'short', year: '2-digit' });
-      if (!byM[k]) byM[k] = { v: 0, t: d < now ? 0 : d.getTime() }; byM[k].v += num(p.amount);
-    });
-    var mk = Object.keys(byM).sort(function (a, b) { return byM[a].t - byM[b].t; });
-    var flow = mk.map(function (k) { return [k, byM[k].v, k === 'Overdue' ? 'bad' : '']; });
-    if (unsched > 0.5) flow.push(['Not scheduled', unsched, 'soft', 'booked, no due date']);
-    if (considering > 0.5) flow.push(['Considering', considering, 'soft2', 'if you book them']);
-    h += '<div class="ins-card"><h3>Upcoming payments</h3>' + (flow.length ? bar(flow) : '<p class="ins-none">Nothing scheduled</p>') + '</div>';
+      '<div class="ins-t"><span>Per guest</span><b>' + (H ? money(Math.round(projected / H)) : '–') + '</b><small>' + H + ' guests</small></div></div>';
     // per guest planner
     h += '<div class="ins-card" id="bPer"></div>';
     // where the money goes
@@ -2262,12 +2280,6 @@
     if (shop + shopPlan) cats['Shopping'] = (cats['Shopping'] || 0) + shop + shopPlan;
     var ck = Object.keys(cats).sort(function (a, b) { return cats[b] - cats[a]; });
     h += '<div class="ins-card"><h3>Where the money goes</h3>' + (ck.length ? bar(ck.map(function (c) { return [c, cats[c], '', Math.round(cats[c] / projected * 100) + '%']; })) : '<p class="ins-none">No costs yet</p>') + '</div>';
-    // by event, per guest
-    var evT = {}; bud.bookings.forEach(function (b) { if (!counted(b)) return; var eff = isCommitted(b) ? Math.max(b._eff, num(b.paid)) : b._eff, parts = byEvent(b, eff); Object.keys(parts).forEach(function (k) { evT[k] = (evT[k] || 0) + parts[k]; }); });
-    var evK = ['Ceremony', 'Reception', 'Pre-wedding'].filter(function (k) { return evT[k] > 0.5; });
-    if (evK.length) h += '<div class="ins-card"><h3>Cost per guest, by event</h3><div class="pg-rows">' + evK.map(function (k) {
-      var n = guestsFor(k); return '<div class="pg-row"><span>' + esc(k) + ' <small class="ins-sm">' + money(Math.round(evT[k])) + ' · ' + n + ' guests</small></span><b>' + (n ? money(Math.round(evT[k] / n)) : '–') + '</b></div>';
-    }).join('') + '</div></div>';
     // who's paying
     var us = 0, fam = 0, usDue = 0, famDue = 0, noneDue = 0;
     bud.installments.forEach(function (p) { var a = num(p.amount), w = p.payer; if (p.paid === 'Yes') { if (w === 'Family') fam += a; else us += a; } else { if (w === 'Family') famDue += a; else if (w === 'Us') usDue += a; else noneDue += a; } });
@@ -2296,47 +2308,54 @@
       return '<button type="button" class="pg-row evr' + (k === 'Not split' || k === 'No event' ? ' muted' : '') + (bud.ev === k ? ' on' : '') + '" data-ev="' + esc(k) + '"><span>' + esc(k) + '</span><b>' + money(Math.round(tot[k])) + '</b></button>';
     }).join('') + '</div>';
   }
-  function renderPer(H) {
+  function renderPer() {
     var el = $('bPer'); if (!el) return;
-    var perVendors = bud.bookings.filter(function (b) { return counted(b) && pricingOf(b) !== 'Flat'; });
-    var listN = guestListCount(), own = bud.plan && bud.plan.guests !== '' && bud.plan.guests !== undefined && bud.plan.guests !== null;
-    var tot = projectedAt(H), per = H ? tot / H : 0;
-    var lo = Math.max(50, Math.round(Math.min(H || 300, 300) * 0.5 / 10) * 10), hi = Math.max(500, Math.ceil((H || 0) * 1.3 / 10) * 10);
-    var steps = [], n;
-    for (n = lo; n <= hi; n += 5) steps.push([n, projectedAt(n)]);
+    var evs = ['Ceremony', 'Reception'];
+    if (bud.bookings.some(function (b) { return counted(b) && evList(b).indexOf('Pre-wedding') !== -1; })) evs.push('Pre-wedding');
+    var ev = evs.indexOf(bud.perEv) !== -1 ? bud.perEv : 'Reception'; bud.perEv = ev;
+    var p = bud.plan || {}, own = setv(p[ev]) || setv(p.guests), listN = listCount(ev), H = planFor(ev);
+    var tot = eventCostAt(ev, H), per = H ? tot / H : 0;
+    // pricing pieces that depend on this event's headcount (for the chart's kinks)
+    var kinks = [], perGuest = false;
+    bud.bookings.forEach(function (b) {
+      if (!counted(b)) return; var o = evpOf(b), L = evList(b), pc = o ? o[ev] : ((L.length === 1 && L[0] === ev) || (!L.length && ev === 'Reception') ? b : null);
+      if (!pc || pricingOf(pc) === 'Flat') return; perGuest = true;
+      if (pricingOf(pc) === 'Flat + extra guests' && kinks.indexOf(num(pc.included)) === -1 && num(pc.included) > 0) kinks.push(num(pc.included));
+    });
+    kinks.sort(function (a, b) { return a - b; });
+    var lo = Math.max(50, Math.floor(Math.min(H || 200, kinks[0] || H || 200) * 0.5 / 10) * 10), hi = Math.max(lo + 100, Math.ceil(Math.max(H, kinks[kinks.length - 1] || 0) * 1.3 / 10) * 10);
+    kinks = kinks.filter(function (k) { return k > lo && k < hi; });
+    var steps = []; for (var n = lo; n <= hi; n += 5) steps.push([n, eventCostAt(ev, n)]);
     var ymin = steps[0][1], ymax = steps[steps.length - 1][1]; if (ymax - ymin < 1) ymax = ymin + 1;
     var Wd = 600, Ht = 140;
     function X(v) { return (v - lo) / (hi - lo) * Wd; } function Y(v) { return Ht - 6 - (v - ymin) / (ymax - ymin) * (Ht - 14); }
-    var path = steps.map(function (p, i) { return (i ? 'L' : 'M') + X(p[0]).toFixed(1) + ' ' + Y(p[1]).toFixed(1); }).join(' ');
-    var kinks = []; perVendors.forEach(function (b) { if (pricingOf(b) === 'Flat + extra guests' && num(b.included) > lo && num(b.included) < hi && kinks.indexOf(num(b.included)) === -1) kinks.push(num(b.included)); });
-    kinks.sort(function (a, b) { return a - b; });
-    // what one more guest costs, in each stretch between contract limits
+    var path = steps.map(function (q, i) { return (i ? 'L' : 'M') + X(q[0]).toFixed(1) + ' ' + Y(q[1]).toFixed(1); }).join(' ');
     var edges = [lo].concat(kinks).concat([hi]), stretches = [];
-    for (var i = 0; i < edges.length - 1; i++) { var m = (edges[i] + edges[i + 1]) / 2; stretches.push([edges[i], edges[i + 1], projectedAt(Math.floor(m) + 1) - projectedAt(Math.floor(m))]); }
-    el.innerHTML = '<h3>Guest count</h3>' +
-      '<div class="pg-top"><label class="pg-in"><input id="bPlanN" type="number" inputmode="numeric" min="0" value="' + (own ? num(bud.plan.guests) : '') + '" placeholder="' + listN + '"><span>guests</span></label>' +
-      '<div class="pg-big"><b>' + (H ? money(Math.round(per)) : '–') + '</b><span>per guest</span></div></div>' +
-      (own && listN !== H ? '<button type="button" class="pg-reset" id="bPlanReset">Use guest list (' + listN + ')</button>' : '') +
-      (perVendors.length ? '<svg class="pg-chart" viewBox="-8 0 ' + (Wd + 16) + ' ' + (Ht + 18) + '">' +
-        kinks.map(function (k) { return '<line x1="' + X(k) + '" x2="' + X(k) + '" y1="2" y2="' + (Ht - 2) + '" class="pg-k"/><text x="' + X(k) + '" y="' + (Ht + 13) + '" text-anchor="middle">' + k + '</text>'; }).join('') +
-        '<path d="' + path + '" class="pg-line"/>' +
-        (H >= lo && H <= hi ? '<circle cx="' + X(H) + '" cy="' + Y(tot) + '" r="4" class="pg-dot"/>' : '') +
-        '<text x="0" y="' + (Ht + 13) + '">' + lo + '</text><text x="' + Wd + '" y="' + (Ht + 13) + '" text-anchor="end">' + hi + '</text></svg>' +
+    for (var i = 0; i < edges.length - 1; i++) { var m = Math.floor((edges[i] + edges[i + 1]) / 2); stretches.push([edges[i], edges[i + 1], eventCostAt(ev, m + 1) - eventCostAt(ev, m)]); }
+    el.innerHTML = '<div class="pg-head"><h3>Guest count</h3><div class="pg-evs">' + evs.map(function (e) { return '<button type="button" data-perev="' + e + '" class="' + (e === ev ? 'on' : '') + '">' + e + '</button>'; }).join('') + '</div></div>' +
+      '<div class="pg-top"><label class="pg-in"><input id="bPlanN" type="number" inputmode="numeric" min="0" value="' + (setv(p[ev]) ? num(p[ev]) : '') + '" placeholder="' + listN + '"><span>guests</span></label>' +
+      '<div class="pg-big"><b>' + (H && tot ? money(Math.round(per)) : '–') + '</b><span>per guest</span></div></div>' +
+      (setv(p[ev]) && num(p[ev]) !== listN ? '<button type="button" class="pg-reset" id="bPlanReset">Use guest list (' + listN + ')</button>' : '') +
+      (perGuest ? '<svg class="pg-chart" viewBox="-8 0 ' + (Wd + 16) + ' ' + (Ht + 18) + '">' +
+        kinks.map(function (k) { return '<line x1="' + X(k) + '" x2="' + X(k) + '" y1="2" y2="' + (Ht - 2) + '" class="pg-k"/><text x="' + X(k) + '" y="' + (Ht + 15) + '" text-anchor="middle">' + k + '</text>'; }).join('') +
+        '<path d="' + path + '" class="pg-line"/>' + (H >= lo && H <= hi ? '<circle cx="' + X(H) + '" cy="' + Y(tot) + '" r="5" class="pg-dot"/>' : '') +
+        '<text x="0" y="' + (Ht + 15) + '">' + lo + '</text><text x="' + Wd + '" y="' + (Ht + 15) + '" text-anchor="end">' + hi + '</text></svg>' +
         '<div class="pg-rows">' + stretches.map(function (st) {
           return '<div class="pg-row"><span>' + (stretches.length === 1 ? 'Each extra guest' : 'Each extra guest ' + (st[0] === lo ? 'up to ' + st[1] : st[1] === hi ? 'over ' + st[0] : st[0] + '–' + st[1])) + '</span><b>+' + money(Math.round(st[2])) + '</b></div>';
-        }).join('') + '<div class="pg-row"><span>Total at ' + H + '</span><b>' + money(Math.round(tot)) + '</b></div></div>'
-      : '<p class="pg-none">Set a vendor to per-guest pricing to see how cost changes with guest count.</p>');
+        }).join('') + '<div class="pg-row"><span>' + ev + ' total at ' + H + '</span><b>' + money(Math.round(tot)) + '</b></div></div>'
+      : '<div class="pg-rows"><div class="pg-row"><span>' + ev + ' total</span><b>' + money(Math.round(tot)) + '</b></div></div>');
     var inp = $('bPlanN');
     inp.addEventListener('input', function () {
       clearTimeout(renderPer._t);
-      var v = inp.value.trim(); bud.plan = { guests: v === '' ? '' : Math.max(0, Math.round(num(v))) };
+      var v = inp.value.trim(); bud.plan = Object.assign({}, bud.plan || {}); bud.plan[ev] = v === '' ? '' : Math.max(0, Math.round(num(v))); delete bud.plan.guests;
       renderPer._t = setTimeout(function () {
         renderBudget(); var again = $('bPlanN'); if (again) { again.focus(); var l = again.value.length; try { again.setSelectionRange(l, l); } catch (e) {} }
         google.script.run.withSuccessHandler(function () {}).withFailureHandler(function () {}).saveBudgetPlanning(bud.plan);
       }, 500);
     });
     var rs = $('bPlanReset');
-    if (rs) rs.addEventListener('click', function () { bud.plan = { guests: '' }; renderBudget(); google.script.run.withSuccessHandler(function () {}).withFailureHandler(function () {}).saveBudgetPlanning(bud.plan); });
+    if (rs) rs.addEventListener('click', function () { bud.plan = Object.assign({}, bud.plan || {}); bud.plan[ev] = ''; delete bud.plan.guests; renderBudget(); google.script.run.withSuccessHandler(function () {}).withFailureHandler(function () {}).saveBudgetPlanning(bud.plan); });
+    el.querySelectorAll('[data-perev]').forEach(function (b) { b.addEventListener('click', function () { bud.perEv = b.dataset.perev; renderPer(); }); });
   }
   function isCommitted(b) { return COMMITTED.indexOf(b.stage) !== -1 || (num(b.paid) > 0 && b.stage !== 'Not going ahead'); }
   function bookingByRow(r) { r = Number(r); for (var i = 0; i < bud.bookings.length; i++) if (bud.bookings[i].row === r) return bud.bookings[i]; return null; }
@@ -2375,7 +2394,7 @@
     var today = todayIso(), soon = isoPlusDays(60), cats = {};
     bOpt('categories').forEach(function (c) { cats[c] = { committed: 0, paid: 0, shortlist: 0, n: 0 }; });
     var H = planGuests();
-    bud.bookings.forEach(function (b) { b._eff = effCost(b, H); b._owed = isCommitted(b) ? Math.max(0, b._eff - num(b.paid)) : 0; });
+    bud.bookings.forEach(function (b) { b._eff = vendorCost(b); b._owed = isCommitted(b) ? Math.max(0, b._eff - num(b.paid)) : 0; });
     bud.bookings.forEach(function (b) {
       var c = b.category || 'Other'; if (!cats[c]) cats[c] = { committed: 0, paid: 0, shortlist: 0, n: 0 };
       var cost = b._eff; cats[c].n++;
@@ -2474,7 +2493,7 @@
     list.className = 'list t-' + t;
     $('bPills').hidden = t === 'installments' || t === 'insights';
     var srch = document.querySelector('#viewBudget .main .search'); if (srch) srch.hidden = t === 'insights';
-    if (t === 'insights') { $('bCount').textContent = ''; list.innerHTML = insightsHtml(); renderPer(planGuests()); return; }
+    if (t === 'insights') { $('bCount').textContent = ''; list.innerHTML = insightsHtml(); renderPer(); return; }
     var html = '';
     if (t === 'purchases') {
       $('bPills').innerHTML = (bud.forWho ? '<button type="button" class="pill on" data-clearfor="1">' + esc(bud.forWho) + ' ✕</button>' : '') +
@@ -2665,7 +2684,7 @@
   }
   function extraGuestNote(b) {
     if (!b || pricingOf(b) === 'Flat') return '';
-    var H = planGuests(), tax = 1 + num(b.tax) / 100, rate = num(b.rate) * tax;
+    var L = evList(b), H = L.length === 1 ? planFor(L[0]) : planGuests(), tax = 1 + num(b.tax) / 100, rate = num(b.rate) * tax;
     if (pricingOf(b) === 'Per guest') return H + ' guests × ' + money(Math.round(rate * 100) / 100);
     var extra = Math.max(0, H - num(b.included));
     return extra ? 'Extra guests: ' + extra + ' × ' + money(Math.round(rate * 100) / 100) : '';
@@ -3673,7 +3692,10 @@
     /** Budget planning settings (the guest count used for per-guest pricing). */
     api.saveBudgetPlanning = function (p) {
       return ready.then(function () {
-        var plan = { guests: p && p.guests !== '' && p.guests !== undefined && p.guests !== null ? Math.max(0, Math.min(5000, Math.round(Number(p.guests) || 0))) : '' };
+        var plan = {};
+        ['guests', 'Ceremony', 'Reception', 'Pre-wedding'].forEach(function (k) {
+          var v = p && p[k]; if (v !== '' && v !== undefined && v !== null) plan[k] = Math.max(0, Math.min(5000, Math.round(Number(v) || 0)));
+        });
         var rec = Object.assign({}, data.budgetMeta || {}, { planning: plan });
         var b = fs.batch(); b.set('meta', 'budget', stamp(rec)); data.budgetMeta = rec;
         return commit(b).then(function () { return plan; });
