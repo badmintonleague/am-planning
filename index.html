@@ -322,13 +322,16 @@
   .walk-load{position:absolute;inset:0;display:grid;place-items:center;color:#55524C;font-size:14px;pointer-events:none}
   .v-layers-btn{position:absolute;top:10px;right:64px;border:0;border-radius:999px;padding:8px 13px;font-size:13px;font-family:inherit;background:rgba(255,255,255,.9);box-shadow:0 1px 4px rgba(0,0,0,.12);cursor:pointer;display:inline-flex;align-items:center;gap:6px}
   .v-layers-btn svg{width:15px;height:15px}
-  .v-layers{position:absolute;top:50px;right:10px;width:230px;max-height:calc(100% - 64px);overflow:auto;background:rgba(255,255,255,.97);border-radius:16px;box-shadow:0 8px 28px rgba(0,0,0,.18);padding:10px 12px;z-index:3}
+  .v-layers{position:absolute;top:50px;right:10px;width:262px;max-height:calc(100% - 64px);overflow:auto;background:rgba(255,255,255,.97);border-radius:16px;box-shadow:0 8px 28px rgba(0,0,0,.18);padding:10px 12px;z-index:3}
   .v-layers[hidden]{display:none}
   .v-layers label{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 2px;font-size:14px;border-bottom:1px solid var(--line);cursor:pointer}
   .v-layers label:last-of-type{border-bottom:0}
   .v-layers input{width:18px;height:18px;accent-color:var(--ink)}
   .v-layers label > span:first-child{flex:1}
   .v-dots{display:inline-flex;gap:6px}
+  .v-pick{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+  .v-pick button{border:0;background:#fff;font:inherit;font-size:12px;padding:3px 8px;cursor:pointer;color:var(--ink2)}
+  .v-pick button.on{background:var(--ink);color:#fff}
   .v-dots button{width:18px;height:18px;border-radius:50%;border:1px solid rgba(0,0,0,.18);padding:0;cursor:pointer}
   .v-dots button.on{box-shadow:0 0 0 2px #fff,0 0 0 3.5px var(--ink)}
   .v-lh{font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin:6px 2px 4px}
@@ -1886,9 +1889,9 @@
         presUnsub = window.__presence.listen(function (docs) { presDocs = docs; pushOthers(); });
         presTimer = setInterval(pushOthers, 4000);                 // drop people who stopped walking
       }
-      walker = m.startWalk($('vWalkStage'), 'venue-scene.glb?v=26', {
+      walker = m.startWalk($('vWalkStage'), 'venue-scene.glb?v=27', {
         start: WALK_SPOTS.entrance[0], yaw: WALK_SPOTS.entrance[1], nub: $('vWalkNub'), base: $('vWalkBase'),
-        hidden: vprefs.hidden.slice(), chairColor: vprefs.chairs,
+        hidden: vprefs.hidden.concat(vprefs.umb === 'market' ? ['umbrellas'] : ['umbrellas2']).concat(vprefs.hidden.indexOf('umbrellas') !== -1 ? ['umbrellas2'] : []), chairColor: vprefs.chairs,
         onReady: function () { $('vWalkLoad').hidden = true; },
         onError: function () { $('vWalkLoad').textContent = 'Couldn’t load. Check your connection.'; },
         onExit: closeWalk,
@@ -1913,14 +1916,16 @@
   var LAYERS = [['chairs', 'Chairs'], ['mandap', 'Mandap'], ['umbrellas', 'Umbrellas'], ['decor', 'Aisle decor & welcome table'],
                 ['structures', 'Pergola & gazebo'], ['fence', 'Barrel fence'], ['tent', 'Tent'], ['tables', 'Tent tables & chairs'], ['trees', 'Trees']];
   var vprefs = (function () { try { return JSON.parse(localStorage.getItem('am.venue3d') || '{}'); } catch (e) { return {}; } })();
-  vprefs.hidden = vprefs.hidden || []; vprefs.chairs = vprefs.chairs || 'brown';
+  vprefs.hidden = vprefs.hidden || []; vprefs.chairs = vprefs.chairs || 'brown'; vprefs.umb = vprefs.umb || 'fringe';
   function saveVprefs() { try { localStorage.setItem('am.venue3d', JSON.stringify(vprefs)); } catch (e) {} }
   var vOrig = null;
   function applyLayers() {
     var mv = $('vModel'); if (!mv || !mv.model) return;
     if (!vOrig) { vOrig = mv.model.materials.map(function (m) { return m.pbrMetallicRoughness.baseColorFactor.slice(); }); }
     mv.model.materials.forEach(function (m, i) {
-      var layer = String(m.name || '').split(':')[0], hide = vprefs.hidden.indexOf(layer) !== -1;
+      var layer = String(m.name || '').split(':')[0], hide = vprefs.hidden.indexOf(layer === 'umbrellas2' ? 'umbrellas' : layer) !== -1;
+      if (layer === 'umbrellas' && vprefs.umb === 'market') hide = true;
+      if (layer === 'umbrellas2' && vprefs.umb !== 'market') hide = true;
       var c = vOrig[i].slice();
       if (/chair_wood$/.test(m.name || '') && vprefs.chairs === 'white') c = [0.86, 0.86, 0.84, 1];
       if (hide) { m.setAlphaMode('BLEND'); c[3] = 0; } else m.setAlphaMode('OPAQUE');
@@ -1930,7 +1935,9 @@
   function renderLayerUi() {
     $('vLayerList').innerHTML = LAYERS.map(function (l) {
       var dots = l[0] === 'chairs' ? '<span class="v-dots" id="vChairCol">' + [['brown', '#46241f'], ['white', '#f4f4f2']].map(function (c) {
-        return '<button type="button" data-c="' + c[0] + '" aria-label="' + c[0] + ' chairs" class="' + (vprefs.chairs === c[0] ? 'on' : '') + '" style="background:' + c[1] + '"></button>'; }).join('') + '</span>' : '';
+        return '<button type="button" data-c="' + c[0] + '" aria-label="' + c[0] + ' chairs" class="' + (vprefs.chairs === c[0] ? 'on' : '') + '" style="background:' + c[1] + '"></button>'; }).join('') + '</span>'
+        : l[0] === 'umbrellas' ? '<span class="v-pick">' + [['fringe', 'Fringe'], ['market', 'Market']].map(function (u) {
+        return '<button type="button" data-u="' + u[0] + '" class="' + (vprefs.umb === u[0] ? 'on' : '') + '">' + u[1] + '</button>'; }).join('') + '</span>' : '';
       return '<label><span>' + esc(l[1]) + '</span>' + dots + '<input type="checkbox" data-l="' + l[0] + '"' + (vprefs.hidden.indexOf(l[0]) === -1 ? ' checked' : '') + '></label>';
     }).join('');
   }
@@ -1942,6 +1949,8 @@
     saveVprefs(); applyLayers();
   });
   $('vLayerList').addEventListener('click', function (e) {
+    var u = e.target.closest('button[data-u]');
+    if (u) { e.preventDefault(); vprefs.umb = u.dataset.u; saveVprefs(); renderLayerUi(); applyLayers(); return; }
     var b = e.target.closest('button[data-c]'); if (!b) return; e.preventDefault();
     vprefs.chairs = b.dataset.c; saveVprefs(); renderLayerUi(); applyLayers();
   });
@@ -1956,7 +1965,7 @@
     document.head.appendChild(sc);
     customElements.whenDefined('model-viewer').then(function () {
       customElements.get('model-viewer').meshoptDecoderLocation = 'vendor/meshopt_decoder.js';
-      mv.setAttribute('src', 'venue-scene.glb?v=26');
+      mv.setAttribute('src', 'venue-scene.glb?v=27');
     });
   }
   $('vViews').addEventListener('click', function (e) {
