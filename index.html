@@ -433,6 +433,17 @@
   .tag.split{background:linear-gradient(90deg,#ECEAF6 50%,var(--gold-soft) 50%);color:#5d4f6e}
   .bp-gap{cursor:default;background:var(--gold-soft)}.bp-gap b{color:#8A6A22}.bp-gap.over{background:var(--no-soft)}.bp-gap.over b{color:var(--no)}
   .unsched{display:block;font-size:12px;color:#8A6A22;margin-top:2px}
+  .evp{display:flex;flex-direction:column;gap:8px}
+  .evp-ev{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#fff}
+  .evp-tog{width:100%;display:flex;justify-content:space-between;align-items:center;border:0;background:none;font:inherit;font-size:15px;padding:11px 14px;cursor:pointer;color:var(--muted)}
+  .evp-tog::before{content:'';width:16px;height:16px;border-radius:5px;border:1.5px solid var(--line);margin-right:10px;flex:none}
+  .evp-ev.on .evp-tog{color:var(--ink)} .evp-ev.on .evp-tog::before{background:var(--ink);border-color:var(--ink);box-shadow:inset 0 0 0 3px #fff}
+  .evp-tog b{margin-left:auto;font-weight:500}
+  .evp-body{display:none;padding:0 14px 12px}.evp-ev.on .evp-body{display:block}
+  .evp-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+  .evp-f{display:flex;flex-direction:column;font-size:12px;color:var(--muted);position:relative}
+  .evp-f input{border:1px solid var(--line);border-radius:10px;height:40px;box-sizing:border-box;padding:0 10px;font:inherit;font-size:15px;color:var(--ink);margin-top:4px}
+  .evp-f i{position:absolute;left:10px;bottom:0;height:40px;line-height:40px;font-style:normal;color:var(--muted);font-size:15px}.evp-f i + input{padding-left:22px}
   .split-h{grid-column:1/-1;margin:6px 0 -2px;font-size:13px;color:var(--ink2);font-weight:500}
   .split-h span{font-weight:400;color:var(--muted)}.split-h span.over{color:var(--no)}
   .pg-row.muted span,.pg-row.muted b{color:var(--muted)}
@@ -2056,7 +2067,7 @@
         [{ k: 'stage', l: 'Status', t: 'select', o: 'stages', req: 1 }, { k: 'pricing', l: 'Pricing', t: 'seg', o: 'pricing' },
          { k: 'cost', l: 'Quote / price', t: 'money' }, { k: 'included', l: 'Guests included', t: 'number' },
          { k: 'rate', l: 'Per extra guest', t: 'money' }, { k: 'tax', l: 'Tax %', t: 'number' },
-         { k: 'splitCer', l: 'Ceremony', t: 'money' }, { k: 'splitRec', l: 'Reception', t: 'money' }, { k: 'splitPre', l: 'Pre-wedding', t: 'money' }],
+         { k: 'evPricing', l: 'Pricing by event', t: 'evpricing' }],
         [{ k: 'contact', l: 'Contact name', t: 'text' }, { k: 'phone', l: 'Phone', t: 'tel' },
          { k: 'email', l: 'Email', t: 'email' }, { k: 'notes', l: 'Notes', t: 'area' }]
       ] },
@@ -2096,6 +2107,8 @@
   /* ---------- per-guest pricing ---------- */
   function pricingOf(b) { return b.pricing === 'Per guest' || b.pricing === 'Flat + extra guests' ? b.pricing : 'Flat'; }
   function effCost(b, n) {
+    var o = evpOf(b);
+    if (o) { var t = 0; Object.keys(o).forEach(function (ev) { t += effCost(o[ev], guestsFor(ev)); }); return t; }
     var pr = pricingOf(b), tax = 1 + (b.tax === '' || b.tax === undefined ? 0 : num(b.tax)) / 100, rate = num(b.rate);
     if (pr === 'Per guest') return Math.round(rate * n * tax * 100) / 100;
     if (pr === 'Flat + extra guests') return num(b.cost) + Math.round(Math.max(0, n - num(b.included)) * rate * tax * 100) / 100;
@@ -2117,40 +2130,55 @@
     bud.bookings.forEach(function (b) { if (!counted(b)) return; var e = effCost(b, n); t += isCommitted(b) ? Math.max(e, num(b.paid)) : e; });
     return t;
   }
-  var EVS = [['splitCer', 'Ceremony'], ['splitRec', 'Reception'], ['splitPre', 'Pre-wedding']];
-  /** How a vendor's cost divides between events: {Ceremony: $, Reception: $, Pre-wedding: $, 'Not split': $, 'No event': $} */
+  var EV_NAMES = ['Ceremony', 'Reception', 'Pre-wedding'];
+  function evpOf(b) { if (!b || b.event !== 'Both' || !b.evPricing) return null; try { var o = typeof b.evPricing === 'string' ? JSON.parse(b.evPricing) : b.evPricing; return o && Object.keys(o).length ? o : null; } catch (e) { return null; } }
+  function guestsFor(ev) {                       // each event priced on its own headcount (unless you've typed a planning number)
+    var own = bud.plan && bud.plan.guests !== '' && bud.plan.guests !== undefined && bud.plan.guests !== null;
+    if (own || typeof state === 'undefined' || !state.guests || ev === 'Pre-wedding') return planGuests();
+    var key = ev === 'Ceremony' ? 'wedding' : 'reception', n = 0;
+    state.guests.forEach(function (g) { if (g[key + 'Rsvp'] !== 'Declined') n += num(g[key + 'Adults']) + num(g[key + 'Kids']); });
+    return n;
+  }
+  /** Split of a vendor's cost by event. */
   function byEvent(b, eff) {
-    var out = {};
+    var out = {}, o = evpOf(b);
+    if (o) { Object.keys(o).forEach(function (ev) { out[ev] = effCost(o[ev], guestsFor(ev)); }); var sum = 0; Object.keys(out).forEach(function (k) { sum += out[k]; }); if (eff - sum > 0.5) out['Not split'] = eff - sum; return out; }
     if (!b.event) { out['No event'] = eff; return out; }
-    if (b.event !== 'Both') { out[b.event] = eff; return out; }
-    var used = 0;
-    EVS.forEach(function (e) { var v = num(b[e[0]]); if (v) { out[e[1]] = v; used += v; } });
-    if (eff - used > 0.5) out['Not split'] = eff - used;
-    return out;
+    if (b.event === 'Both') { out['Not split'] = eff; return out; }
+    out[b.event] = eff; return out;
+  }
+  function readEvp() {
+    var out = {};
+    document.querySelectorAll('#b_evPricing .evp-ev.on').forEach(function (el) {
+      var c = { pricing: el.querySelector('.evp-pr').dataset.value || 'Flat' };
+      el.querySelectorAll('input[data-f]').forEach(function (i) { var v = i.value.trim(); if (v !== '') c[i.dataset.f] = v; });
+      out[el.dataset.ev] = c;
+    });
+    return Object.keys(out).length ? JSON.stringify(out) : '';
   }
   function splitVis() {
     var wrap = $('bFields'); if (!wrap) return;
     var ev = wrap.querySelector('#b_event'); if (!ev) return;
     var multi = ev.dataset.value === 'Both';
-    EVS.forEach(function (e, i) {
-      var f = wrap.querySelector('.field[data-k="' + e[0] + '"]'); if (!f) return;
-      f.style.display = multi ? '' : 'none';
-      if (i === 0 && !wrap.querySelector('#bSplitH')) f.insertAdjacentHTML('beforebegin', '<p class="split-h" id="bSplitH">Cost by event <span id="bSplitLeft"></span></p>');
+    ['pricing', 'cost', 'included', 'rate', 'tax'].forEach(function (k) { var f = wrap.querySelector('.field[data-k="' + k + '"]'); if (f && multi) f.style.display = 'none'; });
+    var box = wrap.querySelector('.field[data-k="evPricing"]'); if (!box) return;
+    box.style.display = multi ? '' : 'none';
+    if (!multi) { pricingVis(); return; }
+    box.querySelectorAll('.evp-ev').forEach(function (el) {
+      var pr = el.querySelector('.evp-pr').dataset.value || 'Flat';
+      var show = function (k, on, lab) { var f = el.querySelector('.evp-f[data-f="' + k + '"]'); f.style.display = on ? '' : 'none'; if (lab) f.querySelector('span').textContent = lab; };
+      show('cost', pr !== 'Per guest', pr === 'Flat + extra guests' ? 'Base price' : 'Price');
+      show('included', pr === 'Flat + extra guests'); show('rate', pr !== 'Flat', pr === 'Per guest' ? 'Per guest' : 'Per extra guest'); show('tax', pr !== 'Flat');
+      var c = { pricing: pr }; el.querySelectorAll('input[data-f]').forEach(function (i) { c[i.dataset.f] = i.value.trim(); });
+      var t = effCost(c, guestsFor(el.dataset.ev));
+      el.querySelector('.evp-tot').textContent = el.classList.contains('on') && t ? money(Math.round(t)) : '';
     });
-    var h = $('bSplitH'); if (h) h.style.display = multi ? '' : 'none';
-    if (!multi) return;
-    var g = function (k) { var el = $('b_' + k); return el ? (el.dataset.value !== undefined && el.tagName !== 'INPUT' ? el.dataset.value : el.value) : ''; };
-    var tmp = { pricing: g('pricing'), cost: g('cost'), rate: g('rate'), included: g('included'), tax: g('tax') };
-    var total = effCost(tmp, planGuests()), used = 0;
-    EVS.forEach(function (e) { used += num(g(e[0])); });
-    var left = Math.round((total - used) * 100) / 100;
-    $('bSplitLeft').textContent = !total ? '' : Math.abs(left) < 0.5 ? '· all split' : left > 0 ? '· ' + money(left) + ' left' : '· ' + money(-left) + ' over';
-    $('bSplitLeft').className = left < -0.5 ? 'over' : '';
   }
   function pricingVis() {
     var wrap = $('bFields'); if (!wrap) return;
     var seg = wrap.querySelector('#b_pricing'); if (!seg) return;
     var pr = seg.dataset.value || 'Flat';
+    var evs = wrap.querySelector('#b_event'); if (evs && evs.dataset.value === 'Both') return;
     function show(k, on, label) {
       var f = wrap.querySelector('.field[data-k="' + k + '"]'); if (!f) return;
       f.style.display = on ? '' : 'none'; if (label) f.querySelector('label').textContent = label;
@@ -2498,6 +2526,18 @@
       return '<div class="field" data-k="' + f.k + '">' + label + '<select id="' + id + '"><option value="">Choose a booking…</option>' +
         list.map(function (b) { return '<option value="' + b.row + '"' + (String(b.row) === String(val) ? ' selected' : '') + '>' + esc(b.name) + '</option>'; }).join('') + '</select></div>';
     }
+    if (f.t === 'evpricing') {
+      var evp = {}; try { evp = typeof val === 'string' && val ? JSON.parse(val) : (val || {}); } catch (e) { evp = {}; }
+      return '<div class="field evp" data-k="evPricing" id="' + id + '">' + EV_NAMES.map(function (ev) {
+        var c = evp[ev], on = !!c; c = c || { pricing: 'Flat', tax: '13' };
+        var inp = function (k, lab, money) { return '<label class="evp-f" data-f="' + k + '"><span>' + lab + '</span>' + (money ? '<i>$</i>' : '') +
+          '<input data-f="' + k + '" inputmode="decimal" placeholder="0" value="' + esc(c[k] === undefined || c[k] === null ? '' : String(c[k])) + '"></label>'; };
+        return '<div class="evp-ev' + (on ? ' on' : '') + '" data-ev="' + ev + '"><button type="button" class="evp-tog">' + ev + '<b class="evp-tot"></b></button>' +
+          '<div class="evp-body"><div class="seg evp-pr" data-value="' + esc(c.pricing || 'Flat') + '">' + BUD_DEFAULTS.pricing.map(function (x) {
+            return '<button type="button" class="' + (x === (c.pricing || 'Flat') ? 'on' : '') + '" data-v="' + esc(x) + '">' + esc(x) + '</button>'; }).join('') + '</div>' +
+          '<div class="evp-grid">' + inp('cost', 'Price', 1) + inp('included', 'Guests included') + inp('rate', 'Per guest', 1) + inp('tax', 'Tax %') + '</div></div></div>';
+      }).join('') + '</div>';
+    }
     if (f.t === 'money') {
       return '<div class="field" data-k="' + f.k + '">' + label + '<div class="money-in"><span>$</span><input id="' + id + '" inputmode="decimal" placeholder="0" value="' +
         esc(val === '' ? '' : String(val)) + '"></div></div>';
@@ -2590,7 +2630,7 @@
     var t = bud.editing.table, out = { row: bud.editing.row, original: bud.editing.original };
     BFORM[t].groups.forEach(function (g) { g.forEach(function (f) {
       var el = $('b_' + f.k);
-      out[f.k] = f.t === 'seg' ? (el.dataset.value || '') : el.value.trim();
+      out[f.k] = f.t === 'evpricing' ? readEvp() : f.t === 'seg' ? (el.dataset.value || '') : el.value.trim();
     }); });
     return out;
   }
@@ -2716,6 +2756,10 @@
 
   $('bFields').addEventListener('click', function (e) { if (e.target.closest('#b_pricing [data-v], #b_event [data-v]')) setTimeout(function () { pricingVis(); splitVis(); }, 0); });
   $('bFields').addEventListener('input', function () { splitVis(); });
+  $('bFields').addEventListener('click', function (e) {
+    var t = e.target.closest('.evp-tog'); if (t) { t.parentNode.classList.toggle('on'); splitVis(); if (bAuto) bAuto.schedule(250); return; }
+    if (e.target.closest('.evp-pr [data-v]')) setTimeout(function () { splitVis(); if (bAuto) bAuto.schedule(250); }, 0);
+  });
   /* ---------- Events ---------- */
   $('q').addEventListener('input', function (e) { state.q = e.target.value.trim().toLowerCase(); render(); });
   $('filters').addEventListener('click', function (e) {
@@ -3000,7 +3044,7 @@
       fields: { name: 'Booking', category: 'Category', event: 'Event', stage: 'Stage', cost: 'Cost (CAD)',
         paid: 'Paid (CAD)', owed: 'Still owed (CAD)', payer: 'Paid by', contact: 'Contact Name', phone: 'Phone', email: 'Email', notes: 'Notes', row: 'Booking #',
         pricing: 'Pricing', rate: 'Per guest (CAD)', included: 'Guests included', tax: 'Tax %',
-        splitCer: 'Ceremony share (CAD)', splitRec: 'Reception share (CAD)', splitPre: 'Pre-wedding share (CAD)' },
+        splitCer: 'Ceremony share (CAD)', splitRec: 'Reception share (CAD)', splitPre: 'Pre-wedding share (CAD)', evPricing: 'Pricing by event' },
       readOnly: ['paid', 'owed', 'row'], money: ['cost', 'paid', 'owed', 'rate', 'splitCer', 'splitRec', 'splitPre'], dates: [] },
     installments: { key: 'booking', match: ['Booking #', 'Payment', 'Amount (CAD)'],
       fields: { booking: 'Booking #', forName: 'For', label: 'Payment', amount: 'Amount (CAD)', due: 'Due Date',
