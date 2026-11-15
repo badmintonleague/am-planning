@@ -464,6 +464,14 @@
   .ib-bar{height:8px;background:var(--soft);border-radius:4px;overflow:hidden}.ib-bar i{display:block;height:100%;background:var(--gold);border-radius:4px}
   .ib-bar i.bad{background:var(--no)}.ib-bar i.soft{background:#D9C79B}.ib-bar i.soft2{background:#E7D9B3}
   .ib-row b{font-weight:500;white-space:nowrap}
+  .gf-in{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+  .gf-in label{display:flex;flex-direction:column;font-size:12px;color:var(--muted);position:relative}
+  .gf-in input{border:1px solid var(--line);border-radius:10px;height:40px;box-sizing:border-box;padding:0 10px 0 22px;font:inherit;font-size:15px;color:var(--ink);margin-top:4px;width:100%}
+  .gf-in i{position:absolute;left:10px;bottom:0;height:40px;line-height:40px;font-style:normal;color:var(--muted);font-size:15px}
+  .gf-note{font-size:13px;color:var(--ink2);margin:0 0 6px}
+  .gf-row{display:grid;grid-template-columns:1.4fr 1fr 1fr 1.2fr;gap:8px;align-items:center;padding:9px 0;border-top:1px solid var(--line);font-size:14px}
+  .gf-row small{display:block;font-size:11px;color:var(--muted)}.gf-row b{font-weight:500}
+  .gf-c{text-align:right}.gf-net.ok{color:var(--ok)}.gf-net.bad{color:var(--no)}
   .pg-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:wrap}.pg-head h3{margin:0}
   .pg-evs{display:inline-flex;background:var(--soft);border-radius:999px;padding:3px}
   .pg-evs button{border:0;background:none;font:inherit;font-size:13px;padding:6px 12px;border-radius:999px;cursor:pointer;color:var(--ink2)}
@@ -2275,6 +2283,7 @@
       '<div class="ins-t"><span>Per guest</span><b>' + (H ? money(Math.round(projected / H)) : '–') + '</b><small>' + H + ' guests</small></div></div>';
     // per guest planner
     h += '<div class="ins-card" id="bPer"></div>';
+    h += '<div class="ins-card" id="bGift"></div>';
     // where the money goes
     var cats = {}; bud.bookings.forEach(function (b) { if (!counted(b)) return; var c = b.category || 'Other'; cats[c] = (cats[c] || 0) + (isCommitted(b) ? Math.max(b._eff, num(b.paid)) : b._eff); });
     if (shop + shopPlan) cats['Shopping'] = (cats['Shopping'] || 0) + shop + shopPlan;
@@ -2307,6 +2316,57 @@
     el.innerHTML = '<div class="rel-h"><span>By event</span>' + (bud.ev ? '<button type="button" class="rel-clear" data-evclear="1">Show all</button>' : '') + '</div><div class="pg-rows">' + keys.map(function (k) {
       return '<button type="button" class="pg-row evr' + (k === 'Not split' || k === 'No event' ? ' muted' : '') + (bud.ev === k ? ' on' : '') + '" data-ev="' + esc(k) + '"><span>' + esc(k) + '</span><b>' + money(Math.round(tot[k])) + '</b></button>';
     }).join('') + '</div>';
+  }
+  /* ---------- gifts vs the cost of inviting ---------- */
+  var GTYPES = [['Individual', 1], ['Couple', 2], ['Family', 4]];
+  function hhPeople(g) { return Math.max(num(g.weddingAdults) + num(g.weddingKids), num(g.receptionAdults) + num(g.receptionKids)); }
+  function hhType(n) { return n <= 1 ? 'Individual' : n === 2 ? 'Couple' : 'Family'; }
+  function marginal(ev) { var n = planFor(ev); return eventCostAt(ev, n + 1) - eventCostAt(ev, n); }
+  function renderGifts() {
+    var el = $('bGift'); if (!el) return;
+    var g = (bud.plan && bud.plan.gifts) || {};
+    el.innerHTML = '<h3>Gifts vs cost</h3><div class="gf-in">' + GTYPES.map(function (t) {
+      return '<label><span>' + t[0] + '</span><i>$</i><input data-gift="' + t[0] + '" inputmode="decimal" placeholder="0" value="' + (setv(g[t[0]]) ? num(g[t[0]]) : '') + '"></label>';
+    }).join('') + '</div><div id="bGiftOut"></div>';
+    el.querySelectorAll('[data-gift]').forEach(function (inp) {
+      inp.addEventListener('input', function () {
+        bud.plan = Object.assign({}, bud.plan || {}); bud.plan.gifts = Object.assign({}, bud.plan.gifts || {});
+        var v = inp.value.trim(); if (v === '') delete bud.plan.gifts[inp.dataset.gift]; else bud.plan.gifts[inp.dataset.gift] = Math.max(0, num(v));
+        giftOut();
+        clearTimeout(renderGifts._t);
+        renderGifts._t = setTimeout(function () { google.script.run.withSuccessHandler(function () {}).withFailureHandler(function () {}).saveBudgetPlanning(bud.plan); }, 600);
+      });
+    });
+    giftOut();
+  }
+  function giftOut() {
+    var out = $('bGiftOut'); if (!out) return;
+    var g = (bud.plan && bud.plan.gifts) || {}, perPerson = marginal('Ceremony') + marginal('Reception');
+    var st = {}; GTYPES.forEach(function (t) { st[t[0]] = { n: 0, ppl: 0 }; });
+    (typeof state !== 'undefined' && state.guests ? state.guests : []).forEach(function (h) {
+      if (h.weddingRsvp === 'Declined' && h.receptionRsvp === 'Declined') return;
+      var p = hhPeople(h); if (!p) return; var t = hhType(p); st[t].n++; st[t].ppl += p;
+    });
+    var gifts = 0, rows = GTYPES.map(function (t) {
+      var x = st[t[0]], avg = x.n ? x.ppl / x.n : t[1], cost = avg * perPerson, gift = num(g[t[0]]), net = gift - cost;
+      gifts += gift * x.n;
+      return '<div class="gf-row"><span><b>' + t[0] + '</b><small>' + x.n + ' on the list' + (t[0] === 'Family' ? ' · avg ' + (Math.round(avg * 10) / 10) + ' people' : '') + '</small></span>' +
+        '<span class="gf-c"><small>Costs</small>' + money(Math.round(cost)) + '</span><span class="gf-c"><small>Gift</small>' + (gift ? money(Math.round(gift)) : '–') + '</span>' +
+        '<span class="gf-c gf-net ' + (!gift ? '' : net >= 0 ? 'ok' : 'bad') + '"><small>' + (!gift ? '' : net >= 0 ? 'Covers itself' : 'Costs you') + '</small>' + (gift ? (net >= 0 ? '+' : '−') + money(Math.round(Math.abs(net))) : '–') + '</span></div>';
+    }).join('');
+    var projected = 0; bud.bookings.forEach(function (b) { if (counted(b)) projected += isCommitted(b) ? Math.max(b._eff, num(b.paid)) : b._eff; });
+    bud.purchases.forEach(function (p) { projected += num(p.actual); });
+    out.innerHTML = '<p class="gf-note">Each extra guest costs about <b>' + money(Math.round(perPerson)) + '</b> right now' +
+      '.' + (function () {
+        var R = planFor('Reception'), ks = [];
+        bud.bookings.forEach(function (b) { if (!counted(b)) return; var o = evpOf(b), L = evList(b), pc = o ? o.Reception : ((L.length === 1 && L[0] === 'Reception') || !L.length ? b : null);
+          if (pc && pricingOf(pc) === 'Flat + extra guests' && num(pc.included) > R) ks.push(num(pc.included)); });
+        if (!ks.length) return '';
+        var k = Math.min.apply(null, ks), after = marginal('Ceremony') + eventCostAt('Reception', k + 1) - eventCostAt('Reception', k);
+        return ' Past ' + k + ' reception guests it goes up to <b>' + money(Math.round(after)) + '</b>.';
+      })() + '</p>' + rows +
+      (gifts ? '<div class="pg-rows" style="margin-top:6px"><div class="pg-row"><span>Expected gifts from the list</span><b>' + money(Math.round(gifts)) + '</b></div>' +
+        '<div class="pg-row"><span>Net cost after gifts</span><b>' + money(Math.round(projected - gifts)) + '</b></div></div>' : '');
   }
   function renderPer() {
     var el = $('bPer'); if (!el) return;
@@ -2493,7 +2553,7 @@
     list.className = 'list t-' + t;
     $('bPills').hidden = t === 'installments' || t === 'insights';
     var srch = document.querySelector('#viewBudget .main .search'); if (srch) srch.hidden = t === 'insights';
-    if (t === 'insights') { $('bCount').textContent = ''; list.innerHTML = insightsHtml(); renderPer(); return; }
+    if (t === 'insights') { $('bCount').textContent = ''; list.innerHTML = insightsHtml(); renderPer(); renderGifts(); return; }
     var html = '';
     if (t === 'purchases') {
       $('bPills').innerHTML = (bud.forWho ? '<button type="button" class="pill on" data-clearfor="1">' + esc(bud.forWho) + ' ✕</button>' : '') +
@@ -3696,6 +3756,10 @@
         ['guests', 'Ceremony', 'Reception', 'Pre-wedding'].forEach(function (k) {
           var v = p && p[k]; if (v !== '' && v !== undefined && v !== null) plan[k] = Math.max(0, Math.min(5000, Math.round(Number(v) || 0)));
         });
+        if (p && p.gifts && typeof p.gifts === 'object') {
+          plan.gifts = {};
+          ['Individual', 'Couple', 'Family'].forEach(function (k) { var v = p.gifts[k]; if (v !== '' && v !== undefined && v !== null && isFinite(Number(v))) plan.gifts[k] = Math.max(0, Math.min(100000, Number(v))); });
+        }
         var rec = Object.assign({}, data.budgetMeta || {}, { planning: plan });
         var b = fs.batch(); b.set('meta', 'budget', stamp(rec)); data.budgetMeta = rec;
         return commit(b).then(function () { return plan; });
