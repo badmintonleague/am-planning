@@ -446,13 +446,31 @@
   .split-h{grid-column:1/-1;margin:6px 0 -2px;font-size:13px;color:var(--ink2);font-weight:500}
   .split-h span{font-weight:400;color:var(--muted)}.split-h span.over{color:var(--no)}
   .pg-row.muted span,.pg-row.muted b{color:var(--muted)}
+  button.pg-row{width:100%;border:0;background:none;font:inherit;cursor:pointer;text-align:left;border-top:1px solid var(--line)}
+  button.pg-row:hover span{color:var(--ink)} button.pg-row.on{background:var(--gold-soft);margin:0 -6px;padding-left:6px;padding-right:6px;width:calc(100% + 12px);border-radius:8px}
+  #bTabs{overflow-x:auto;scrollbar-width:none;max-width:100%}#bTabs::-webkit-scrollbar{display:none}#bTabs button{flex:none}
+  .ins{display:grid;gap:14px;padding:4px 0 24px}
+  .ins-tiles{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+  @media (min-width:700px){.ins-tiles{grid-template-columns:repeat(4,1fr)}}
+  .ins-t{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px}
+  .ins-t span{display:block;font-size:12.5px;color:var(--muted)}.ins-t b{display:block;font-family:var(--serif);font-weight:400;font-size:24px;margin:4px 0 2px}
+  .ins-t small{font-size:11.5px;color:var(--muted)}
+  .ins-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px}
+  .ins-card h3{margin:0 0 10px;font-size:14px;font-weight:500}
+  .ins-none{margin:0;color:var(--muted);font-size:13px}
+  .ins-sm{color:var(--muted);font-size:12px;margin-left:6px}
+  .ib{display:grid;gap:9px}.ib-row{display:grid;grid-template-columns:minmax(90px,1fr) 2fr auto;gap:10px;align-items:center;font-size:14px}
+  .ib-l{color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ib-l small{display:block;font-size:11px;color:var(--muted)}
+  .ib-bar{height:8px;background:var(--soft);border-radius:4px;overflow:hidden}.ib-bar i{display:block;height:100%;background:var(--gold);border-radius:4px}
+  .ib-bar i.bad{background:var(--no)}.ib-bar i.soft{background:#D9C79B}.ib-bar i.soft2{background:#E7D9B3}
+  .ib-row b{font-weight:500;white-space:nowrap}
   .pg-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:4px 6px 10px}
   .pg-in{display:flex;align-items:baseline;gap:6px;color:var(--ink2);font-size:14px}
   .pg-in input{width:78px;border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:18px;font-family:inherit;background:#fff;color:var(--ink)}
   .pg-big{text-align:right}.pg-big b{display:block;font-family:var(--serif);font-weight:400;font-size:26px;line-height:1}.pg-big span{font-size:12px;color:var(--muted)}
   .pg-reset{border:0;background:none;color:var(--gold);font:inherit;font-size:13px;padding:0 6px 8px;cursor:pointer}
-  .pg-chart{width:100%;height:110px;display:block;margin:4px 0 6px}
-  .pg-chart text{font-size:10px;fill:var(--muted)}
+  .pg-chart{width:100%;height:auto;max-height:200px;display:block;margin:4px 0 6px}
+  .pg-chart text{font-size:13px;fill:var(--muted)}
   .pg-line{fill:none;stroke:var(--gold);stroke-width:2}.pg-dot{fill:var(--ink)}.pg-k{stroke:var(--line);stroke-dasharray:3 3}
   .pg-rows{margin:0 6px 4px}.pg-row{display:flex;justify-content:space-between;font-size:14px;padding:7px 0;border-top:1px solid var(--line)}
   .pg-row span{color:var(--ink2)}.pg-row b{font-weight:500}
@@ -872,7 +890,6 @@
       <div id="bCats"></div>
     </div>
     <div class="rel" id="bEvents" hidden></div>
-    <div class="rel" id="bPer"></div>
     <div class="rel" id="bForWrap" hidden>
       <div class="rel-h"><span>Shopping by person</span><button type="button" class="rel-clear" id="bForClear" hidden>Show all</button></div>
       <div id="bFor"></div>
@@ -886,6 +903,7 @@
       <button class="on" data-t="bookings" role="tab">Vendors <span id="tcB"></span></button>
       <button data-t="purchases" role="tab">Shopping <span id="tcS"></span></button>
       <button data-t="installments" role="tab">Payments <span id="tcP"></span></button>
+      <button data-t="insights" role="tab">Insights</button>
     </div>
     <div class="search" style="margin-top:12px">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
@@ -2199,6 +2217,71 @@
     show('rate', pr !== 'Flat', pr === 'Per guest' ? 'Per guest' : 'Per extra guest');
     show('tax', pr !== 'Flat');
   }
+  /* ---------- Insights ---------- */
+  var WED = new Date(2027, 8, 5);
+  function monthsUntil(d) { var n = new Date(); return Math.max(1, (d.getFullYear() - n.getFullYear()) * 12 + d.getMonth() - n.getMonth()); }
+  function bar(rows, unit) {             // simple horizontal bars: rows = [[label, value, cls?, sub?]]
+    var mx = 0; rows.forEach(function (r) { mx = Math.max(mx, r[1]); });
+    return '<div class="ib">' + rows.map(function (r) {
+      return '<div class="ib-row"><span class="ib-l">' + esc(r[0]) + (r[3] ? '<small>' + esc(r[3]) + '</small>' : '') + '</span><span class="ib-bar"><i class="' + (r[2] || '') + '" style="width:' + (mx ? r[1] / mx * 100 : 0) + '%"></i></span><b>' + (unit ? unit(r[1]) : money(Math.round(r[1]))) + '</b></div>';
+    }).join('') + '</div>';
+  }
+  function insightsHtml() {
+    var committed = 0, considering = 0, paid = 0, unsched = 0, H = planGuests();
+    bud.bookings.forEach(function (b) {
+      if (isCommitted(b)) { committed += Math.max(b._eff, num(b.paid)); paid += num(b.paid); var u = unscheduledOf(b); if (u > 0) unsched += u; }
+      else if (SHORTLIST.indexOf(b.stage) !== -1) considering += b._eff;
+    });
+    var shop = 0, shopPlan = 0; bud.purchases.forEach(function (p) { if (p.status === 'Bought') shop += num(p.actual); else shopPlan += num(p.actual); });
+    committed += shop; paid += shop;
+    var projected = committed + considering + shopPlan, left = Math.max(0, projected - paid), months = monthsUntil(WED);
+    var h = '<div class="ins">';
+    // summary
+    h += '<div class="ins-tiles">' +
+      '<div class="ins-t"><span>Projected total</span><b>' + money(Math.round(projected)) + '</b></div>' +
+      '<div class="ins-t"><span>Left to pay</span><b>' + money(Math.round(left)) + '</b><small>' + money(Math.round(paid)) + ' paid so far</small></div>' +
+      '<div class="ins-t"><span>Set aside each month</span><b>' + money(Math.round(left / months)) + '</b><small>' + months + ' months to the wedding</small></div>' +
+      '<div class="ins-t"><span>Per guest</span><b>' + (H ? money(Math.round(projected / H)) : '–') + '</b><small>at ' + H + ' guests</small></div></div>';
+    // cash flow: scheduled payments by month
+    var byM = {}, now = new Date(); now.setDate(1);
+    bud.installments.forEach(function (p) {
+      if (p.paid === 'Yes' || !p.due) return;
+      var d = new Date(p.due + 'T12:00'); if (isNaN(d)) return;
+      var k = d < now ? 'Overdue' : d.toLocaleDateString('en-CA', { month: 'short', year: '2-digit' });
+      if (!byM[k]) byM[k] = { v: 0, t: d < now ? 0 : d.getTime() }; byM[k].v += num(p.amount);
+    });
+    var mk = Object.keys(byM).sort(function (a, b) { return byM[a].t - byM[b].t; });
+    var flow = mk.map(function (k) { return [k, byM[k].v, k === 'Overdue' ? 'bad' : '']; });
+    if (unsched > 0.5) flow.push(['Not scheduled', unsched, 'soft', 'booked, no due date']);
+    if (considering > 0.5) flow.push(['Considering', considering, 'soft2', 'if you book them']);
+    h += '<div class="ins-card"><h3>Upcoming payments</h3>' + (flow.length ? bar(flow) : '<p class="ins-none">Nothing scheduled</p>') + '</div>';
+    // per guest planner
+    h += '<div class="ins-card" id="bPer"></div>';
+    // where the money goes
+    var cats = {}; bud.bookings.forEach(function (b) { if (!counted(b)) return; var c = b.category || 'Other'; cats[c] = (cats[c] || 0) + (isCommitted(b) ? Math.max(b._eff, num(b.paid)) : b._eff); });
+    if (shop + shopPlan) cats['Shopping'] = (cats['Shopping'] || 0) + shop + shopPlan;
+    var ck = Object.keys(cats).sort(function (a, b) { return cats[b] - cats[a]; });
+    h += '<div class="ins-card"><h3>Where the money goes</h3>' + (ck.length ? bar(ck.map(function (c) { return [c, cats[c], '', Math.round(cats[c] / projected * 100) + '%']; })) : '<p class="ins-none">No costs yet</p>') + '</div>';
+    // by event, per guest
+    var evT = {}; bud.bookings.forEach(function (b) { if (!counted(b)) return; var eff = isCommitted(b) ? Math.max(b._eff, num(b.paid)) : b._eff, parts = byEvent(b, eff); Object.keys(parts).forEach(function (k) { evT[k] = (evT[k] || 0) + parts[k]; }); });
+    var evK = ['Ceremony', 'Reception', 'Pre-wedding'].filter(function (k) { return evT[k] > 0.5; });
+    if (evK.length) h += '<div class="ins-card"><h3>Cost per guest, by event</h3><div class="pg-rows">' + evK.map(function (k) {
+      var n = guestsFor(k); return '<div class="pg-row"><span>' + esc(k) + ' <small class="ins-sm">' + money(Math.round(evT[k])) + ' · ' + n + ' guests</small></span><b>' + (n ? money(Math.round(evT[k] / n)) : '–') + '</b></div>';
+    }).join('') + '</div></div>';
+    // who's paying
+    var us = 0, fam = 0, usDue = 0, famDue = 0, noneDue = 0;
+    bud.installments.forEach(function (p) { var a = num(p.amount), w = p.payer; if (p.paid === 'Yes') { if (w === 'Family') fam += a; else us += a; } else { if (w === 'Family') famDue += a; else if (w === 'Us') usDue += a; else noneDue += a; } });
+    bud.purchases.forEach(function (p) { if (p.status !== 'Bought') return; if (p.payer === 'Family') fam += num(p.actual); else us += num(p.actual); });
+    if (us + fam + usDue + famDue + noneDue) h += '<div class="ins-card"><h3>Who\'s paying</h3><div class="pg-rows">' +
+      '<div class="pg-row"><span>Us</span><b>' + money(Math.round(us)) + ' paid' + (usDue ? ' · ' + money(Math.round(usDue)) + ' to come' : '') + '</b></div>' +
+      '<div class="pg-row"><span>Family</span><b>' + money(Math.round(fam)) + ' paid' + (famDue ? ' · ' + money(Math.round(famDue)) + ' to come' : '') + '</b></div>' +
+      (noneDue ? '<div class="pg-row muted"><span>Not decided</span><b>' + money(Math.round(noneDue)) + ' to come</b></div>' : '') + '</div></div>';
+    // biggest vendors
+    var big = bud.bookings.filter(counted).map(function (b) { return [b.name, isCommitted(b) ? Math.max(b._eff, num(b.paid)) : b._eff, isCommitted(b) ? '' : 'soft2', isCommitted(b) ? '' : 'considering']; })
+      .sort(function (a, b) { return b[1] - a[1]; }).slice(0, 6);
+    if (big.length) h += '<div class="ins-card"><h3>Biggest costs</h3>' + bar(big) + '</div>';
+    return h + '</div>';
+  }
   function renderEvents() {
     var el = $('bEvents'); if (!el) return;
     var tot = {}, order = ['Ceremony', 'Reception', 'Pre-wedding', 'Not split', 'No event'];
@@ -2209,8 +2292,8 @@
     });
     var keys = order.filter(function (k) { return tot[k] > 0.5; });
     el.hidden = !keys.length;
-    el.innerHTML = '<div class="rel-h"><span>By event</span></div><div class="pg-rows">' + keys.map(function (k) {
-      return '<div class="pg-row' + (k === 'Not split' || k === 'No event' ? ' muted' : '') + '"><span>' + esc(k) + '</span><b>' + money(Math.round(tot[k])) + '</b></div>';
+    el.innerHTML = '<div class="rel-h"><span>By event</span>' + (bud.ev ? '<button type="button" class="rel-clear" data-evclear="1">Show all</button>' : '') + '</div><div class="pg-rows">' + keys.map(function (k) {
+      return '<button type="button" class="pg-row evr' + (k === 'Not split' || k === 'No event' ? ' muted' : '') + (bud.ev === k ? ' on' : '') + '" data-ev="' + esc(k) + '"><span>' + esc(k) + '</span><b>' + money(Math.round(tot[k])) + '</b></button>';
     }).join('') + '</div>';
   }
   function renderPer(H) {
@@ -2222,7 +2305,7 @@
     var steps = [], n;
     for (n = lo; n <= hi; n += 5) steps.push([n, projectedAt(n)]);
     var ymin = steps[0][1], ymax = steps[steps.length - 1][1]; if (ymax - ymin < 1) ymax = ymin + 1;
-    var Wd = 300, Ht = 90;
+    var Wd = 600, Ht = 140;
     function X(v) { return (v - lo) / (hi - lo) * Wd; } function Y(v) { return Ht - 6 - (v - ymin) / (ymax - ymin) * (Ht - 14); }
     var path = steps.map(function (p, i) { return (i ? 'L' : 'M') + X(p[0]).toFixed(1) + ' ' + Y(p[1]).toFixed(1); }).join(' ');
     var kinks = []; perVendors.forEach(function (b) { if (pricingOf(b) === 'Flat + extra guests' && num(b.included) > lo && num(b.included) < hi && kinks.indexOf(num(b.included)) === -1) kinks.push(num(b.included)); });
@@ -2230,17 +2313,17 @@
     // what one more guest costs, in each stretch between contract limits
     var edges = [lo].concat(kinks).concat([hi]), stretches = [];
     for (var i = 0; i < edges.length - 1; i++) { var m = (edges[i] + edges[i + 1]) / 2; stretches.push([edges[i], edges[i + 1], projectedAt(Math.floor(m) + 1) - projectedAt(Math.floor(m))]); }
-    el.innerHTML = '<div class="rel-h"><span>Per guest</span></div>' +
+    el.innerHTML = '<h3>Guest count</h3>' +
       '<div class="pg-top"><label class="pg-in"><input id="bPlanN" type="number" inputmode="numeric" min="0" value="' + (own ? num(bud.plan.guests) : '') + '" placeholder="' + listN + '"><span>guests</span></label>' +
       '<div class="pg-big"><b>' + (H ? money(Math.round(per)) : '–') + '</b><span>per guest</span></div></div>' +
       (own && listN !== H ? '<button type="button" class="pg-reset" id="bPlanReset">Use guest list (' + listN + ')</button>' : '') +
-      (perVendors.length ? '<svg class="pg-chart" viewBox="-4 0 ' + (Wd + 8) + ' ' + (Ht + 16) + '" preserveAspectRatio="none">' +
+      (perVendors.length ? '<svg class="pg-chart" viewBox="-8 0 ' + (Wd + 16) + ' ' + (Ht + 18) + '">' +
         kinks.map(function (k) { return '<line x1="' + X(k) + '" x2="' + X(k) + '" y1="2" y2="' + (Ht - 2) + '" class="pg-k"/><text x="' + X(k) + '" y="' + (Ht + 13) + '" text-anchor="middle">' + k + '</text>'; }).join('') +
         '<path d="' + path + '" class="pg-line"/>' +
         (H >= lo && H <= hi ? '<circle cx="' + X(H) + '" cy="' + Y(tot) + '" r="4" class="pg-dot"/>' : '') +
         '<text x="0" y="' + (Ht + 13) + '">' + lo + '</text><text x="' + Wd + '" y="' + (Ht + 13) + '" text-anchor="end">' + hi + '</text></svg>' +
         '<div class="pg-rows">' + stretches.map(function (st) {
-          return '<div class="pg-row"><span>' + (stretches.length === 1 ? 'Each extra guest' : st[0] === lo ? 'Up to ' + st[1] : st[1] === hi ? 'Over ' + st[0] : st[0] + '–' + st[1]) + '</span><b>+' + money(Math.round(st[2])) + '</b></div>';
+          return '<div class="pg-row"><span>' + (stretches.length === 1 ? 'Each extra guest' : 'Each extra guest ' + (st[0] === lo ? 'up to ' + st[1] : st[1] === hi ? 'over ' + st[0] : st[0] + '–' + st[1])) + '</span><b>+' + money(Math.round(st[2])) + '</b></div>';
         }).join('') + '<div class="pg-row"><span>Total at ' + H + '</span><b>' + money(Math.round(tot)) + '</b></div></div>'
       : '<p class="pg-none">Set a vendor to per-guest pricing to see how cost changes with guest count.</p>');
     var inp = $('bPlanN');
@@ -2389,7 +2472,9 @@
   function renderBudgetList() {
     var t = bud.tab, list = $('bList');
     list.className = 'list t-' + t;
-    $('bPills').hidden = t === 'installments';
+    $('bPills').hidden = t === 'installments' || t === 'insights';
+    var srch = document.querySelector('#viewBudget .main .search'); if (srch) srch.hidden = t === 'insights';
+    if (t === 'insights') { $('bCount').textContent = ''; list.innerHTML = insightsHtml(); renderPer(planGuests()); return; }
     var html = '';
     if (t === 'purchases') {
       $('bPills').innerHTML = (bud.forWho ? '<button type="button" class="pill on" data-clearfor="1">' + esc(bud.forWho) + ' ✕</button>' : '') +
@@ -2435,9 +2520,17 @@
       if (!items.length) html = '<div class="empty"><b>' + (bud.q || bud.forWho || bud.sfilter !== 'all' ? 'Nothing matches' : 'Nothing on the shopping list') + '</b>' +
         '</div>';
     } else if (t === 'bookings') {
-      $('bPills').innerHTML = (bud.cat ? '<button type="button" class="pill on" data-clearcat="1">' + esc(bud.cat) + ' ✕</button>' : '') +
+      $('bPills').innerHTML = (bud.ev ? '<button type="button" class="pill on" data-clearev="1">' + esc(bud.ev) + ' ✕</button>' : '') +
+        (bud.cat ? '<button type="button" class="pill on" data-clearcat="1">' + esc(bud.cat) + ' ✕</button>' : '') +
         STAGE_FILTERS.map(function (f) { return '<button type="button" class="pill' + (bud.filter === f[0] ? ' on' : '') + '" data-filter="' + f[0] + '">' + f[1] + '</button>'; }).join('');
       var rows = bud.bookings.filter(function (b) { return bMatches(b) && passesStage(b) && (!bud.cat || (b.category || 'Other') === bud.cat); });
+      if (bud.ev) {                       // only vendors for this event, showing just that event's share of each cost
+        rows = rows.map(function (b) {
+          var share = byEvent(b, b._eff)[bud.ev]; if (share === undefined) return null;
+          var k = b._eff ? share / b._eff : 0;
+          return Object.assign({}, b, { _eff: share, _owed: b._owed * k, paid: num(b.paid) * k });
+        }).filter(Boolean);
+      }
       var order = bOpt('categories'), stageOrder = ['Considering', 'Quote only', 'Not going ahead'];
       rows.sort(function (a, b) {
         var ca = order.indexOf(a.category || 'Other'), cb = order.indexOf(b.category || 'Other');
@@ -2478,7 +2571,7 @@
           '<div class="bcol bnum' + (committedNow && b._owed ? '' : ' dim') + '">' + (committedNow ? money(b._owed) : '–') + (committedNow && unscheduledOf(b) > 0.5 ? '<span class="unsched">' + money(unscheduledOf(b)) + ' not scheduled</span>' : '') + '</div>' +
           '<div class="amt"><b>' + (hasCost ? money(b._eff) : '–') + '</b><span>' + right + '</span></div></div>';
       });
-      if (!rows.length) html = '<div class="empty"><b>' + (bud.q || bud.cat || bud.filter !== 'all' ? 'Nothing matches' : 'No vendors yet') + '</b>' +
+      if (!rows.length) html = '<div class="empty"><b>' + (bud.q || bud.cat || bud.ev || bud.filter !== 'all' ? 'Nothing matches' : 'No vendors yet') + '</b>' +
         '</div>';
     } else {
       var today = todayIso();
@@ -2782,6 +2875,15 @@
   $('bFields').addEventListener('click', function (e) {
     if (e.target.closest('.evp-pr [data-v]')) setTimeout(function () { splitVis(); if (bAuto) bAuto.schedule(250); }, 0);
   });
+  BFORM.insights = { addShort: 'Add vendor' };
+  var _openBF = openBudgetForm;
+  openBudgetForm = function (row, table) { return _openBF(row, table || (bud.tab === 'insights' ? 'bookings' : undefined)); };
+  $('bEvents').addEventListener('click', function (e) {
+    if (e.target.closest('[data-evclear]')) { bud.ev = ''; renderBudget(); return; }
+    var r = e.target.closest('[data-ev]'); if (!r) return;
+    bud.ev = bud.ev === r.dataset.ev ? '' : r.dataset.ev; bud.tab = 'bookings'; updateAddLabels(); renderBudget();
+  });
+  $('bPills').addEventListener('click', function (e) { if (e.target.closest('[data-clearev]')) { bud.ev = ''; renderBudget(); } });
   /* ---------- Events ---------- */
   $('q').addEventListener('input', function (e) { state.q = e.target.value.trim().toLowerCase(); render(); });
   $('filters').addEventListener('click', function (e) {
