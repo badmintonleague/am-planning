@@ -322,7 +322,7 @@
   .walk-load{position:absolute;inset:0;display:grid;place-items:center;color:#55524C;font-size:14px;pointer-events:none}
   .v-layers-btn{position:absolute;top:10px;right:64px;border:0;border-radius:999px;padding:8px 13px;font-size:13px;font-family:inherit;background:rgba(255,255,255,.9);box-shadow:0 1px 4px rgba(0,0,0,.12);cursor:pointer;display:inline-flex;align-items:center;gap:6px}
   .v-layers-btn svg{width:15px;height:15px}
-  .v-layers{position:absolute;top:50px;right:10px;width:262px;max-height:calc(100% - 64px);overflow:auto;background:rgba(255,255,255,.97);border-radius:16px;box-shadow:0 8px 28px rgba(0,0,0,.18);padding:10px 12px;z-index:3}
+  .v-layers{position:absolute;top:50px;right:10px;width:250px;max-height:calc(100% - 64px);overflow:auto;background:rgba(255,255,255,.97);border-radius:16px;box-shadow:0 8px 28px rgba(0,0,0,.18);padding:10px 12px;z-index:3}
   .v-layers[hidden]{display:none}
   .v-layers label{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 2px;font-size:14px;border-bottom:1px solid var(--line);cursor:pointer}
   .v-layers label:last-of-type{border-bottom:0}
@@ -1936,8 +1936,8 @@
     $('vLayerList').innerHTML = LAYERS.map(function (l) {
       var dots = l[0] === 'chairs' ? '<span class="v-dots" id="vChairCol">' + [['brown', '#46241f'], ['white', '#f4f4f2']].map(function (c) {
         return '<button type="button" data-c="' + c[0] + '" aria-label="' + c[0] + ' chairs" class="' + (vprefs.chairs === c[0] ? 'on' : '') + '" style="background:' + c[1] + '"></button>'; }).join('') + '</span>'
-        : l[0] === 'umbrellas' ? '<span class="v-pick">' + [['fringe', 'Fringe'], ['market', 'Market']].map(function (u) {
-        return '<button type="button" data-u="' + u[0] + '" class="' + (vprefs.umb === u[0] ? 'on' : '') + '">' + u[1] + '</button>'; }).join('') + '</span>' : '';
+        : l[0] === 'umbrellas' ? '<span class="v-dots">' + [['fringe', '#f1ebdd', 'Cream fringe umbrellas'], ['market', '#b8a48a', 'Taupe market umbrellas']].map(function (u) {
+        return '<button type="button" data-u="' + u[0] + '" aria-label="' + u[2] + '" title="' + u[2] + '" class="' + (vprefs.umb === u[0] ? 'on' : '') + '" style="background:' + u[1] + '"></button>'; }).join('') + '</span>' : '';
       return '<label><span>' + esc(l[1]) + '</span>' + dots + '<input type="checkbox" data-l="' + l[0] + '"' + (vprefs.hidden.indexOf(l[0]) === -1 ? ' checked' : '') + '></label>';
     }).join('');
   }
