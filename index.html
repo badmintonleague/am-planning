@@ -433,6 +433,9 @@
   .tag.split{background:linear-gradient(90deg,#ECEAF6 50%,var(--gold-soft) 50%);color:#5d4f6e}
   .bp-gap{cursor:default;background:var(--gold-soft)}.bp-gap b{color:#8A6A22}.bp-gap.over{background:var(--no-soft)}.bp-gap.over b{color:var(--no)}
   .unsched{display:block;font-size:12px;color:#8A6A22;margin-top:2px}
+  .split-h{grid-column:1/-1;margin:6px 0 -2px;font-size:13px;color:var(--ink2);font-weight:500}
+  .split-h span{font-weight:400;color:var(--muted)}.split-h span.over{color:var(--no)}
+  .pg-row.muted span,.pg-row.muted b{color:var(--muted)}
   .pg-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:4px 6px 10px}
   .pg-in{display:flex;align-items:baseline;gap:6px;color:var(--ink2);font-size:14px}
   .pg-in input{width:78px;border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:18px;font-family:inherit;background:#fff;color:var(--ink)}
@@ -858,6 +861,7 @@
       <div class="rel-h"><span>By category</span><button type="button" class="rel-clear" id="bCatClear" hidden>Show all</button></div>
       <div id="bCats"></div>
     </div>
+    <div class="rel" id="bEvents" hidden></div>
     <div class="rel" id="bPer"></div>
     <div class="rel" id="bForWrap" hidden>
       <div class="rel-h"><span>Shopping by person</span><button type="button" class="rel-clear" id="bForClear" hidden>Show all</button></div>
@@ -2048,10 +2052,11 @@
       groups: [
         [{ k: 'name', l: 'What / who', t: 'text', ph: 'e.g. Nantha Catering' },
          { k: 'category', l: 'Category', t: 'select', o: 'categories', req: 1 },
-         { k: 'event', l: 'For', t: 'seg', o: 'events', clear: 1 }],
+         { k: 'event', l: 'For', t: 'seg', o: 'events', clear: 1, labels: { Both: 'Multiple' } }],
         [{ k: 'stage', l: 'Status', t: 'select', o: 'stages', req: 1 }, { k: 'pricing', l: 'Pricing', t: 'seg', o: 'pricing' },
          { k: 'cost', l: 'Quote / price', t: 'money' }, { k: 'included', l: 'Guests included', t: 'number' },
-         { k: 'rate', l: 'Per extra guest', t: 'money' }, { k: 'tax', l: 'Tax %', t: 'number' }],
+         { k: 'rate', l: 'Per extra guest', t: 'money' }, { k: 'tax', l: 'Tax %', t: 'number' },
+         { k: 'splitCer', l: 'Ceremony', t: 'money' }, { k: 'splitRec', l: 'Reception', t: 'money' }, { k: 'splitPre', l: 'Pre-wedding', t: 'money' }],
         [{ k: 'contact', l: 'Contact name', t: 'text' }, { k: 'phone', l: 'Phone', t: 'tel' },
          { k: 'email', l: 'Email', t: 'email' }, { k: 'notes', l: 'Notes', t: 'area' }]
       ] },
@@ -2112,6 +2117,36 @@
     bud.bookings.forEach(function (b) { if (!counted(b)) return; var e = effCost(b, n); t += isCommitted(b) ? Math.max(e, num(b.paid)) : e; });
     return t;
   }
+  var EVS = [['splitCer', 'Ceremony'], ['splitRec', 'Reception'], ['splitPre', 'Pre-wedding']];
+  /** How a vendor's cost divides between events: {Ceremony: $, Reception: $, Pre-wedding: $, 'Not split': $, 'No event': $} */
+  function byEvent(b, eff) {
+    var out = {};
+    if (!b.event) { out['No event'] = eff; return out; }
+    if (b.event !== 'Both') { out[b.event] = eff; return out; }
+    var used = 0;
+    EVS.forEach(function (e) { var v = num(b[e[0]]); if (v) { out[e[1]] = v; used += v; } });
+    if (eff - used > 0.5) out['Not split'] = eff - used;
+    return out;
+  }
+  function splitVis() {
+    var wrap = $('bFields'); if (!wrap) return;
+    var ev = wrap.querySelector('#b_event'); if (!ev) return;
+    var multi = ev.dataset.value === 'Both';
+    EVS.forEach(function (e, i) {
+      var f = wrap.querySelector('.field[data-k="' + e[0] + '"]'); if (!f) return;
+      f.style.display = multi ? '' : 'none';
+      if (i === 0 && !wrap.querySelector('#bSplitH')) f.insertAdjacentHTML('beforebegin', '<p class="split-h" id="bSplitH">Cost by event <span id="bSplitLeft"></span></p>');
+    });
+    var h = $('bSplitH'); if (h) h.style.display = multi ? '' : 'none';
+    if (!multi) return;
+    var g = function (k) { var el = $('b_' + k); return el ? (el.dataset.value !== undefined && el.tagName !== 'INPUT' ? el.dataset.value : el.value) : ''; };
+    var tmp = { pricing: g('pricing'), cost: g('cost'), rate: g('rate'), included: g('included'), tax: g('tax') };
+    var total = effCost(tmp, planGuests()), used = 0;
+    EVS.forEach(function (e) { used += num(g(e[0])); });
+    var left = Math.round((total - used) * 100) / 100;
+    $('bSplitLeft').textContent = !total ? '' : Math.abs(left) < 0.5 ? '· all split' : left > 0 ? '· ' + money(left) + ' left' : '· ' + money(-left) + ' over';
+    $('bSplitLeft').className = left < -0.5 ? 'over' : '';
+  }
   function pricingVis() {
     var wrap = $('bFields'); if (!wrap) return;
     var seg = wrap.querySelector('#b_pricing'); if (!seg) return;
@@ -2124,6 +2159,20 @@
     show('included', pr === 'Flat + extra guests');
     show('rate', pr !== 'Flat', pr === 'Per guest' ? 'Per guest' : 'Per extra guest');
     show('tax', pr !== 'Flat');
+  }
+  function renderEvents() {
+    var el = $('bEvents'); if (!el) return;
+    var tot = {}, order = ['Ceremony', 'Reception', 'Pre-wedding', 'Not split', 'No event'];
+    bud.bookings.forEach(function (b) {
+      if (!counted(b)) return;
+      var eff = isCommitted(b) ? Math.max(b._eff, num(b.paid)) : b._eff, parts = byEvent(b, eff);
+      Object.keys(parts).forEach(function (k) { tot[k] = (tot[k] || 0) + parts[k]; });
+    });
+    var keys = order.filter(function (k) { return tot[k] > 0.5; });
+    el.hidden = !keys.length;
+    el.innerHTML = '<div class="rel-h"><span>By event</span></div><div class="pg-rows">' + keys.map(function (k) {
+      return '<div class="pg-row' + (k === 'Not split' || k === 'No event' ? ' muted' : '') + '"><span>' + esc(k) + '</span><b>' + money(Math.round(tot[k])) + '</b></div>';
+    }).join('') + '</div>';
   }
   function renderPer(H) {
     var el = $('bPer'); if (!el) return;
@@ -2222,7 +2271,7 @@
     committed += shopBought; paid += shopBought;
     var countedNow = 0; bud.bookings.forEach(function (b) { if (counted(b)) countedNow += isCommitted(b) ? Math.max(b._eff, num(b.paid)) : b._eff; });
     bud.fixedOther = committed + shortlist - countedNow;
-    renderPer(H);
+    renderPer(H); renderEvents();
     var upcoming = bud.installments.filter(function (p) { return !isPaid(p.paid); });
     upcoming.forEach(function (p) {
       if (p.due && p.due < today) overdue += num(p.amount);
@@ -2377,7 +2426,7 @@
         }
         var hasCost = b.cost !== '' || b._eff > 0, committedNow = isCommitted(b);
         var tag = '<span class="tag ' + stageTone(b.stage) + '">' + esc(b.stage === 'Quote only' ? 'Quote' : b.stage) + '</span>';
-        var sub = [b.event ? (b.event === 'Both' ? 'Ceremony + reception' : b.event) : ''].filter(Boolean).join(' · ');
+        var sub = [b.event ? (b.event === 'Both' ? 'Multiple events' : b.event) : ''].filter(Boolean).join(' · ');
         var right = committedNow
           ? (b._owed > 0 ? money(b._owed) + ' owed' : hasCost ? 'paid' : '')
           : '';
@@ -2435,7 +2484,7 @@
     if (f.t === 'seg') {
       var opts = o.slice(); if (val && opts.indexOf(val) === -1) opts.push(val);
       return '<div class="field" data-k="' + f.k + '"><label>' + esc(f.l) + '</label><div class="seg' + (f.clear ? ' clearable' : '') + '" id="' + id + '" data-value="' + esc(val) + '">' +
-        opts.map(function (x) { return '<button type="button" class="' + (x === val ? 'on' : '') + '" data-v="' + esc(x) + '">' + esc(x) + '</button>'; }).join('') + '</div>' +
+        opts.map(function (x) { return '<button type="button" class="' + (x === val ? 'on' : '') + '" data-v="' + esc(x) + '">' + esc((f.labels && f.labels[x]) || x) + '</button>'; }).join('') + '</div>' +
         (f.hint ? '<p class="fhint">' + esc(f.hint) + '</p>' : '') + '</div>';
     }
     if (f.t === 'select') {
@@ -2517,7 +2566,7 @@
       var half = g.every(function (f) { return f.half; });
       return '<div class="group' + (half ? ' counts' : '') + '">' + g.map(function (f) { return bField(f, data[f.k]); }).join('') + '</div>';
     }).join('') + (t === 'bookings' ? '<div id="bPays">' + bookingPaymentsHtml(row ? row.row : null) + '</div>' : '');
-    pricingVis();
+    pricingVis(); splitVis();
     $('bErr').textContent = '';
     $('bDel').style.display = isNew ? 'none' : '';
     $('bDel').textContent = t === 'bookings' ? 'Remove vendor' : t === 'purchases' ? 'Remove item' : 'Remove payment';
@@ -2665,7 +2714,8 @@
     else fn();
   }
 
-  $('bFields').addEventListener('click', function (e) { if (e.target.closest('#b_pricing [data-v]')) setTimeout(pricingVis, 0); });
+  $('bFields').addEventListener('click', function (e) { if (e.target.closest('#b_pricing [data-v], #b_event [data-v]')) setTimeout(function () { pricingVis(); splitVis(); }, 0); });
+  $('bFields').addEventListener('input', function () { splitVis(); });
   /* ---------- Events ---------- */
   $('q').addEventListener('input', function (e) { state.q = e.target.value.trim().toLowerCase(); render(); });
   $('filters').addEventListener('click', function (e) {
@@ -2949,8 +2999,9 @@
     bookings: { key: 'name', match: ['Booking', 'Category', 'Stage'],
       fields: { name: 'Booking', category: 'Category', event: 'Event', stage: 'Stage', cost: 'Cost (CAD)',
         paid: 'Paid (CAD)', owed: 'Still owed (CAD)', payer: 'Paid by', contact: 'Contact Name', phone: 'Phone', email: 'Email', notes: 'Notes', row: 'Booking #',
-        pricing: 'Pricing', rate: 'Per guest (CAD)', included: 'Guests included', tax: 'Tax %' },
-      readOnly: ['paid', 'owed', 'row'], money: ['cost', 'paid', 'owed', 'rate'], dates: [] },
+        pricing: 'Pricing', rate: 'Per guest (CAD)', included: 'Guests included', tax: 'Tax %',
+        splitCer: 'Ceremony share (CAD)', splitRec: 'Reception share (CAD)', splitPre: 'Pre-wedding share (CAD)' },
+      readOnly: ['paid', 'owed', 'row'], money: ['cost', 'paid', 'owed', 'rate', 'splitCer', 'splitRec', 'splitPre'], dates: [] },
     installments: { key: 'booking', match: ['Booking #', 'Payment', 'Amount (CAD)'],
       fields: { booking: 'Booking #', forName: 'For', label: 'Payment', amount: 'Amount (CAD)', due: 'Due Date',
         paid: 'Paid?', paidDate: 'Paid Date', payer: 'Paid by', method: 'Method / Ref', notes: 'Notes' },
