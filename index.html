@@ -269,6 +269,26 @@
 
   /* ---------- Budget ---------- */
   .view[hidden]{display:none!important}
+  #netBanner{position:fixed;left:50%;top:max(10px,env(safe-area-inset-top));transform:translate(-50%,-160%);z-index:9000;background:#2B2620;color:#FFF8EC;
+    border-radius:999px;padding:9px 16px;font-size:13px;display:flex;gap:8px;align-items:center;box-shadow:0 8px 24px rgba(0,0,0,.2);transition:transform .35s ease}
+  #netBanner.on{transform:translate(-50%,0)}
+  #netBanner i{width:8px;height:8px;border-radius:50%;background:#E5A23A}
+  #viewHistory [hidden]{display:none!important}
+  .hx-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin:6px 0 16px}
+  .hx-head h2{font-family:var(--serif);font-weight:300;font-size:30px;margin:0}
+  .hx-day{font-size:11.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin:22px 0 8px}
+  .hx{display:flex;gap:12px;align-items:flex-start;background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:8px}
+  .hx-av{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:600;color:#fff;background:#8A7A63}
+  .hx-av.musi{background:#B4536E} .hx-av.abb{background:#3E6A8A}
+  .hx-b{flex:1;min-width:0}
+  .hx-t{font-size:14px;line-height:1.4}
+  .hx-t b{font-weight:600}
+  .hx-d{font-size:12.5px;color:var(--muted);margin-top:3px;overflow-wrap:anywhere}
+  .hx-d s{color:#B3261E;opacity:.75}
+  .hx-u{flex:none;border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;font-size:12.5px;cursor:pointer}
+  .hx-u:hover{border-color:var(--ink)}
+  .hx-empty{color:var(--muted);text-align:center;padding:50px 10px}
+
   #viewInvite [hidden]{display:none!important}
   .inv-head{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;flex-wrap:wrap;margin:6px 0 18px}
   .inv-head h2{font-family:var(--serif);font-weight:300;font-size:30px;margin:0}
@@ -915,6 +935,14 @@
   <div class="inv-toast" id="invToast" hidden></div>
 </div>
 
+
+<!-- ================= HISTORY VIEW ================= -->
+<div class="wrap view" id="viewHistory" hidden>
+  <div class="hx-head"><h2>History</h2><button type="button" class="hx-u" id="hxRefresh">Refresh</button></div>
+  <div id="hxList"><div class="hx-empty">Loading…</div></div>
+</div>
+<div id="netBanner" role="status"><i></i><span>You’re offline — changes won’t save until you reconnect</span></div>
+
 <!-- ================= BUDGET VIEW ================= -->
 <div class="wrap layout view" id="viewBudget" hidden>
   <aside class="side">
@@ -986,6 +1014,10 @@
   <button type="button" class="nav-item" data-view="invite">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5.5" width="18" height="13" rx="2.5"/><path d="M3.5 7l8.5 6 8.5-6"/></svg>
     <span><b>Invite</b><small></small></span>
+  </button>
+  <button type="button" class="nav-item" data-view="history">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1"/><path d="M3 4.5v4h4"/><path d="M12 7.5V12l3 2"/></svg>
+    <span><b>History</b><small></small></span>
   </button>
   <div class="nav-item disabled" aria-disabled="true">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg>
@@ -1495,7 +1527,7 @@
     $('formErr').textContent = ''; $('formErr').classList.remove('note'); save._warned = false; closeForm._ok = false;
     var openRef = g;
     gAuto = makeAuto(guestPayload, sendGuest, $('fStatus'), $('formErr'));
-    gAuto.ctx = { id: isNew ? '' : g.id, ref: { isOpen: function () { return state.editing === openRef && $('sheet').classList.contains('open'); } } };
+    gAuto.ctx = { id: isNew ? '' : g.id, v: isNew ? '' : (g._v || ''), nonce: newNonce(), ref: { isOpen: function () { return state.editing === openRef && $('sheet').classList.contains('open'); } } };
     setSaveStatus($('fStatus'), 'idle');
     $('delBtn').style.display = isNew ? 'none' : '';
     $('confirmBox').classList.remove('show');
@@ -1597,8 +1629,8 @@
   }
   function sendGuest(ctx, p, done) {
     var g = p.g, people = p.people;
-    g.id = ctx.id || '';
-    if (people && p.refs) people.forEach(function (x, i) { if (!x.pid && p.refs[i] && p.refs[i].pid) x.pid = p.refs[i].pid; });
+    g.id = ctx.id || ''; g._v = ctx.v; g._nonce = ctx.nonce;
+    if (people && p.refs) people.forEach(function (x, i) { if (!x.pid && p.refs[i] && p.refs[i].pid) x.pid = p.refs[i].pid; if (p.refs[i] && p.refs[i]._v !== undefined) x._v = p.refs[i]._v; });
     var isNew = !g.id;
     var local = JSON.parse(JSON.stringify(g)), prev = null, idx = -1, prevPeople = state.people.slice();
     NUM_KEYS.forEach(function (k) { local[k] = local[k] === '' ? '' : Number(local[k]); });
@@ -1617,9 +1649,9 @@
         if (i !== -1) state.guests[i] = res.guest; else state.guests.push(res.guest);
         if (res.people) {
           state.people = state.people.filter(function (x) { return x.guestId !== local.id && x.guestId !== res.guest.id; }).concat(res.people);
-          if (p.refs) res.people.forEach(function (rp, j) { if (p.refs[j]) p.refs[j].pid = rp.pid; });
+          if (p.refs) res.people.forEach(function (rp, j) { if (p.refs[j]) { p.refs[j].pid = rp.pid; p.refs[j]._v = rp._v; } });
         }
-        ctx.id = res.guest.id; ctx.tmp = null; ctx.saved = p.key;
+        ctx.id = res.guest.id; ctx.tmp = null; ctx.saved = p.key; ctx.v = res.guest._v;
         if (ctx.ref.isOpen()) {
           state.editing.id = ctx.id;
           $('delBtn').style.display = ''; $('idLine').textContent = 'Guest ID ' + ctx.id;
@@ -1632,7 +1664,7 @@
         if (isNew) ctx.tmp = null;
         state.people = prevPeople; ctx.saved = null;
         syncEnd(false); render();
-        if (ctx.ref.isOpen()) { $('formErr').classList.remove('note'); $('formErr').textContent = 'Couldn’t save: ' + err.message + ' Your changes are still here — edit anything to retry.'; }
+        if (ctx.ref.isOpen()) { $('formErr').classList.remove('note'); $('formErr').textContent = 'Couldn’t save: ' + err.message + (err.conflict ? '' : ' Your changes are still here — edit anything to retry.'); }
         else toast('Couldn’t save “' + g.household + '”: ' + err.message, 5000);
         done(false);
       });
@@ -1731,7 +1763,7 @@
         var msg = String(err && err.message || err);
         if (RETRYABLE.test(msg) && job.tries < 4) { setTimeout(pumpSaves, 1200 * job.tries); return; }
         saveQueue.shift();
-        job.fail(new Error(msg.replace(/^BUSY:\s*/, '')));
+        var fe = new Error(msg.replace(/^BUSY:\s*/, '')); fe.conflict = !!(err && err.conflict); job.fail(fe);
         pumpSaves();
       });
     r[job.name].apply(r, job.args);
@@ -1904,7 +1936,8 @@
     $('viewBudget').hidden = v !== 'budget';
     $('viewVenue').hidden = v !== 'venue';
     $('viewInvite').hidden = v !== 'invite';
-    $('addBtnTop').style.display = $('addBtn').style.display = v === 'venue' || v === 'invite' ? 'none' : '';
+    $('viewHistory').hidden = v !== 'history';
+    $('addBtnTop').style.display = $('addBtn').style.display = v === 'venue' || v === 'invite' || v === 'history' ? 'none' : '';
     document.querySelectorAll('.nav-item[data-view]').forEach(function (b) { b.classList.toggle('on', b.dataset.view === v); });
     updateAddLabels();
     try { localStorage.setItem(VIEW_KEY, v); } catch (e) {}
@@ -1912,6 +1945,7 @@
     if (v === 'venue' && !ven.loaded && window.google) loadVenue();
     if (v === 'venue') start3d();
     if (v === 'invite') startInvite();
+    if (v === 'history') loadHistory();
     if (!quiet) window.scrollTo(0, 0);
   }
   function openNav() { $('nav').classList.add('open'); $('navBack').classList.add('open'); $('nav').setAttribute('aria-hidden', 'false'); $('menuBtn').setAttribute('aria-expanded', 'true'); }
@@ -2163,6 +2197,58 @@
     var b = e.target.closest('button'); if (!b) return;
     this.querySelectorAll('button').forEach(function (x) { x.classList.toggle('on', x === b); });
     $('invStage').className = 'inv-stage ' + b.dataset.d;
+  });
+
+
+  /* ================= SAFE SAVING: offline banner ================= */
+  function netState() { $('netBanner').classList.toggle('on', navigator.onLine === false); }
+  window.addEventListener('online', netState); window.addEventListener('offline', netState); setTimeout(netState, 0);
+  function newNonce() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 9); }
+
+  /* ================= HISTORY ================= */
+  var HX_FIELDS = { amount: 'Amount', due: 'Due', paid: 'Paid', paidDate: 'Paid date', label: 'Payment', notes: 'Notes', method: 'Method', payer: 'Paid by',
+    booking: 'Vendor', name: 'Name', category: 'Category', event: 'For', stage: 'Status', cost: 'Cost', contact: 'Contact', phone: 'Phone', email: 'Email',
+    pricing: 'Pricing', rate: 'Per guest', included: 'Guests included', tax: 'Tax', evPricing: 'Pricing by event', item: 'Item', forWho: 'For', type: 'Type',
+    status: 'Status', actual: 'Cost', household: 'Household', side: 'Side', relationship: 'Group', country: 'Country', phoneEmail: 'Phone / email',
+    weddingAdults: 'Wedding adults', weddingKids: 'Wedding kids', receptionAdults: 'Reception adults', receptionKids: 'Reception kids',
+    weddingRsvp: 'Wedding RSVP', receptionRsvp: 'Reception RSVP', wedding: 'Wedding', reception: 'Reception', age: 'Adult / kid', dietary: 'Dietary' };
+  var HX_TABLE = { installments: 'payment', bookings: 'vendor', purchases: 'item', households: 'guest', people: 'person' };
+  var hx = { list: [], busy: false };
+  function hxVal(k, v) {
+    if (v === '' || v === undefined || v === null) return '—';
+    if (/amount|cost|actual|rate/.test(k) && isFinite(Number(v))) return money(Number(v));
+    if (k === 'evPricing') return 'updated';
+    return String(v).length > 60 ? String(v).slice(0, 57) + '…' : String(v);
+  }
+  function hxRender() {
+    var el = $('hxList');
+    if (!hx.list.length) { el.innerHTML = '<div class="hx-empty">No changes yet. Every save from now on shows up here, and can be undone.</div>'; return; }
+    var seen = {}, day = '', h = '';
+    hx.list.forEach(function (x) {
+      var d = new Date(x.at), dk = d.toDateString();
+      if (dk !== day) { day = dk; h += '<div class="hx-day">' + d.toLocaleDateString('en-CA', { weekday: 'short', month: 'short', day: 'numeric' }) + '</div>'; }
+      var kind = HX_TABLE[x.table] || 'entry', verb = x.action === 'add' ? 'added' : x.action === 'delete' ? 'removed' : 'changed';
+      var detail = '';
+      if (x.action === 'edit') detail = (x.fields || []).map(function (k) { return (HX_FIELDS[k] || k) + ': <s>' + esc(hxVal(k, x.before && x.before[k])) + '</s> → ' + esc(hxVal(k, x.after && x.after[k])); }).join(' · ');
+      var who = x.who || 'Someone', cls = /musi/i.test(who) ? 'musi' : /abb/i.test(who) ? 'abb' : '';
+      var first = !seen[x.group]; seen[x.group] = 1;
+      h += '<div class="hx"><div class="hx-av ' + cls + '">' + esc(who.charAt(0).toUpperCase()) + '</div><div class="hx-b"><div class="hx-t"><b>' + esc(who) + '</b> ' + verb + ' ' + kind + ' <b>' + esc(x.label || '') + '</b>' + (x.undo ? ' <span style="color:var(--muted)">(undo)</span>' : '') +
+        '</div><div class="hx-d">' + d.toLocaleTimeString('en-CA', { hour: 'numeric', minute: '2-digit' }) + (detail ? ' · ' + detail : '') + '</div></div>' +
+        (first ? '<button type="button" class="hx-u" data-hx="' + esc(x.id) + '">Undo</button>' : '') + '</div>';
+    });
+    el.innerHTML = h;
+  }
+  function loadHistory() {
+    $('hxList').innerHTML = hx.list.length ? $('hxList').innerHTML : '<div class="hx-empty">Loading…</div>';
+    google.script.run.withSuccessHandler(function (list) { hx.list = list || []; hxRender(); })
+      .withFailureHandler(function (e) { $('hxList').innerHTML = '<div class="hx-empty">Couldn’t load history: ' + esc(e.message) + '</div>'; }).getHistory();
+  }
+  $('hxRefresh').addEventListener('click', loadHistory);
+  $('hxList').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-hx]'); if (!b || hx.busy) return;
+    hx.busy = true; b.textContent = 'Undoing…';
+    google.script.run.withSuccessHandler(function () { hx.busy = false; toast('Undone'); loadHistory(); if (window.__remote) window.__remote(); })
+      .withFailureHandler(function (err) { hx.busy = false; b.textContent = 'Undo'; toast('Couldn’t undo: ' + err.message, 6000); }).undoChange(b.dataset.hx);
   });
 
   /* ================= BUDGET =================
@@ -2886,7 +2972,7 @@
     bud.editing = { table: t, row: row ? row.row : null, original: row ? String(row[F.key]) : '', display: display };
     var bRef = bud.editing; closeBudgetForm._ok = false;
     bAuto = makeAuto(budgetPayload, sendBudgetAuto, $('bStatus'), $('bErr'));
-    bAuto.ctx = { table: t, row: bRef.row, original: bRef.original,
+    bAuto.ctx = { table: t, row: bRef.row, original: bRef.original, v: row ? (row._v || '') : '', nonce: newNonce(),
       ref: { isOpen: function () { return bud.editing === bRef && $('bsheet').classList.contains('open'); } } };
     setSaveStatus($('bStatus'), 'idle');
     $('bTitle').textContent = isNew ? F.addTitle : (t === 'installments' ? (row.forName || 'Payment') : t === 'purchases' ? row.item : row.name);
@@ -2966,7 +3052,7 @@
   function budgetIndexTmp(t, tmp) { for (var i = 0; i < bud[t].length; i++) if (bud[t][i]._tmp === tmp) return i; return -1; }
   function sendBudgetAuto(ctx, p, done) {
     var t = ctx.table, F = BFORM[t], d = p.d;
-    d.row = ctx.row || null; d.original = ctx.original || '';
+    d.row = ctx.row || null; d.original = ctx.original || ''; d._v = ctx.v; d._nonce = ctx.nonce;
     var isNew = !d.row, local = budgetLocal(t, d), prev = null, i = -1;
     if (isNew) { local._tmp = 'tmp-' + Date.now(); bud[t].push(local); }
     else { i = budgetIndex(t, d.row); prev = i !== -1 ? bud[t][i] : null; if (i !== -1) bud[t][i] = local; }
@@ -2974,7 +3060,7 @@
     runSave('saveBudgetRow', [t, d], function (res) {
         var j = local._tmp ? budgetIndexTmp(t, local._tmp) : budgetIndex(t, local.row);
         if (j !== -1) bud[t][j] = res.item; else bud[t].push(res.item);
-        ctx.row = res.row; ctx.original = String(res.item[F.key]); ctx.saved = p.key;
+        ctx.row = res.row; ctx.original = String(res.item[F.key]); ctx.saved = p.key; ctx.v = res.item._v;
         if (ctx.ref.isOpen()) {
           bud.editing.row = res.row; bud.editing.original = String(res.item[F.key]);
           bud.editing.display = t === 'installments' ? ((res.item.label || 'Payment') + (res.item.forName ? ' · ' + res.item.forName : '')) : t === 'purchases' ? res.item.item : res.item.name;
@@ -2987,7 +3073,7 @@
         var j = local._tmp ? budgetIndexTmp(t, local._tmp) : budgetIndex(t, local.row);
         if (j !== -1) { if (isNew) bud[t].splice(j, 1); else if (prev) bud[t][j] = prev; }
         ctx.saved = null; syncEnd(false); renderBudget();
-        if (ctx.ref.isOpen()) $('bErr').textContent = 'Couldn’t save: ' + err.message + ' Your changes are still here — edit anything to retry.';
+        if (ctx.ref.isOpen()) $('bErr').textContent = 'Couldn’t save: ' + err.message + (err.conflict ? '' : ' Your changes are still here — edit anything to retry.');
         else toast('Couldn’t save: ' + err.message, 5000);
         done(false);
       });
@@ -3136,7 +3222,7 @@
   $('pplWrap').addEventListener('input', onPeopleInput);
   $('pplWrap').addEventListener('change', onPeopleInput);
   $('f_household').addEventListener('input', function () { save._warned = false; $('formErr').textContent = ''; });
-  function onAdd() { if (state.view === 'venue' || state.view === 'invite') return; if (state.view === 'budget') { if (bud.loaded) openBudgetForm(null); } else openForm(null); }
+  function onAdd() { if (state.view === 'venue' || state.view === 'invite' || state.view === 'history') return; if (state.view === 'budget') { if (bud.loaded) openBudgetForm(null); } else openForm(null); }
   $('addBtn').addEventListener('click', onAdd);
   $('addBtnTop').addEventListener('click', onAdd);
 
@@ -3235,7 +3321,7 @@
 
   var savedView = 'guests';
   try { savedView = localStorage.getItem(VIEW_KEY) || 'guests'; } catch (e) {}
-  setView(savedView === 'budget' || savedView === 'venue' || savedView === 'invite' ? savedView : 'guests', true);
+  setView(savedView === 'budget' || savedView === 'venue' || savedView === 'invite' || savedView === 'history' ? savedView : 'guests', true);
   /* ---------- Start (called once you're signed in) ---------- */
   window.__boot = function (email) {
     $('navWho').textContent = 'Signed in as ' + email;
@@ -3474,7 +3560,7 @@
   function budgetItem(table, row, d, paid, names) {
     var cfg = BUDGET[table], out = {};
     Object.keys(cfg.fields).forEach(function (k) { out[k] = d[k] === undefined || d[k] === null ? '' : d[k]; });
-    out.row = Number(row);
+    out.row = Number(row); out._v = d.updatedAt || '';
     if (table === 'bookings') {
       out.payer = normPayer(out.payer);
       out.paid = Math.round((paid || 0) * 100) / 100;
@@ -3500,7 +3586,7 @@
   function friendly(e) {
     var code = e && e.code || '', msg = String(e && e.message || e);
     if (/permission-denied|insufficient permissions/i.test(code + msg)) return new Error('This account doesn’t have access. Check the Firestore rules.');
-    if (/unavailable|network/i.test(code + msg)) return new Error('You seem to be offline. Try again in a moment.');
+    if (/unavailable|network|offline|failed-precondition|deadline/i.test(code + msg)) return new Error('You’re offline, so this wasn’t saved. Reconnect and it’ll save when you edit again.');
     return e instanceof Error ? e : new Error(msg);
   }
 
@@ -3614,14 +3700,18 @@
     opts = opts || {};
     var COMMIT_WAIT = opts.commitWait || 6000;
     var data = { households: {}, people: {}, bookings: {}, installments: {}, purchases: {}, vendors: {}, payments: {}, expenses: {}, options: null, budgetMeta: null, venue: null };
-    var seen = {};
+    var seen = {}, fromCache = {};
+    var vcache = {};
+    function remember(c, id, d) { if (d) vcache[c + '/' + id + '@' + (d.updatedAt || '')] = d; }
+    var TX_WAIT = opts.txWait || 15000;
     var ready = new Promise(function (resolve, reject) {
       var need = COLLECTIONS.length + 3;
       function arrived(k) { if (seen[k]) return false; seen[k] = true; if (--need === 0) resolve(); return true; }
       COLLECTIONS.forEach(function (c) {
         fs.onCollection(c, function (docs, meta) {
-          var m = {}; docs.forEach(function (d) { m[d.id] = d.data; });
+          var m = {}; docs.forEach(function (d) { m[d.id] = d.data; remember(c, d.id, d.data); });
           data[c] = m;
+          if (opts.onStatus) { fromCache[c] = !!(meta && meta.fromCache); opts.onStatus(Object.keys(fromCache).some(function (k) { return fromCache[k]; })); }
           if (!arrived(c) && !(meta && meta.hasPendingWrites) && onRemoteChange) onRemoteChange(c);
         }, function (e) { reject(friendly(e)); });
       });
@@ -3636,7 +3726,8 @@
       }, function (e) { reject(friendly(e)); });
     });
 
-    function stamp(o) { o.updatedBy = user || ''; o.updatedAt = new Date().toISOString(); return o; }
+    var lastStamp = '';
+    function stamp(o) { o.updatedBy = user || ''; o.updatedAt = lastStamp = new Date().toISOString(); return o; }
     /** Waits for Google to confirm the write; if offline it's kept on the device and syncs later. */
     function commit(b) {
       return Promise.race([
@@ -3645,12 +3736,12 @@
       ]);
     }
     function guestOut(id, d) {
-      var o = { id: id };
+      var o = { id: id, _v: d.updatedAt || '' };
       GUEST_FIELDS.forEach(function (k) { o[k] = d[k] === undefined || d[k] === null ? '' : d[k]; });
       return o;
     }
     function personOut(pid, d) {
-      var o = { pid: pid };
+      var o = { pid: pid, _v: d.updatedAt || '' };
       PERSON_FIELDS.forEach(function (k) { o[k] = d[k] === undefined || d[k] === null ? '' : d[k]; });
       if (o.age !== 'Kid') o.age = 'Adult';
       return o;
@@ -3721,6 +3812,94 @@
       };
     }
 
+
+    /* ---------------- safe saving ----------------
+     * Every save is a transaction confirmed by the server (nothing waits on a device to sync later).
+     * Only the fields you changed are written, and if someone else changed the same field since you
+     * opened it, the save stops and says who. New entries get their number from a shared counter.
+     * Each change is also written to `history` so it can be undone. */
+    function who(email) {
+      email = String(email || '').toLowerCase();
+      if (email && email === String(user || '').toLowerCase()) return 'You (on another device)';
+      if (/^musissha/.test(email)) return 'Musi';
+      if (/^abbilash\.u/.test(email)) return 'Abb';
+      if (/^abbilashandmusi/.test(email)) return 'The shared account';
+      return email ? email.split('@')[0] : 'Someone';
+    }
+    function ago(iso) {
+      var sec = (Date.now() - Date.parse(iso)) / 1000;
+      if (!(sec >= 0)) return 'recently';
+      if (sec < 90) return 'just now';
+      if (sec < 3600) return Math.round(sec / 60) + ' min ago';
+      if (sec < 86400) return Math.round(sec / 3600) + ' h ago';
+      return Math.round(sec / 86400) + ' days ago';
+    }
+    function same(a, b) { return String(a === undefined || a === null ? '' : a) === String(b === undefined || b === null ? '' : b); }
+    function conflict(server, labels) {
+      var what = labels && labels.length ? labels.join(', ') : 'this';
+      var mine = String(server.updatedBy || '').toLowerCase() === String(user || '').toLowerCase();
+      var e = new Error((mine ? what.charAt(0).toUpperCase() + what.slice(1) + (labels && labels.length > 1 ? ' were' : ' was') + ' changed since you opened it'
+                              : who(server.updatedBy) + ' changed ' + what + ' ' + ago(server.updatedAt)) +
+        '. Close and reopen it to see the latest, then make your change again.');
+      e.conflict = true; return e;
+    }
+    /** Which fields to write, given what the editor started from (v) and what's on the server now. */
+    function plan(col, id, server, clean, keys, v, labels) {
+      var hasV = v !== undefined && v !== null;
+      var base = hasV ? vcache[col + '/' + id + '@' + v] : server;
+      var stale = hasV && (server.updatedAt || '') !== String(v);
+      if (stale && !base) throw conflict(server, null);
+      var mine = keys.filter(function (k) { return !same(clean[k], base[k]); });
+      if (stale) {
+        var clash = mine.filter(function (k) { return !same(server[k], base[k]) && !same(server[k], clean[k]); });
+        if (clash.length) throw conflict(server, clash.map(function (k) { return labels[k] || k; }));
+      }
+      mine = mine.filter(function (k) { return !same(clean[k], server[k]); });
+      var patch = null;
+      if (mine.length) { patch = {}; mine.forEach(function (k) { patch[k] = clean[k]; }); }
+      return { patch: patch, fields: mine };
+    }
+    function pick(o, keys) { var r = {}; keys.forEach(function (k) { r[k] = o[k] === undefined ? '' : o[k]; }); return r; }
+    function txn(fn) {
+      var hist = [];
+      return Promise.race([
+        fs.tx(function (t) { hist.length = 0; return fn(t, hist); }).catch(function (e) { throw e && e.conflict ? e : friendly(e); }),
+        new Promise(function (r, j) { setTimeout(function () { j(friendly({ code: 'unavailable' })); }, TX_WAIT); })
+      ]).then(function (res) {
+        if (hist.length && fs.add) {
+          var group = Date.now().toString(36) + Math.random().toString(36).slice(2, 7), at = new Date().toISOString();
+          hist.forEach(function (h) { fs.add('history', Object.assign({ group: group, by: user || '', at: at }, h)).catch(function () {}); });
+        }
+        return res;
+      });
+    }
+    /** Next free number for a collection, from meta/counters (read inside the transaction). */
+    function allocator(t, counters) {
+      var next = {}, used = {};
+      return function (col, prefix, localIds) {
+        var start = Math.max(Number(counters[col]) || 0, maxNum(localIds, prefix), next[col] || 0);
+        function probe(n) {
+          var id = prefix ? prefix + pad3(n) : String(n);
+          if (used[col + id]) return probe(n + 1);
+          return t.get(col, id).then(function (d) { if (d) return probe(n + 1); used[col + id] = 1; next[col] = n; return { id: id, n: n }; });
+        }
+        return probe(start + 1);
+      };
+    }
+    function nonceHit(col, nonce) {
+      if (!nonce) return null;
+      var hit = null; Object.keys(data[col]).forEach(function (id) { if (data[col][id].nonce === nonce) hit = id; });
+      return hit;
+    }
+    function labelOf(table, d) {
+      if (table === 'bookings') return d.name || 'Vendor';
+      if (table === 'purchases') return d.item || 'Item';
+      if (table === 'installments') return (d.label || 'Payment') + (bookingNames()[Number(d.booking)] ? ' · ' + bookingNames()[Number(d.booking)] : '');
+      if (table === 'households') return d.household || 'Guest';
+      if (table === 'people') return d.name || 'Person';
+      return table;
+    }
+
     var api = {
       getData: function () {
         return ready.then(function () {
@@ -3738,33 +3917,60 @@
       /** people = null: leave people alone; [] = remove them all; [...] = the full list. */
       saveHousehold: function (guest, people) {
         return ready.then(function () {
-          var clean = validateGuest(guest);
-          var list = Array.isArray(people) ? people.map(validatePerson) : null;
-          if (clean.id) {
-            if (!data.households[clean.id]) throw new Error('That guest was removed by someone else. Refresh and try again.');
-          } else {
-            clean.id = 'G' + pad3(maxNum(Object.keys(data.households), 'G') + 1);
-          }
-          var id = clean.id, b = fs.batch(), saved = null;
-          if (list) {
-            var mine = {}, next = maxNum(Object.keys(data.people), 'P') + 1, keep = {};
-            Object.keys(data.people).forEach(function (pid) { if (data.people[pid].guestId === id) mine[pid] = true; });
-            list.forEach(function (p) {
-              p.guestId = id;
-              if (!(p.pid && mine[p.pid])) { while (data.people['P' + pad3(next)]) next++; p.pid = 'P' + pad3(next++); }
-              keep[p.pid] = true;
+          var clean = validateGuest(guest), gv = guest && guest._v;
+          var list = Array.isArray(people) ? people.map(function (p, i) { var c = validatePerson(p); c._v = people[i] && people[i]._v; return c; }) : null;
+          if (clean.id && !data.households[clean.id]) throw new Error('That guest was removed by someone else. Refresh and try again.');
+          var nonce = guest && guest._nonce, hitId = !clean.id && nonceHit('households', nonce);
+          if (hitId) clean.id = hitId;
+          return txn(function (t, hist) {
+            var isNew = !clean.id, id = clean.id, existing = {};
+            var mine = {}; Object.keys(data.people).forEach(function (pid) { if (data.people[pid].guestId === id) mine[pid] = true; });
+            var reads = [isNew ? Promise.resolve(null) : t.get('households', id), t.get('meta', 'counters')];
+            var known = list ? list.filter(function (p) { return p.pid && mine[p.pid]; }) : [];
+            var gone = list ? Object.keys(mine).filter(function (pid) { return !list.some(function (p) { return p.pid === pid; }); }) : [];
+            known.concat(gone.map(function (pid) { return { pid: pid }; })).forEach(function (p) { reads.push(t.get('people', p.pid).then(function (d) { existing[p.pid] = d; })); });
+            return Promise.all(reads).then(function (r) {
+              var server = r[0], counters = r[1] || {}, alloc = allocator(t, counters), steps = Promise.resolve();
+              if (!isNew && !server) throw new Error('That guest was removed by someone else. Refresh and try again.');
+              if (isNew) steps = steps.then(function () { return alloc('households', 'G', Object.keys(data.households)).then(function (x) { id = x.id; }); });
+              if (list) list.forEach(function (p) {
+                if (!(p.pid && mine[p.pid] && existing[p.pid])) steps = steps.then(function () { return alloc('people', 'P', Object.keys(data.people)).then(function (x) { p.pid = x.id; p._new = true; }); });
+              });
+              return steps.then(function () {
+                if (list && list.length) Object.assign(clean, deriveFromPeople(list));
+                var labels = GUEST_HEADERS, hp;
+                if (isNew) {
+                  var doc = {}; GUEST_FIELDS.forEach(function (k) { doc[k] = clean[k]; }); if (nonce) doc.nonce = nonce;
+                  t.set('households', id, stamp(doc)); hist.push({ table: 'households', id: id, action: 'add', label: labelOf('households', doc), after: doc });
+                } else {
+                  hp = plan('households', id, server, clean, GUEST_FIELDS, gv, labels);
+                  if (hp.patch) { t.merge('households', id, stamp(hp.patch)); hist.push({ table: 'households', id: id, action: 'edit', label: labelOf('households', Object.assign({}, server, hp.patch)), fields: hp.fields, before: pick(server, hp.fields), after: pick(hp.patch, hp.fields) }); }
+                }
+                var saved = null;
+                if (list) {
+                  saved = list.map(function (p) {
+                    p.guestId = id;
+                    var d = {}; PERSON_FIELDS.forEach(function (k) { d[k] = p[k]; });
+                    if (p._new) { t.set('people', p.pid, stamp(d)); hist.push({ table: 'people', id: p.pid, action: 'add', label: labelOf('people', d) + ' · ' + clean.household, after: d }); return personOut(p.pid, d); }
+                    var pp = plan('people', p.pid, existing[p.pid], d, PERSON_FIELDS, p._v, PERSON_HEADERS);
+                    if (pp.patch) { t.merge('people', p.pid, stamp(pp.patch)); hist.push({ table: 'people', id: p.pid, action: 'edit', label: labelOf('people', d) + ' · ' + clean.household, fields: pp.fields, before: pick(existing[p.pid], pp.fields), after: pick(pp.patch, pp.fields) }); }
+                    return personOut(p.pid, Object.assign({}, existing[p.pid], pp.patch || {}));
+                  });
+                  gone.forEach(function (pid) { if (existing[pid]) { t.delete('people', pid); hist.push({ table: 'people', id: pid, action: 'delete', label: labelOf('people', existing[pid]) + ' · ' + clean.household, before: existing[pid] }); } });
+                }
+                var c = {}; ['households', 'people'].forEach(function (k) { if (allocMax(k)) c[k] = allocMax(k); });
+                function allocMax(k) { var m = 0; if (k === 'households' && isNew) m = Number(id.slice(1)); if (k === 'people' && list) list.forEach(function (p) { if (p._new) m = Math.max(m, Number(p.pid.slice(1))); }); return m > (Number(counters[k]) || 0) ? m : 0; }
+                if (Object.keys(c).length) t.merge('meta', 'counters', c);
+                var rec = isNew ? Object.assign({}, clean, { updatedAt: lastStamp, updatedBy: user || '' }) : Object.assign({}, server, hp && hp.patch || {});
+                var out = guestOut(id, rec);
+                return { guest: out, people: saved, _rec: rec, _id: id };
+              });
             });
-            if (list.length) Object.assign(clean, deriveFromPeople(list));
-            list.forEach(function (p) {
-              var d = {}; PERSON_FIELDS.forEach(function (k) { d[k] = p[k]; });
-              b.set('people', p.pid, stamp(d));
-            });
-            Object.keys(mine).forEach(function (pid) { if (!keep[pid]) b.delete('people', pid); });
-            saved = list.map(function (p) { return personOut(p.pid, p); });
-          }
-          var doc = {}; GUEST_FIELDS.forEach(function (k) { doc[k] = clean[k]; });
-          b.set('households', id, stamp(doc));
-          return commit(b).then(function () { return { guest: guestOut(id, clean), people: saved }; });
+          }).then(function (res) {
+            remember('households', res._id, res._rec);
+            if (res.people) res.people.forEach(function (p) { var d = {}; PERSON_FIELDS.forEach(function (k) { d[k] = p[k]; }); d.updatedAt = p._v; remember('people', p.pid, Object.assign({}, data.people[p.pid] || {}, d)); });
+            return { guest: res.guest, people: res.people };
+          });
         });
       },
 
@@ -3772,10 +3978,15 @@
         return ready.then(function () {
           id = str(id, 20);
           if (!id) throw new Error('Missing guest id.');
-          var b = fs.batch();
-          b.delete('households', id);
-          Object.keys(data.people).forEach(function (pid) { if (data.people[pid].guestId === id) b.delete('people', pid); });
-          return commit(b).then(function () { return { id: id }; });
+          var pids = Object.keys(data.people).filter(function (pid) { return data.people[pid].guestId === id; });
+          return txn(function (t, hist) {
+            var before = {};
+            return Promise.all([t.get('households', id).then(function (d) { before[id] = d; })].concat(pids.map(function (pid) { return t.get('people', pid).then(function (d) { before[pid] = d; }); }))).then(function () {
+              if (before[id]) { t.delete('households', id); hist.push({ table: 'households', id: id, action: 'delete', label: labelOf('households', before[id]), before: before[id] }); }
+              pids.forEach(function (pid) { if (before[pid]) { t.delete('people', pid); hist.push({ table: 'people', id: pid, action: 'delete', label: labelOf('people', before[pid]), before: before[pid] }); } });
+              return { id: id };
+            });
+          });
         });
       },
 
@@ -3804,24 +4015,41 @@
         return ready.then(function () {
           var cfg = BUDGET[table];
           if (!cfg) throw new Error('Unknown table.');
-          var clean = validateBudget(cfg, d), row;
-          if (d.row) {
-            row = Number(d.row);
-            if (!data[table][String(row)]) throw new Error('That entry was removed by someone else. Refresh and try again.');
-          } else {
-            row = 0;
-            Object.keys(data[table]).forEach(function (id) { row = Math.max(row, Number(data[table][id].row || id) || 0); });
-            row++;
-          }
+          var clean = validateBudget(cfg, d), row = d.row ? Number(d.row) : 0, v = d._v, nonce = d._nonce;
+          if (row && !data[table][String(row)]) throw new Error('That entry was removed by someone else. Refresh and try again.');
+          if (!row) { var hit = nonceHit(table, nonce); if (hit) row = Number(hit); }
           if (table === 'installments' && !data.bookings[String(clean.booking)]) throw new Error('That booking was removed. Pick another one.');
           // Vendors no longer have a Paid by field; keep any earlier value so older payments still show who paid.
           if (table === 'bookings' && d.payer === undefined) clean.payer = normPayer((data.bookings[String(row)] || {}).payer);
-          clean.row = row;
-          var b = fs.batch();
-          b.set(table, String(row), stamp(Object.assign({}, clean)));
-          return commit(b).then(function () {
-            var item = table === 'bookings' ? budgetItem('bookings', row, clean, paidFor(row)) : table === 'purchases' ? budgetItem('purchases', row, clean) : withPayer(budgetItem('installments', row, clean, 0, bookingNames()));
-            return { row: row, item: item, inserted: false };
+          // Only fields the form actually sent count as edits.
+          var keys = Object.keys(clean).filter(function (k) { return k === 'payer' || Object.prototype.hasOwnProperty.call(d, k); });
+          return txn(function (t, hist) {
+            return Promise.all([row ? t.get(table, String(row)) : Promise.resolve(null), t.get('meta', 'counters'),
+                                table === 'installments' ? t.get('bookings', String(clean.booking)) : Promise.resolve(true)]).then(function (r) {
+              var server = r[0], counters = r[1] || {};
+              if (!r[2]) throw new Error('That booking was removed. Pick another one.');
+              if (row && !server) throw new Error('That entry was removed by someone else. Refresh and try again.');
+              if (!row) {
+                return allocator(t, counters)(table, '', Object.keys(data[table])).then(function (x) {
+                  row = x.n; clean.row = row; if (nonce) clean.nonce = nonce;
+                  var doc = stamp(Object.assign({}, clean));
+                  t.set(table, String(row), doc);
+                  var c = {}; c[table] = row; t.merge('meta', 'counters', c);
+                  hist.push({ table: table, id: String(row), action: 'add', label: labelOf(table, doc), after: doc });
+                  return { row: row, rec: doc };
+                });
+              }
+              var pl = plan(table, String(row), server, clean, keys, v, cfg.fields), rec = server;
+              if (pl.patch) {
+                var patch = stamp(pl.patch); t.merge(table, String(row), patch); rec = Object.assign({}, server, patch);
+                hist.push({ table: table, id: String(row), action: 'edit', label: labelOf(table, rec), fields: pl.fields, before: pick(server, pl.fields), after: pick(patch, pl.fields) });
+              }
+              return { row: row, rec: rec };
+            });
+          }).then(function (res) {
+            var r = res.rec; remember(table, String(res.row), r);
+            var item = table === 'bookings' ? budgetItem('bookings', res.row, r, paidFor(res.row)) : table === 'purchases' ? budgetItem('purchases', res.row, r) : withPayer(budgetItem('installments', res.row, r, 0, bookingNames()));
+            return { row: res.row, item: item, inserted: false };
           });
         });
       },
@@ -3829,10 +4057,58 @@
       deleteBudgetRow: function (table, row) {
         return ready.then(function () {
           if (!BUDGET[table]) throw new Error('Unknown table.');
-          var b = fs.batch();
-          b.delete(table, String(Number(row)));
-          if (table === 'bookings') Object.keys(data.installments).forEach(function (id) { if (Number(data.installments[id].booking) === Number(row)) b.delete('installments', id); });
-          return commit(b).then(function () { return { row: Number(row) }; });
+          row = Number(row);
+          var pays = table === 'bookings' ? Object.keys(data.installments).filter(function (id) { return Number(data.installments[id].booking) === row; }) : [];
+          return txn(function (t, hist) {
+            var before = {};
+            return Promise.all([t.get(table, String(row)).then(function (d) { before.self = d; })].concat(pays.map(function (id) { return t.get('installments', id).then(function (d) { before[id] = d; }); }))).then(function () {
+              if (before.self) { t.delete(table, String(row)); hist.push({ table: table, id: String(row), action: 'delete', label: labelOf(table, before.self), before: before.self }); }
+              pays.forEach(function (id) { if (before[id]) { t.delete('installments', id); hist.push({ table: 'installments', id: id, action: 'delete', label: labelOf('installments', before[id]), before: before[id] }); } });
+              return { row: row };
+            });
+          });
+        });
+      },
+
+      /** Recent changes, newest first. */
+      getHistory: function () {
+        return ready.then(function () {
+          if (!fs.recent) return [];
+          return fs.recent('history', 'at', 150).then(function (list) {
+            return list.map(function (h) { return Object.assign({}, h.data, { id: h.id, who: who(h.data.by).replace(' (on another device)', '') }); });
+          });
+        });
+      },
+
+      /** Undo one saved change (all the records it touched). */
+      undoChange: function (hid) {
+        return ready.then(function () {
+          return fs.recent('history', 'at', 150).then(function (list) {
+            var h = list.filter(function (x) { return x.id === hid; })[0]; if (!h) throw new Error('That change is too old to undo here.');
+            var group = list.filter(function (x) { return x.data.group === h.data.group; }).map(function (x) { return x.data; });
+            return txn(function (t, hist) {
+              var cur = {};
+              return Promise.all(group.map(function (g) { return t.get(g.table, g.id).then(function (d) { cur[g.table + '/' + g.id] = d; }); })).then(function () {
+                group.forEach(function (g) {
+                  var now = cur[g.table + '/' + g.id];
+                  if (g.action === 'add') {
+                    if (now) { t.delete(g.table, g.id); hist.push({ table: g.table, id: g.id, action: 'delete', label: g.label, before: now, undo: true }); }
+                  } else if (g.action === 'delete') {
+                    if (now) throw new Error('“' + g.label + '” is already back.');
+                    var back = Object.assign({}, g.before); stamp(back); t.set(g.table, g.id, back);
+                    hist.push({ table: g.table, id: g.id, action: 'add', label: g.label, after: back, undo: true });
+                  } else if (g.action === 'edit') {
+                    if (!now) throw new Error('“' + g.label + '” has since been removed.');
+                    var moved = (g.fields || []).filter(function (k) { return !same(now[k], g.after[k]); });
+                    if (moved.length) throw conflict(now, moved.map(function (k) { return (BUDGET[g.table] && BUDGET[g.table].fields[k]) || GUEST_HEADERS[k] || PERSON_HEADERS[k] || k; }));
+                    var patch = stamp(pick(g.before, g.fields)); t.merge(g.table, g.id, patch);
+                    hist.push({ table: g.table, id: g.id, action: 'edit', label: g.label, fields: g.fields, before: pick(now, g.fields), after: pick(patch, g.fields), undo: true });
+                  }
+                });
+                return { ok: true };
+              });
+            });
+          });
         });
       },
 
@@ -3850,9 +4126,8 @@
         var url = String((d && d.earthUrl) || '').trim();
         if (url && !/^https:\/\/earth\.google\.com\//i.test(url)) throw new Error('That doesn’t look like a Google Earth link. It should start with https://earth.google.com/');
         var rec = stamp(Object.assign({}, data.venue || {}, { earthUrl: url }));
-        var b = fs.batch(); b.set('meta', 'venue', rec);
-        data.venue = rec;
-        return commit(b).then(function () { return { earthUrl: url, updatedBy: rec.updatedBy, updatedAt: rec.updatedAt }; });
+        return txn(function (t) { t.merge('meta', 'venue', { earthUrl: url, updatedBy: rec.updatedBy, updatedAt: rec.updatedAt }); return Promise.resolve(); }).then(function () {
+          data.venue = rec; return { earthUrl: url, updatedBy: rec.updatedBy, updatedAt: rec.updatedAt }; });
       });
     };
     /** Budget planning settings (the guest count used for per-guest pricing). */
@@ -3867,8 +4142,7 @@
           ['Individual', 'Couple', 'Family'].forEach(function (k) { var v = p.gifts[k]; if (v !== '' && v !== undefined && v !== null && isFinite(Number(v))) plan.gifts[k] = Math.max(0, Math.min(100000, Number(v))); });
         }
         var rec = Object.assign({}, data.budgetMeta || {}, { planning: plan });
-        var b = fs.batch(); b.set('meta', 'budget', stamp(rec)); data.budgetMeta = rec;
-        return commit(b).then(function () { return plan; });
+        return txn(function (t) { t.merge('meta', 'budget', stamp({ planning: plan })); return Promise.resolve(); }).then(function () { data.budgetMeta = rec; return plan; });
       });
     };
     api._ready = ready;
@@ -3923,8 +4197,8 @@
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js';
   import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signInWithRedirect, getRedirectResult, signOut }
     from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js';
-  import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, doc, onSnapshot, writeBatch,
-           terminate, clearIndexedDbPersistence }
+  import { initializeFirestore, memoryLocalCache, collection, doc, onSnapshot, writeBatch,
+           terminate, clearIndexedDbPersistence, runTransaction, addDoc, getDocs, query, orderBy, limit }
     from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js';
 
   const firebaseConfig = {
@@ -3940,7 +4214,18 @@
 
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
-  const db = initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) });
+  // No on-device write queue: every save must reach the server (an old queue on a phone could replay days later).
+  const db = initializeFirestore(app, { localCache: memoryLocalCache() });
+  // Throw away any queue left by the previous version of the app, so stale edits can't sync over newer ones.
+  const oldQueueCleared = (async () => {
+    try { await clearIndexedDbPersistence(db); } catch (e) {}
+    try {
+      if (indexedDB.databases) {
+        const dbs = await indexedDB.databases();
+        await Promise.all(dbs.filter((d) => /firestore/i.test(d.name || '')).map((d) => new Promise((r) => { const q = indexedDB.deleteDatabase(d.name); q.onsuccess = q.onerror = q.onblocked = () => r(); })));
+      }
+    } catch (e) {}
+  })();
   const provider = new GoogleAuthProvider();
   provider.setCustomParameters({ prompt: 'select_account' });
 
@@ -3973,7 +4258,19 @@
     batch() {
       const b = writeBatch(db);
       return { set: (c, id, d) => b.set(doc(db, c, id), d), delete: (c, id) => b.delete(doc(db, c, id)), commit: () => b.commit() };
-    }
+    },
+    /** Server-confirmed transaction. merge() replaces just the fields given. */
+    tx(fn) {
+      if (!navigator.onLine) return Promise.reject({ code: 'unavailable' });
+      return runTransaction(db, (t) => fn({
+        get: (c, id) => t.get(doc(db, c, id)).then((s) => (s.exists() ? s.data() : null)),
+        set: (c, id, d) => { t.set(doc(db, c, id), d); },
+        merge: (c, id, d) => { t.set(doc(db, c, id), d, { mergeFields: Object.keys(d) }); },
+        delete: (c, id) => { t.delete(doc(db, c, id)); }
+      }));
+    },
+    add(c, d) { return addDoc(collection(db, c), d); },
+    recent(c, field, n) { return getDocs(query(collection(db, c), orderBy(field, 'desc'), limit(n))).then((s) => s.docs.map((d) => ({ id: d.id, data: d.data() }))); }
   };
 
   window.__signOut = async () => {
@@ -3983,12 +4280,13 @@
   };
 
   let started = false;
-  onAuthStateChanged(auth, (user) => {
+  onAuthStateChanged(auth, async (user) => {
     if (!user) { if (!started) setGate('signin'); else location.reload(); return; }
     const email = String(user.email || '').toLowerCase();
     if (!ALLOWED.includes(email)) { document.getElementById('gWho').textContent = email; setGate('denied'); return; }
     if (started) return;
     started = true;
+    await oldQueueCleared;
     window.__email = email;
     const api = AMData.makeBackend(fsAdapter, email, () => window.__remote && window.__remote());
     window.__api = api;
