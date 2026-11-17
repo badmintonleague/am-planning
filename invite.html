@@ -58,7 +58,7 @@
   .t-shade{position:absolute;inset:0;z-index:3;pointer-events:none;opacity:0;
     background:radial-gradient(ellipse 85% 70% at 50% 50%,rgba(60,32,14,.38),rgba(44,24,10,.72) 80%)}
   .t-txt{position:absolute;left:0;right:0;text-align:center;padding:0 24px;z-index:6;pointer-events:none}
-  .t-open{top:50%;transform:translateY(-52%);text-shadow:0 2px 28px rgba(10,14,30,.45)}
+  .t-open{top:50%;transform:translateY(-52%);text-shadow:0 2px 24px rgba(10,14,30,.55),0 1px 3px rgba(10,14,30,.35)}
   .t-open .nm{font-size:clamp(54px,13vw,112px);line-height:.9;letter-spacing:-.025em;color:#FFFDF8}
   .t-open .nm i{display:block;font-size:.4em;color:#F3CF85;font-style:italic;margin:.1em 0 .05em;letter-spacing:0}
   .t-open .inv{margin:22px 0 0;font-family:var(--serif);font-style:italic;font-size:clamp(17px,2.6vw,21px);color:#FFF5E4}
@@ -66,7 +66,7 @@
   .t-open > *{opacity:0;transform:translateY(18px);transition:opacity 1.4s var(--ease),transform 1.4s var(--ease)}
   .t-pin.ready .t-open > *{opacity:1;transform:none}
   .t-pin.ready .t-open .nm{transition-delay:.15s} .t-pin.ready .t-open .inv{transition-delay:.55s} .t-pin.ready .t-open .when{transition-delay:.8s}
-  .t-scrim{position:absolute;inset:0;z-index:3;pointer-events:none;background:radial-gradient(ellipse 75% 45% at 50% 50%,rgba(16,20,38,.42),rgba(16,20,38,.12) 70%,rgba(16,20,38,0))}
+  .t-scrim{position:absolute;inset:0;z-index:3;pointer-events:none;background:radial-gradient(ellipse 70% 30% at 50% 50%,rgba(16,20,38,.3),rgba(16,20,38,.06) 70%,rgba(16,20,38,0))}
   .fly{will-change:filter}
   .t-end{top:50%;transform:translateY(-50%);color:#F8EBD0}
   .t-end .pre{font-size:11.5px;letter-spacing:.34em;text-transform:uppercase;margin:0 0 10px;color:#E9CF94}
@@ -529,13 +529,16 @@ var DEMO = {
   /* ---------- opening: walk into Nallur Kandaswamy Kovil ----------
    * A frame sequence scrubbed by scroll (smoother than seeking a video on phones).
    * Frames load coarse-to-fine so the scroll works almost immediately. */
-  var FLY = { n: 77, w: 640, h: 1138, src: function (i) { return 'img/fly/f' + ('00' + (i + 1)).slice(-3) + '.webp'; }, img: [], cur: -1, drawn: -1 };
+  var FLY = { n: 77, w: 828, h: 1472, heroA: 1, hero: null, src: function (i) { return 'img/fly/f' + ('00' + (i + 1)).slice(-3) + '.webp'; }, img: [], cur: -1, drawn: -1 };
   function clamp(v) { return v < 0 ? 0 : v > 1 ? 1 : v; }
   (function () {
     var order = [], seen = {};
     [16, 8, 4, 2, 1].forEach(function (st) { for (var i = 0; i < FLY.n; i += st) if (!seen[i]) { seen[i] = 1; order.push(i); } });
     if (!seen[FLY.n - 1]) order.splice(1, 0, FLY.n - 1);
     var k = 0, live = 0;
+    var hero = new Image(); hero.decoding = 'async';
+    hero.onload = function () { FLY.hero = hero; $('tLoad').classList.add('done'); setTimeout(function () { $('tPin').classList.add('ready'); }, 250); FLY.drawn = -1; drawFly(); };
+    hero.src = 'img/hero.webp';
     function next() {
       if (k >= order.length) return;
       var i = order[k++], im = new Image(); live++;
@@ -561,7 +564,7 @@ var DEMO = {
   }
   function sizeCanvas(c, w, h) { var r = Math.min(window.devicePixelRatio || 1, 2); if (c.width !== Math.round(w * r)) { c.width = Math.round(w * r); c.height = Math.round(h * r); } return r; }
   function drawFly() {
-    var im = nearest(FLY.cur); if (!im) return;
+    var im = nearest(FLY.cur) || FLY.hero; if (!im) return;
     FLY.drawn = FLY.img[FLY.cur] ? FLY.cur : -2;
     var c = $('fly'), vw = c.clientWidth, vh = c.clientHeight, r = sizeCanvas(c, vw, vh), ctx = c.getContext('2d');
     var tall = vw / vh < .8;   // phones: fill the screen; wider screens: show it whole over a soft blurred copy
@@ -569,6 +572,7 @@ var DEMO = {
     var w = FLY.w * k, h = FLY.h * k;
     ctx.setTransform(r, 0, 0, r, 0, 0); ctx.clearRect(0, 0, vw, vh);
     ctx.drawImage(im, (vw - w) / 2, (vh - h) / 2, w, h);
+    if (FLY.hero && FLY.heroA > 0) { ctx.globalAlpha = FLY.heroA; ctx.drawImage(FLY.hero, (vw - w) / 2, (vh - h) / 2, w, h); ctx.globalAlpha = 1; }
     var b = $('flyBg'); b.style.display = tall ? 'none' : '';
     if (!tall) {
       var bx = b.getContext('2d'); b.width = 96; b.height = Math.round(96 * vh / vw);
@@ -582,14 +586,14 @@ var DEMO = {
     var r = sec.getBoundingClientRect(); if (r.bottom < 0) return;
     var p = clamp(-r.top / (sec.offsetHeight - vh));
     var f = Math.round(clamp(p / .84) * (FLY.n - 1));
-    if (f !== FLY.cur) { FLY.cur = f; drawFly(); }
+    var ha = 1 - clamp(p / .045);
+    if (f !== FLY.cur || ha !== FLY.heroA) { FLY.cur = f; FLY.heroA = ha; drawFly(); }
     $('tTop').style.opacity = 1 - clamp((p - .03) / .12);
     var o = clamp(p / .12), oe = o * o * (3 - 2 * o);
     $('tOpen').style.opacity = 1 - oe;
     $('tOpen').style.transform = 'translateY(calc(-52% - ' + (oe * 40).toFixed(1) + 'px))';
     $('tScrim').style.opacity = 1 - oe;
-    var sat = clamp(p / .16), se = sat * sat * (3 - 2 * sat);
-    $('fly').style.filter = 'saturate(' + (.18 + .82 * se).toFixed(3) + ') brightness(' + (.9 + .1 * se).toFixed(3) + ') contrast(' + (.94 + .06 * se).toFixed(3) + ')';
+    $('fly').style.filter = 'none';
     $('cue').style.opacity = 1 - clamp(p / .05);
     var e = clamp((p - .82) / .1);
     $('tShade').style.opacity = clamp((p - .72) / .16);
