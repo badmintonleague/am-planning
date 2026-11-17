@@ -50,7 +50,7 @@
   .rv.in{opacity:1;transform:none}
 
   /* ---------- opening: photo fly-through ---------- */
-  .temple{height:640vh;position:relative;background:#F6EEE3}
+  .temple{height:560vh;position:relative;background:#F6EEE3}
   .t-pin{position:sticky;top:0;height:100svh;overflow:hidden;background:#E9DCC8}
   .fly,.fly-bg{position:absolute;inset:0;width:100%;height:100%;display:block}
   .fly-bg{filter:blur(28px) brightness(.95) saturate(1.05);transform:scale(1.12)}
@@ -384,7 +384,7 @@ var DEMO = {
   /* ---------- opening: walk into Nallur Kandaswamy Kovil ----------
    * A frame sequence scrubbed by scroll (smoother than seeking a video on phones).
    * Frames load coarse-to-fine so the scroll works almost immediately. */
-  var FLY = { n: 169, w: 640, h: 1138, src: function (i) { return 'img/fly/f' + ('00' + (i + 1)).slice(-3) + '.webp'; }, img: [], cur: -1, drawn: -1 };
+  var FLY = { n: 111, w: 640, h: 1138, src: function (i) { return 'img/fly/f' + ('00' + (i + 1)).slice(-3) + '.webp'; }, img: [], cur: -1, drawn: -1 };
   function clamp(v) { return v < 0 ? 0 : v > 1 ? 1 : v; }
   (function () {
     var order = [], seen = {};
