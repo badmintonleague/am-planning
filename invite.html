@@ -36,35 +36,32 @@
   .rv{opacity:0;transform:translateY(28px);transition:opacity 1s var(--ease),transform 1s var(--ease);transition-delay:var(--d,0s)}
   .rv.in{opacity:1;transform:none}
 
-  /* ---------- temple fly-through ---------- */
-  .temple{height:560vh;position:relative;background:#1E0D07}
-  .t-pin{position:sticky;top:0;height:100svh;overflow:hidden;background:linear-gradient(#BFD6E2 0%,#E9E3D3 58%,#F6E3C4 78%)}
-  .t-sun{position:absolute;left:50%;top:44%;width:120vmax;height:120vmax;transform:translate(-50%,-50%);border-radius:50%;
-    background:radial-gradient(circle,rgba(255,236,190,.95) 0,rgba(255,226,170,.45) 9%,rgba(255,220,160,0) 30%);pointer-events:none}
-  .t-ground{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(#EDE0C4,#F4ECDC)}
-  .t-in{position:absolute;inset:0;background:radial-gradient(ellipse 70% 55% at 50% 62%,#6B2E14 0%,#3A170B 45%,#1E0D07 80%);pointer-events:none}
-  .t-world{position:absolute;inset:0}
-  .t-world .L,.t-in .L{position:absolute;display:block;overflow:visible}
-  .t-world .L svg,.t-in .L svg{display:block;width:100%;height:100%;overflow:visible}
-  .t-txt{position:absolute;left:0;right:0;text-align:center;padding:0 24px;z-index:5000;pointer-events:none;transition:opacity .6s ease}
+  /* ---------- opening: photo fly-through ---------- */
+  .temple{height:520vh;position:relative;background:#140904}
+  .t-pin{position:sticky;top:0;height:100svh;overflow:hidden;background:#140904}
+  .ph{position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform,opacity,filter;opacity:0;user-select:none;-webkit-user-drag:none;max-width:none}
+  .t-top{position:absolute;inset:0 0 auto 0;height:34svh;background:linear-gradient(rgba(255,255,255,.55),rgba(255,255,255,0));z-index:3;pointer-events:none;transition:opacity .4s}
+  .t-shade{position:absolute;inset:0;z-index:3;pointer-events:none;opacity:0;
+    background:radial-gradient(ellipse 80% 70% at 50% 60%,rgba(40,14,4,.25),rgba(20,8,3,.85) 75%),linear-gradient(rgba(20,8,3,.75),rgba(20,8,3,.15) 55%,rgba(20,8,3,.6))}
+  .t-txt{position:absolute;left:0;right:0;text-align:center;padding:0 24px;z-index:6;pointer-events:none}
   .t-open{top:max(7svh,28px)}
-  .t-open .eyebrow{color:#8A6A22}
-  .t-open h1{font-size:clamp(34px,7vw,64px);line-height:1.02;color:#3A2410}
-  .t-open h1 i{color:var(--gold)}
-  .t-open p{margin:10px 0 0;font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:#7C6A52}
-  .t-end{top:max(6svh,24px);color:#F8EBD0}
+  .t-open .eyebrow{color:#7A5A1C}
+  .t-open h1{font-size:clamp(34px,7vw,64px);line-height:1.02;color:#2E1C0C}
+  .t-open h1 i{color:#A27A26}
+  .t-open p{margin:10px 0 0;font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:#5E4C36}
+  .t-end{top:50%;transform:translateY(-50%);color:#F8EBD0}
   .t-end .pre{font-size:11.5px;letter-spacing:.34em;text-transform:uppercase;margin:0 0 10px;color:#E9CF94}
-  .t-end .names{font-size:clamp(52px,12vw,110px);line-height:.95;letter-spacing:-.03em;color:#FFF6E2;text-shadow:0 2px 30px rgba(255,170,60,.35)}
+  .t-end .names{font-size:clamp(56px,12vw,120px);line-height:.95;letter-spacing:-.03em;color:#FFF6E2;text-shadow:0 2px 30px rgba(0,0,0,.45)}
   .t-end .names i{display:inline-block;font-size:.5em;color:#E9C46A;font-style:italic;margin:0 .15em;letter-spacing:0;vertical-align:.25em}
   .t-end .date{font-size:12.5px;letter-spacing:.3em;text-transform:uppercase;margin:16px 0 0;color:#F1DDB0}
   .t-end .dear{font-family:var(--serif);font-style:italic;font-size:clamp(18px,3.2vw,23px);color:#F6E6C4;margin:14px 0 0}
-  .cue{position:absolute;bottom:22px;left:50%;transform:translateX(-50%);z-index:5001;display:flex;flex-direction:column;align-items:center;gap:8px;
-    font-size:10.5px;letter-spacing:.3em;text-transform:uppercase;color:#6E5A3E;text-decoration:none;transition:opacity .5s}
-  .cue span{width:1px;height:38px;background:linear-gradient(#8A6A22,transparent);animation:cue 2.2s ease-in-out infinite}
-  .petal{position:absolute;top:-30px;width:11px;height:15px;border-radius:12px 0 12px 0;z-index:4900;pointer-events:none;animation:fall linear infinite}
-  #petals{position:absolute;inset:0;opacity:0;transition:opacity 1.2s ease;pointer-events:none;z-index:4900}
-  .flame{animation:flick 1.6s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:50% 100%}
-  @keyframes flick{0%{transform:scale(1,1)}50%{transform:scale(.92,1.08)}100%{transform:scale(1.05,.95)}}
+  .cue{position:absolute;bottom:22px;left:50%;transform:translateX(-50%);z-index:7;display:flex;flex-direction:column;align-items:center;gap:8px;
+    font-size:10.5px;letter-spacing:.3em;text-transform:uppercase;color:#4A3A26;text-decoration:none;text-shadow:0 0 12px rgba(255,255,255,.8)}
+  .cue span{width:1px;height:38px;background:linear-gradient(#6E531C,transparent);animation:cue 2.2s ease-in-out infinite}
+  .petal{position:absolute;top:-30px;width:11px;height:15px;border-radius:12px 0 12px 0;pointer-events:none;animation:fall linear infinite}
+  #petals{position:absolute;inset:0;opacity:0;pointer-events:none;z-index:5}
+  .t-load{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#E9CF94;font-size:12px;letter-spacing:.3em;text-transform:uppercase;z-index:8;background:#140904;transition:opacity .6s}
+  .t-load.done{opacity:0;pointer-events:none}
 
   /* ring (used at the end of the temple scene) */
   .ring{width:96px;height:96px;margin:0 auto 14px;display:block}
@@ -217,10 +214,11 @@
 
 <section class="temple" id="top" aria-label="Opening">
   <div class="t-pin" id="tPin">
-    <div class="t-sun"></div>
-    <div class="t-ground" id="tGround"></div>
-    <div class="t-in" id="tIn"></div>
-    <div class="t-world" id="tWorld"></div>
+    <img class="ph" id="ph0" src="img/nallur-1.jpg" alt="Nallur Kandaswamy Kovil, Jaffna" decoding="async">
+    <img class="ph" id="ph1" src="img/nallur-2.jpg" alt="" decoding="async">
+    <img class="ph" id="ph2" src="img/nallur-3.jpg" alt="" decoding="async">
+    <div class="t-top" id="tTop"></div>
+    <div class="t-shade" id="tShade"></div>
     <div id="petals"></div>
     <div class="t-txt t-open" id="tOpen">
       <p class="eyebrow">With the blessings of</p>
@@ -235,6 +233,7 @@
       <p class="dear" id="dear"></p>
     </div>
     <a class="cue" id="cue" href="#count">Scroll to enter<span></span></a>
+    <div class="t-load" id="tLoad">Nallur</div>
   </div>
 </section>
 
@@ -367,177 +366,65 @@ var DEMO = {
     pin: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.4"/></svg>'
   };
 
-  /* ---------- opening: fly into Nallur Kandaswamy Kovil ----------
-   * Every piece sits at a real depth (metres). Scrolling moves the camera
-   * forward; each piece is redrawn at its perspective size. */
-  var T = { layers: [], H0: .84, EYE: 1.6, END: 80 };
-  (function buildTemple() {
-    var defs = '<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>' +
-      '<linearGradient id="gGold" x1="0" x2="1"><stop offset="0" stop-color="#9A6A22"/><stop offset=".3" stop-color="#D9AE52"/><stop offset=".55" stop-color="#F4D88E"/><stop offset=".8" stop-color="#C99A3C"/><stop offset="1" stop-color="#875A1C"/></linearGradient>' +
-      '<linearGradient id="gPale" x1="0" x2="1"><stop offset="0" stop-color="#D9BC7C"/><stop offset=".45" stop-color="#F4E3B8"/><stop offset="1" stop-color="#CFAE6A"/></linearGradient>' +
-      '<linearGradient id="gWall" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#3E1A0D"/><stop offset="1" stop-color="#22100A"/></linearGradient>' +
-      '<radialGradient id="gGlow"><stop offset="0" stop-color="#FFD98A" stop-opacity=".95"/><stop offset=".35" stop-color="#FFB24A" stop-opacity=".45"/><stop offset="1" stop-color="#FF9A2E" stop-opacity="0"/></radialGradient>' +
-      '<radialGradient id="gShrine" cy=".62"><stop offset="0" stop-color="#FFC266"/><stop offset=".35" stop-color="#B8561C"/><stop offset="1" stop-color="#2A0F06"/></radialGradient>' +
-      '<pattern id="pStripe" width=".9" height="10" patternUnits="userSpaceOnUse"><rect width=".9" height="10" fill="#F4EEE4"/><rect width=".45" height="10" fill="#B8352C"/></pattern>' +
-      '</defs></svg>';
-    document.body.insertAdjacentHTML('afterbegin', defs);
-    function f(n) { return Math.round(n * 100) / 100; }
-    function add(z, X, x0, x1, h, body, o) { o = o || {}; T.layers.push({ z: z, X: X, x0: x0, x1: x1, h: h, y: o.y || 0, ext: !!o.ext, int: !!o.int, body: body }); }
-
-    // palmyra palm, the tree of Jaffna
-    function palm(h, lean, seed) {
-      var b = '<path d="M-.26 0 Q' + f(lean * .35 - .2) + ' ' + f(-h / 2) + ' ' + f(lean - .13) + ' ' + f(-h) + ' L' + f(lean + .13) + ' ' + f(-h) +
-        ' Q' + f(lean * .35 + .2) + ' ' + f(-h / 2) + ' .26 0Z" fill="#5B4836"/>';
-      for (var r = 1; r < h - 1; r += .9) { var t = r / h, x = lean * t * t; b += '<path d="M' + f(x - .22) + ' ' + f(-r) + 'h.44" stroke="#43352A" stroke-width=".07"/>'; }
-      var cx = lean, cy = -h;
-      for (var i = 0; i < 5; i++) { var a = (50 + i * 12 + seed * 7) * Math.PI / 180, L = 1.4 + (i % 3) * .3, ex = cx + Math.cos(a) * L * (i % 2 ? 1 : -1) * .9, ey = cy + Math.sin(a) * L;
-        b += '<path d="M' + f(cx) + ' ' + f(cy) + ' L' + f(ex) + ' ' + f(ey) + '" stroke="#7D6648" stroke-width=".07" opacity=".7"/>'; }
-      for (var k = 0; k < 17; k++) {
-        var ang = (-175 + k * (170 / 16) + ((k * seed) % 5) * 2) * Math.PI / 180, pl = 1.1 + ((k + seed) % 3) * .25;
-        var px = cx + Math.cos(ang) * pl, py = cy + Math.sin(ang) * pl, R = 1.25 + ((k * 3 + seed) % 4) * .12, spread = .55;
-        var a1 = ang - spread, a2 = ang + spread, col = k % 2 ? '#3D5A35' : '#4D6C3E';
-        b += '<path d="M' + f(cx) + ' ' + f(cy) + ' L' + f(px) + ' ' + f(py) + '" stroke="#4B5E36" stroke-width=".08"/>';
-        b += '<path d="M' + f(px) + ' ' + f(py) + ' L' + f(px + Math.cos(a1) * R) + ' ' + f(py + Math.sin(a1) * R) + ' A' + R + ' ' + R + ' 0 0 1 ' + f(px + Math.cos(a2) * R) + ' ' + f(py + Math.sin(a2) * R) + 'Z" fill="' + col + '"/>';
-      }
-      return b;
-    }
-    function addPalm(z, X, h, lean, seed, ext) { add(z, X, -4 + Math.min(lean, 0), 4 + Math.max(lean, 0), h + 3.2, palm(h, lean, seed), { ext: ext }); }
-
-    // the golden five-tier gopuram, with an open doorway
-    function gopuram() {
-      var b = '<path fill-rule="evenodd" fill="url(#gPale)" d="M-8.5 0V-8.5H8.5V0ZM-1.9 0V-5.3Q-1.9 -6.6 0 -6.9Q1.9 -6.6 1.9 -5.3V0Z"/>';
-      b += '<path d="M-1.9 0V-5.3Q-1.9 -6.6 0 -6.9Q1.9 -6.6 1.9 -5.3V0" fill="none" stroke="#9C6B22" stroke-width=".3"/>';
-      [[-.5, .5], [-1.1, .25], [-7.7, .3], [-8.3, .3]].forEach(function (m) { b += '<rect x="-8.6" y="' + (m[0] - m[1] / 2) + '" width="17.2" height="' + m[1] + '" fill="#C9A35A"/>'; });
-      [-7.4, -5.6, -3.6, 3.6, 5.6, 7.4].forEach(function (x) { b += '<rect x="' + (x - .22) + '" y="-7.5" width=".44" height="6.4" fill="#E8CF94"/><rect x="' + (x - .5) + '" y="-5.4" width="1" height="1.9" rx=".5" fill="#B8893A" opacity=".55"/>'; });
-      for (var i = 0; i < 5; i++) {
-        var yb = -8.5 - i * 2.9, yt = yb - 2.9, wb = 8.2 - i * .8, wt = wb - .8;
-        b += '<path d="M' + -wb + ' ' + yb + 'L' + -wt + ' ' + yt + 'H' + wt + 'L' + wb + ' ' + yb + 'Z" fill="url(#gGold)"/>';
-        b += '<rect x="' + f(-wb - .3) + '" y="' + f(yb - .38) + '" width="' + f(2 * wb + .6) + '" height=".38" fill="#8E5F1E"/>';
-        var n = Math.max(3, Math.round(wb * 1.3)), sp = (2 * wt - 1.2) / (n - 1);
-        for (var k = 0; k < n; k++) {
-          var x = -wt + .6 + k * sp, mid = k === (n - 1) / 2;
-          b += '<rect x="' + f(x - .36) + '" y="' + f(yt + .55) + '" width=".72" height="1.75" rx=".36" fill="#7E4E15" opacity="' + (mid ? .85 : .45) + '"/>';
-          if (!mid) b += '<circle cx="' + f(x) + '" cy="' + f(yt + 1) + '" r=".16" fill="#F7DC94"/><path d="M' + f(x - .22) + ' ' + f(yt + 2.2) + 'Q' + f(x) + ' ' + f(yt + .9) + ' ' + f(x + .22) + ' ' + f(yt + 2.2) + 'Z" fill="#F2D07E"/>';
-        }
-        b += '<path d="M' + f(-wt - .1) + ' ' + f(yt + .2) + 'q.5 -.6 1 0M' + f(wt - .9) + ' ' + f(yt + .2) + 'q.5 -.6 1 0" stroke="#F4D88E" stroke-width=".18" fill="none"/>';
-      }
-      b += '<path d="M-4.6 -23V-24.3Q-4.6 -25.7 -3.3 -25.7H3.3Q4.6 -25.7 4.6 -24.3V-23Z" fill="url(#gGold)"/><rect x="-4.9" y="-23.3" width="9.8" height=".35" fill="#8E5F1E"/>';
-      b += '<circle cx="-4.6" cy="-24.4" r=".6" fill="#B07C26"/><circle cx="4.6" cy="-24.4" r=".6" fill="#B07C26"/><circle cx="-4.6" cy="-24.4" r=".3" fill="#F4D88E"/><circle cx="4.6" cy="-24.4" r=".3" fill="#F4D88E"/>';
-      for (var j = -3; j <= 3; j++) b += '<path d="M' + (j - .2) + ' -25.7h.4l-.05 -.2a.28 .28 0 1 0 -.3 0zM' + j + ' -26.6v.5" fill="#E2B655" stroke="#C99A3C" stroke-width=".06"/>';
-      return b;
-    }
-    function bellTower() {
-      var b = '<rect x="-1.6" y="-9" width="3.2" height="9" fill="url(#gPale)"/><rect x="-1.75" y="-9.3" width="3.5" height=".35" fill="#8E5F1E"/>';
-      b += '<path d="M-.6 -5.2V-7.4Q0 -8.2 .6 -7.4V-5.2Z" fill="#5A3412"/><path d="M-.3 -6.1q.3 -.9 .6 0z" fill="#E9C46A"/>';
-      b += '<path d="M-1.4 -9.3L-1.1 -11.2H1.1L1.4 -9.3Z" fill="url(#gGold)"/><path d="M-1.1 -11.2L-.8 -12.6H.8L1.1 -11.2Z" fill="url(#gGold)"/>';
-      b += '<path d="M-.8 -12.6Q-.8 -13.6 0 -13.9Q.8 -13.6 .8 -12.6Z" fill="#D9AE52"/><path d="M0 -13.9v-.6" stroke="#C99A3C" stroke-width=".1"/>';
-      return b;
-    }
-    function wall(x0, x1) {
-      return '<rect x="' + x0 + '" y="-4.6" width="' + (x1 - x0) + '" height="4.6" fill="url(#pStripe)"/><rect x="' + x0 + '" y="-4.9" width="' + (x1 - x0) + '" height=".5" fill="#F7F2E8"/>' +
-        '<rect x="' + x0 + '" y="-.4" width="' + (x1 - x0) + '" height=".4" fill="#E3DACB"/>';
-    }
-    // hall: a frame of golden pillars, a carved beam and marigold garlands
-    function flame(x, y, s) { return '<circle cx="' + f(x) + '" cy="' + f(y) + '" r="' + f(s * 1.6) + '" fill="url(#gGlow)"/><path class="flame" d="M' + f(x) + ' ' + f(y - s) + 'q' + f(s * .45) + ' ' + f(s * .6) + ' 0 ' + f(s) + 'q' + f(-s * .45) + ' ' + f(-s * .4) + ' 0 ' + f(-s) + 'z" fill="#FFE7A3"/>'; }
-    function frame() {
-      var b = '<path fill-rule="evenodd" fill="url(#gWall)" d="M-6.5 0V-8.6H6.5V0ZM-4.2 0V-6.2H4.2V0Z"/>';
-      [-1, 1].forEach(function (sd) {
-        var x = sd * 4.6;
-        b += '<rect x="' + (x - .42) + '" y="-6.2" width=".84" height="6.2" fill="url(#gGold)"/>';
-        [-.35, -2.1, -4.2, -5.6].forEach(function (y) { b += '<rect x="' + (x - .55) + '" y="' + (y - .14) + '" width="1.1" height=".28" fill="#8E5F1E"/>'; });
-        b += '<path d="M' + (x - .42) + ' -6.2l' + (-sd * .6 - .0) + ' 0 l' + (sd * .6) + ' .6z" fill="#C99A3C"/>';
-        b += '<rect x="' + (sd > 0 ? 5.3 : -6.1) + '" y="-4.6" width=".8" height="1.5" rx=".4" fill="#160803"/>' + flame(sd * 5.7, -3.3, .18);
-      });
-      b += '<rect x="-5.1" y="-7.05" width="10.2" height=".85" fill="url(#gGold)"/>';
-      for (var x = -4.8; x <= 4.8; x += .6) b += '<rect x="' + f(x) + '" y="-6.85" width=".28" height=".45" fill="#8E5F1E" opacity=".6"/>';
-      for (var i = 0; i <= 30; i++) { var t = i / 30, gx = -4.1 + t * 8.2, gy = -6.1 + Math.sin(t * Math.PI) * .75; b += '<circle cx="' + f(gx) + '" cy="' + f(gy) + '" r=".13" fill="' + (i % 2 ? '#F2B33D' : '#E8792B') + '"/>'; }
-      [-3.9, 3.9].forEach(function (x) { for (var j = 0; j < 7; j++) b += '<circle cx="' + x + '" cy="' + f(-6 + j * .24) + '" r=".09" fill="#FFF8EA"/>'; });
-      return b;
-    }
-    function lamp() {
-      return '<path d="M0 -2.6V-1.1M-.35 -1.1L0 -2.6L.35 -1.1" stroke="#8E6A2E" stroke-width=".04" fill="none"/>' +
-        '<path d="M-.4 -1.1h.8l-.12 .55q-.28 .25 -.56 0z" fill="url(#gGold)"/><path d="M-.5 -.5h1q-.1 .35 -.5 .4q-.4 -.05 -.5 -.4z" fill="url(#gGold)"/>' +
-        flame(-.32, -.58, .1) + flame(0, -.6, .11) + flame(.32, -.58, .1);
-    }
-    function sanctum() {
-      var b = '<rect x="-7" y="-8.6" width="14" height="8.6" fill="url(#gWall)"/>';
-      b += '<rect x="-1.7" y="-5.2" width="3.4" height="5.2" fill="url(#gShrine)"/>';
-      b += '<rect x="-2.2" y="-5.2" width=".5" height="5.2" fill="url(#gGold)"/><rect x="1.7" y="-5.2" width=".5" height="5.2" fill="url(#gGold)"/>';
-      b += '<rect x="-2.6" y="-6" width="5.2" height=".8" fill="url(#gGold)"/><path d="M-2 -6Q0 -7.4 2 -6Z" fill="#C99A3C"/><circle cx="0" cy="-6.5" r=".28" fill="#8E5F1E"/>';
-      for (var i = 0; i <= 24; i++) { var t = i / 24, gx = -1.6 + t * 3.2, gy = -5.1 + Math.sin(t * Math.PI) * .5; b += '<circle cx="' + f(gx) + '" cy="' + f(gy) + '" r=".1" fill="' + (i % 2 ? '#F2B33D' : '#E8792B') + '"/>'; }
-      // the Vel
-      b += '<circle cx="0" cy="-2.9" r="1.6" fill="url(#gGlow)"/>';
-      b += '<rect x="-.06" y="-3.3" width=".12" height="3.0" fill="url(#gGold)"/><path d="M0 -4.6Q.36 -3.9 0 -3.25Q-.36 -3.9 0 -4.6Z" fill="#F6DA8C" stroke="#B07C26" stroke-width=".04"/>';
-      b += '<rect x="-.18" y="-3.32" width=".36" height=".1" fill="#B07C26"/><circle cx="0" cy="-3.85" r=".05" fill="#B8352C"/><rect x="-.4" y="-.3" width=".8" height=".3" fill="#B07C26"/>';
-      // standing lamps either side
-      [-3.1, 3.1].forEach(function (x) {
-        b += '<path d="M' + (x - .45) + ' 0h.9l-.2 -.25h-.5zM' + (x - .05) + ' -.25h.1v-2.6h-.1z" fill="url(#gGold)"/><path d="M' + (x - .4) + ' -2.85h.8q-.1 .25 -.4 .3q-.3 -.05 -.4 -.3z" fill="url(#gGold)"/>' +
-          '<path d="M' + x + ' -3.4v.55" stroke="#C99A3C" stroke-width=".06"/><circle cx="' + x + '" cy="-3.5" r=".1" fill="#C99A3C"/>' + flame(x - .32, -2.95, .12) + flame(x, -3, .13) + flame(x + .32, -2.95, .12);
-      });
-      return b;
-    }
-
-    // ---- the scene ----
-    addPalm(150, -60, 17, 1.2, 1, true); addPalm(150, 55, 15, -.8, 2, true); addPalm(130, 40, 18, .6, 3, true);
-    addPalm(110, -35, 16, -1, 4, true); addPalm(95, 30, 15, 1.4, 5, true); addPalm(90, -24, 17, .5, 6, true);
-    add(64, 21, -2, 2, 14.6, bellTower(), { ext: true }); add(64, -21, -2, 2, 14.6, bellTower(), { ext: true });
-    add(62, 0, -80, -8.2, 5, wall(-80, -8.2), { ext: true }); add(62, 0, 8.2, 80, 5, wall(8.2, 80), { ext: true });
-    add(60, 0, -9, 9, 27, gopuram(), { ext: true });
-    addPalm(48, -17, 14, -1.2, 7, true); addPalm(42, 19, 16, 1, 8, true); addPalm(30, -13, 15, .8, 9, true);
-    addPalm(22, 14, 17, -1.4, 10, true); addPalm(12, -11, 16, 1.6, 11, true);
-    addPalm(72, -11.6, 17, -.6, 12, true); addPalm(70, 12.4, 15.5, .8, 13, true);
-    add(98, 0, -7, 7, 8.6, sanctum(), { int: true });
-    [76, 71, 66].forEach(function (z) { add(z, 0, -6.5, 6.5, 8.6, frame(), { int: true }); });
-    [73.5, 68.5].forEach(function (z) { add(z, 0, -.6, .6, 2.6, lamp(), { y: 4.4, int: true }); });
-
-    T.layers.forEach(function (l) {
-      var el = document.createElement('div'); el.className = 'L';
-      el.style.zIndex = Math.round(2000 - l.z * 10);
-      el.innerHTML = '<svg preserveAspectRatio="none">' + l.body + '</svg>';
-      $(l.int ? 'tIn' : 'tWorld').appendChild(el); l.el = el; l.svg = el.firstChild;
+  /* ---------- opening: fly into Nallur Kandaswamy Kovil (photos) ----------
+   * Each shot starts framed on `from` and pushes in toward `to` (image pixels).
+   * The next shot fades in while the previous one is still moving forward. */
+  var SHOTS = [
+    { el: 'ph0', w: 2100, h: 1500, from: [880, 760], to: [1385, 860], zoom: [1, 2.7], at: [0, .36] },
+    { el: 'ph1', w: 1200, h: 800, from: [600, 430], to: [597, 600], zoom: [1, 3.1], at: [.28, .68] },
+    { el: 'ph2', w: 536, h: 800, from: [268, 420], to: [308, 500], zoom: [1, 1.45], at: [.6, 1] }
+  ];
+  var FADE = .09;
+  function clamp(v) { return v < 0 ? 0 : v > 1 ? 1 : v; }
+  function ease(t) { return t * t * (3 - 2 * t); }
+  function easeIn(t) { return t * t; }
+  (function () {
+    var left = SHOTS.length;
+    SHOTS.forEach(function (sh) {
+      var img = $(sh.el);
+      function ok() { if (--left === 0) { $('tLoad').classList.add('done'); setTimeout(onScroll, 0); } }
+      if (img.complete && img.naturalWidth) ok(); else { img.addEventListener('load', ok); img.addEventListener('error', ok); }
     });
-    // marigold petals for the end
+    setTimeout(function () { $('tLoad').classList.add('done'); }, 6000);
     var pe = $('petals'), cols = ['#F2B33D', '#E8792B', '#F6D27A', '#FFF3DA', '#E35D2B'];
     for (var i = 0; i < 22; i++) {
       var p = document.createElement('span'); p.className = 'petal';
       p.style.left = (Math.random() * 100) + '%'; p.style.background = cols[i % cols.length];
       p.style.animationDuration = (8 + Math.random() * 8) + 's'; p.style.animationDelay = (-Math.random() * 14) + 's';
-      p.style.setProperty('--dx', (Math.random() * 160 - 80) + 'px'); p.style.opacity = .8;
+      p.style.setProperty('--dx', (Math.random() * 160 - 80) + 'px'); p.style.opacity = .85;
       pe.appendChild(p);
     }
   })();
-
-  function f2(n) { return Math.round(n * 1000) / 1000; }
-  function clamp(v) { return v < 0 ? 0 : v > 1 ? 1 : v; }
+  function placeShot(sh, t, vw, vh) {
+    var img = $(sh.el), k0 = Math.max(vw / sh.w, vh / sh.h);
+    if (img.dataset.k !== String(k0)) { img.style.width = (sh.w * k0) + 'px'; img.style.height = (sh.h * k0) + 'px'; img.dataset.k = k0; }
+    var e = easeIn(t), z = sh.zoom[0] + (sh.zoom[1] - sh.zoom[0]) * e;
+    var fx = sh.from[0] + (sh.to[0] - sh.from[0]) * ease(t), fy = sh.from[1] + (sh.to[1] - sh.from[1]) * ease(t);
+    var S = k0 * z, W = sh.w * S, H = sh.h * S;
+    var tx = vw / 2 - fx * S, ty = vh / 2 - fy * S;
+    tx = Math.min(0, Math.max(vw - W, tx)); ty = Math.min(0, Math.max(vh - H, ty));
+    img.style.transform = 'translate3d(' + tx.toFixed(1) + 'px,' + ty.toFixed(1) + 'px,0) scale(' + z.toFixed(4) + ')';
+    return img;
+  }
   function templeFrame() {
     var sec = $('top'), vh = window.innerHeight, vw = window.innerWidth;
-    var r = sec.getBoundingClientRect(), p = clamp(-r.top / (sec.offsetHeight - vh));
-    if (r.bottom < 0) return;
-    var q = clamp(p / .86), cz = T.END * (.5 - .5 * Math.cos(Math.PI * q));
-    var F = vh * 1.32, hz = vh * T.H0, cx = vw / 2;
-    var ext = clamp((59.6 - cz) / .6);
-    T.layers.forEach(function (l) {
-      var dz = l.z - cz, el = l.el;
-      if (dz < .3 || (l.ext && ext <= 0)) { el.style.display = 'none'; return; }
-      var sc = F / dz, L0 = cx + (l.X + l.x0) * sc, T0 = hz - (l.y + l.h - T.EYE) * sc, W = (l.x1 - l.x0) * sc, Hh = l.h * sc;
-      // only draw the part that is on screen, so close-up pieces stay sharp and light
-      var vl = Math.max(L0, -4), vt = Math.max(T0, -4), vr = Math.min(L0 + W, vw + 4), vb = Math.min(T0 + Hh, vh + 4);
-      if (vr <= vl || vb <= vt) { el.style.display = 'none'; return; }
-      el.style.display = '';
-      el.style.left = vl + 'px'; el.style.top = vt + 'px'; el.style.width = (vr - vl) + 'px'; el.style.height = (vb - vt) + 'px';
-      l.svg.setAttribute('viewBox', f2(l.x0 + (vl - L0) / sc) + ' ' + f2(-l.h + (vt - T0) / sc) + ' ' + f2((vr - vl) / sc) + ' ' + f2((vb - vt) / sc));
-      el.style.opacity = l.ext ? ext : 1;
+    var r = sec.getBoundingClientRect(); if (r.bottom < 0) return;
+    var p = clamp(-r.top / (sec.offsetHeight - vh));
+    SHOTS.forEach(function (sh, i) {
+      var t = clamp((p - sh.at[0]) / (sh.at[1] - sh.at[0])), img = placeShot(sh, t, vw, vh);
+      var next = SHOTS[i + 1];
+      var fin = i === 0 ? 1 : clamp((p - sh.at[0]) / FADE);
+      var fout = next ? 1 - clamp((p - next.at[0]) / FADE) : 1;
+      img.style.opacity = Math.min(fin, fout);
+      // a touch of motion blur as we push through
+      img.style.filter = next && p > next.at[0] - .03 ? 'blur(' + (clamp((p - next.at[0] + .03) / FADE) * 3).toFixed(1) + "px)"' : 'none';
+      img.style.zIndex = i;
     });
-    $('tGround').style.top = hz + 'px';
-    // from outside, the inside is only seen through the doorway
-    var tin = $('tIn');
-    if (ext > 0) {
-      var ds = F / (60 - cz), dl = cx - 1.9 * ds, dr = cx + 1.9 * ds, dt = hz - (6.9 - T.EYE) * ds, db = hz + T.EYE * ds;
-      tin.style.clipPath = 'inset(' + dt + 'px ' + (vw - dr) + 'px ' + (vh - db) + 'px ' + dl + 'px round ' + (1.9 * ds) + 'px ' + (1.9 * ds) + 'px 0 0)';
-    } else tin.style.clipPath = 'none';
+    $('tTop').style.opacity = 1 - clamp(p / .12);
     $('tOpen').style.opacity = 1 - clamp(p / .1);
-    $('cue').style.opacity = 1 - clamp(p / .06);
-    var e = clamp((p - .8) / .1);
+    $('cue').style.opacity = 1 - clamp(p / .05);
+    var e = clamp((p - .8) / .12);
+    $('tShade').style.opacity = clamp((p - .66) / .16);
     $('tEnd').style.opacity = e; $('tEnd').classList.toggle('on', e > .3);
     $('petals').style.opacity = e;
   }
