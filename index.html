@@ -269,6 +269,26 @@
 
   /* ---------- Budget ---------- */
   .view[hidden]{display:none!important}
+  #viewInvite [hidden]{display:none!important}
+  .inv-head{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;flex-wrap:wrap;margin:6px 0 18px}
+  .inv-head h2{font-family:var(--serif);font-weight:300;font-size:30px;margin:0}
+  .inv-ctl{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .inv-ctl select{border:1px solid var(--line);border-radius:999px;background:#fff;padding:9px 34px 9px 14px;font-size:14px;max-width:240px;
+    appearance:none;-webkit-appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);
+    background-position:calc(100% - 18px) 55%,calc(100% - 13px) 55%;background-size:5px 5px;background-repeat:no-repeat}
+  .inv-seg{display:inline-flex;background:var(--soft);border-radius:999px;padding:3px}
+  .inv-seg button{border:0;background:none;border-radius:999px;padding:7px 14px;font-size:13.5px;cursor:pointer;color:var(--ink2)}
+  .inv-seg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+  .inv-open{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 14px;font-size:13.5px;color:var(--ink);text-decoration:none}
+  .inv-open svg{width:15px;height:15px}
+  .inv-stage{display:flex;justify-content:center;padding:8px 0 30px}
+  .inv-frame{border:0;display:block;background:#F7F4EE}
+  .inv-stage.phone .inv-frame{width:390px;max-width:100%;height:min(780px,calc(100vh - 210px));border-radius:38px;box-shadow:0 0 0 10px #141414,0 24px 60px rgba(0,0,0,.18)}
+  .inv-stage.desktop .inv-frame{width:100%;height:calc(100vh - 200px);min-height:520px;border-radius:16px;border:1px solid var(--line)}
+  .inv-toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:#fff;border-radius:14px;padding:12px 18px;font-size:13.5px;
+    max-width:min(520px,92vw);z-index:60;box-shadow:0 10px 30px rgba(0,0,0,.2)}
+  @media (max-width:700px){ .inv-seg{display:none} .inv-stage.phone .inv-frame{width:100%;height:calc(100vh - 190px);border-radius:20px;box-shadow:none;border:1px solid var(--line)} }
+
   .kpis:has(.kyn){grid-template-columns:repeat(5,1fr)}
   .kpis:has(.kyn) .kpi{padding-left:10px;padding-right:6px}
   .kyn[data-yn="Invited"] b{color:#8A6A22} .kyn[data-yn="Not invited yet"] b{color:var(--muted)}
@@ -880,6 +900,21 @@
   <div class="skel" id="vSkel" style="height:300px;border-radius:18px"></div>
 </div>
 
+
+<!-- ================= INVITE VIEW ================= -->
+<div class="wrap view" id="viewInvite" hidden>
+  <div class="inv-head">
+    <h2>Invite</h2>
+    <div class="inv-ctl">
+      <select id="invWho" aria-label="Preview as"></select>
+      <div class="inv-seg" id="invDev"><button type="button" data-d="phone" class="on">Phone</button><button type="button" data-d="desktop">Desktop</button></div>
+      <a class="inv-open" id="invOpen" href="invite.html" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6"/><path d="M20 4l-9 9"/><path d="M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4"/></svg>Open</a>
+    </div>
+  </div>
+  <div class="inv-stage phone" id="invStage"><iframe class="inv-frame" id="invFrame" title="Invite preview"></iframe></div>
+  <div class="inv-toast" id="invToast" hidden></div>
+</div>
+
 <!-- ================= BUDGET VIEW ================= -->
 <div class="wrap layout view" id="viewBudget" hidden>
   <aside class="side">
@@ -947,6 +982,10 @@
   <button type="button" class="nav-item" data-view="venue">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.4"/></svg>
     <span><b>Venue</b><small id="navVenue"></small></span>
+  </button>
+  <button type="button" class="nav-item" data-view="invite">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5.5" width="18" height="13" rx="2.5"/><path d="M3.5 7l8.5 6 8.5-6"/></svg>
+    <span><b>Invite</b><small></small></span>
   </button>
   <div class="nav-item disabled" aria-disabled="true">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg>
@@ -1864,13 +1903,15 @@
     $('viewGuests').hidden = v !== 'guests';
     $('viewBudget').hidden = v !== 'budget';
     $('viewVenue').hidden = v !== 'venue';
-    $('addBtnTop').style.display = $('addBtn').style.display = v === 'venue' ? 'none' : '';
+    $('viewInvite').hidden = v !== 'invite';
+    $('addBtnTop').style.display = $('addBtn').style.display = v === 'venue' || v === 'invite' ? 'none' : '';
     document.querySelectorAll('.nav-item[data-view]').forEach(function (b) { b.classList.toggle('on', b.dataset.view === v); });
     updateAddLabels();
     try { localStorage.setItem(VIEW_KEY, v); } catch (e) {}
     if (v === 'budget' && !bud.loaded && state.loadedAt) loadBudget(false);
     if (v === 'venue' && !ven.loaded && window.google) loadVenue();
     if (v === 'venue') start3d();
+    if (v === 'invite') startInvite();
     if (!quiet) window.scrollTo(0, 0);
   }
   function openNav() { $('nav').classList.add('open'); $('navBack').classList.add('open'); $('nav').setAttribute('aria-hidden', 'false'); $('menuBtn').setAttribute('aria-expanded', 'true'); }
@@ -2059,6 +2100,70 @@
   $('vUrl').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); saveVenue(); } });
   $('vChange').addEventListener('click', function () { ven.editing = true; $('vUrl').value = ven.url; showVenueErr(''); renderVenue(); $('vUrl').focus(); });
   $('vCancel').addEventListener('click', function () { ven.editing = false; showVenueErr(''); renderVenue(); });
+
+
+  /* ================= INVITE ================= */
+  var inv = { started: false, ready: false, who: '' };
+  function invHouseholds() {
+    return state.guests.filter(function (g) { return !g._pending; })
+      .map(function (g) { return { g: g, ppl: peopleOf(g.id) }; })
+      .filter(function (x) { return x.ppl.some(function (p) { return p.wedding || p.reception; }) || countOf(x.g, 'wedding') || countOf(x.g, 'reception'); })
+      .sort(function (a, b) { return a.g.household.localeCompare(b.g.household); });
+  }
+  function invFill() {
+    var sel = $('invWho'), list = invHouseholds(), keep = inv.who;
+    sel.innerHTML = '<option value="">Sample family</option>' + list.map(function (x) {
+      return '<option value="' + esc(x.g.id) + '">' + esc(x.g.household) + '</option>'; }).join('');
+    sel.value = list.some(function (x) { return x.g.id === keep; }) ? keep : '';
+    inv.who = sel.value;
+  }
+  function invGreeting(name, ppl) {
+    var first = ppl.map(function (p) { return String(p.name).trim().split(/\s+/)[0]; }).filter(Boolean);
+    if (first.length && first.length <= 3) return 'Dear ' + (first.length < 3 ? first.join(' & ') : first[0] + ', ' + first[1] + ' & ' + first[2]);
+    return 'Dear ' + name;
+  }
+  function invPayload() {
+    if (!inv.who) return null;
+    var g = state.guests.filter(function (x) { return x.id === inv.who; })[0]; if (!g) return null;
+    var ppl = peopleOf(g.id).filter(function (p) { return p.wedding || p.reception; });
+    return {
+      household: g.household, greeting: invGreeting(g.household, ppl),
+      people: ppl.map(function (p) { return { pid: p.pid, name: p.name, age: p.age, wedding: p.wedding || '', reception: p.reception || '' }; }),
+      seats: ppl.length ? null : { wedding: countOf(g, 'wedding'), reception: countOf(g, 'reception') }
+    };
+  }
+  function invSend() {
+    var f = $('invFrame'); if (!inv.ready || !f.contentWindow) return;
+    var p = invPayload();
+    if (p) f.contentWindow.postMessage({ type: 'am-invite', invite: p }, location.origin);
+  }
+  function startInvite() {
+    invFill();
+    if (!inv.started) { inv.started = true; inv.ready = false; $('invFrame').src = 'invite.html?preview=1'; }
+    else invSend();
+  }
+  window.addEventListener('message', function (e) {
+    if (e.origin !== location.origin || !e.data) return;
+    if (e.data.type === 'am-invite-ready') { inv.ready = true; invSend(); }
+    if (e.data.type === 'am-rsvp') {
+      var r = e.data.rsvp, bits = Object.keys(r.answers).map(function (k) {
+        var a = r.answers[k], n = a.seats != null ? a.seats : Object.keys(a).filter(function (x) { return a[x] === 'yes'; }).length;
+        return (k === 'wedding' ? 'Wedding' : 'Reception') + ' ' + n;
+      });
+      var t = $('invToast'); t.textContent = 'Preview RSVP from ' + r.household + ': ' + bits.join(' · ') + '. Not saved.'; t.hidden = false;
+      clearTimeout(inv.tt); inv.tt = setTimeout(function () { t.hidden = true; }, 4200);
+    }
+  });
+  $('invWho').addEventListener('change', function () {
+    inv.who = this.value;
+    if (!inv.who) { inv.ready = false; $('invFrame').src = 'invite.html?preview=1&r=' + Date.now(); } else invSend();
+  });
+  $('invWho').addEventListener('focus', invFill);
+  $('invDev').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    this.querySelectorAll('button').forEach(function (x) { x.classList.toggle('on', x === b); });
+    $('invStage').className = 'inv-stage ' + b.dataset.d;
+  });
 
   /* ================= BUDGET =================
    * Bookings = anything you're spending on (vendors, venues, outfits…), grouped by category.
@@ -3031,7 +3136,7 @@
   $('pplWrap').addEventListener('input', onPeopleInput);
   $('pplWrap').addEventListener('change', onPeopleInput);
   $('f_household').addEventListener('input', function () { save._warned = false; $('formErr').textContent = ''; });
-  function onAdd() { if (state.view === 'venue') return; if (state.view === 'budget') { if (bud.loaded) openBudgetForm(null); } else openForm(null); }
+  function onAdd() { if (state.view === 'venue' || state.view === 'invite') return; if (state.view === 'budget') { if (bud.loaded) openBudgetForm(null); } else openForm(null); }
   $('addBtn').addEventListener('click', onAdd);
   $('addBtnTop').addEventListener('click', onAdd);
 
@@ -3130,7 +3235,7 @@
 
   var savedView = 'guests';
   try { savedView = localStorage.getItem(VIEW_KEY) || 'guests'; } catch (e) {}
-  setView(savedView === 'budget' || savedView === 'venue' ? savedView : 'guests', true);
+  setView(savedView === 'budget' || savedView === 'venue' || savedView === 'invite' ? savedView : 'guests', true);
   /* ---------- Start (called once you're signed in) ---------- */
   window.__boot = function (email) {
     $('navWho').textContent = 'Signed in as ' + email;
