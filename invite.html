@@ -50,19 +50,24 @@
   .rv.in{opacity:1;transform:none}
 
   /* ---------- opening: photo fly-through ---------- */
-  .temple{height:560vh;position:relative;background:#F6EEE3}
+  .temple{height:500vh;position:relative;background:#F6EEE3}
   .t-pin{position:sticky;top:0;height:100svh;overflow:hidden;background:#E9DCC8}
   .fly,.fly-bg{position:absolute;inset:0;width:100%;height:100%;display:block}
   .fly-bg{filter:blur(28px) brightness(.95) saturate(1.05);transform:scale(1.12)}
-  .t-top{position:absolute;inset:0 0 auto 0;height:36svh;background:linear-gradient(rgba(252,246,236,.7),rgba(252,246,236,0));z-index:3;pointer-events:none}
+  .t-top{display:none;position:absolute;inset:0 0 auto 0;height:36svh;background:linear-gradient(rgba(252,246,236,.7),rgba(252,246,236,0));z-index:3;pointer-events:none}
   .t-shade{position:absolute;inset:0;z-index:3;pointer-events:none;opacity:0;
     background:radial-gradient(ellipse 85% 70% at 50% 50%,rgba(60,32,14,.38),rgba(44,24,10,.72) 80%)}
   .t-txt{position:absolute;left:0;right:0;text-align:center;padding:0 24px;z-index:6;pointer-events:none}
-  .t-open{top:max(6svh,26px);text-shadow:0 1px 20px rgba(255,248,236,.7)}
-  .t-open .nm{font-size:clamp(50px,12vw,104px);line-height:.92;letter-spacing:-.025em;color:#2C2620}
-  .t-open .nm i{display:block;font-size:.42em;color:#B8894A;font-style:italic;margin:.08em 0 .04em;letter-spacing:0}
-  .t-open .inv{margin:18px 0 0;font-family:var(--serif);font-style:italic;font-size:clamp(17px,2.6vw,21px);color:#4A3F34}
-  .t-open .when{margin:10px 0 0;font-size:11.5px;letter-spacing:.32em;text-transform:uppercase;color:#6B5F52}
+  .t-open{top:50%;transform:translateY(-52%);text-shadow:0 2px 28px rgba(10,14,30,.45)}
+  .t-open .nm{font-size:clamp(54px,13vw,112px);line-height:.9;letter-spacing:-.025em;color:#FFFDF8}
+  .t-open .nm i{display:block;font-size:.4em;color:#F3CF85;font-style:italic;margin:.1em 0 .05em;letter-spacing:0}
+  .t-open .inv{margin:22px 0 0;font-family:var(--serif);font-style:italic;font-size:clamp(17px,2.6vw,21px);color:#FFF5E4}
+  .t-open .when{margin:12px 0 0;font-size:11.5px;letter-spacing:.34em;text-transform:uppercase;color:#FFF1DA}
+  .t-open > *{opacity:0;transform:translateY(18px);transition:opacity 1.4s var(--ease),transform 1.4s var(--ease)}
+  .t-pin.ready .t-open > *{opacity:1;transform:none}
+  .t-pin.ready .t-open .nm{transition-delay:.15s} .t-pin.ready .t-open .inv{transition-delay:.55s} .t-pin.ready .t-open .when{transition-delay:.8s}
+  .t-scrim{position:absolute;inset:0;z-index:3;pointer-events:none;background:radial-gradient(ellipse 75% 45% at 50% 50%,rgba(16,20,38,.42),rgba(16,20,38,.12) 70%,rgba(16,20,38,0))}
+  .fly{will-change:filter}
   .t-end{top:50%;transform:translateY(-50%);color:#F8EBD0}
   .t-end .pre{font-size:11.5px;letter-spacing:.34em;text-transform:uppercase;margin:0 0 10px;color:#E9CF94}
   .t-end .names{font-size:clamp(56px,12vw,120px);line-height:.95;letter-spacing:-.03em;color:#FFF6E2;text-shadow:0 2px 30px rgba(0,0,0,.45)}
@@ -71,8 +76,8 @@
   .t-end .dear{text-wrap:balance;font-family:var(--serif);font-weight:300;font-size:clamp(32px,7vw,60px);line-height:1.08;color:#FFF6E2;margin:0 0 16px;text-shadow:0 2px 26px rgba(0,0,0,.5)}
   .t-end .pre{text-transform:none!important;letter-spacing:0!important;font-family:var(--serif);font-style:italic;font-size:clamp(17px,2.6vw,21px)!important;color:#F6E6C4!important}
   .cue{position:absolute;bottom:22px;left:50%;transform:translateX(-50%);z-index:7;display:flex;flex-direction:column;align-items:center;gap:8px;
-    font-size:10.5px;letter-spacing:.3em;text-transform:uppercase;color:#4A3F34;text-decoration:none;text-shadow:0 1px 10px rgba(255,248,236,.8)}
-  .cue span{width:1px;height:38px;background:linear-gradient(#B8894A,transparent);animation:cue 2.2s ease-in-out infinite}
+    font-size:10.5px;letter-spacing:.3em;text-transform:uppercase;color:#FFF5E4;text-decoration:none;text-shadow:0 1px 10px rgba(10,14,30,.5)}
+  .cue span{width:1px;height:38px;background:linear-gradient(#F3CF85,transparent);animation:cue 2.2s ease-in-out infinite}
   .petal{position:absolute;top:-30px;width:11px;height:15px;border-radius:12px 0 12px 0;pointer-events:none;animation:fall linear infinite}
   #petals{position:absolute;inset:0;opacity:0;pointer-events:none;z-index:5}
   .t-load{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#E9CF94;font-size:12px;letter-spacing:.3em;text-transform:uppercase;z-index:8;background:#140904;transition:opacity .6s}
@@ -285,6 +290,7 @@
     <canvas class="fly-bg" id="flyBg" aria-hidden="true"></canvas>
     <canvas class="fly" id="fly" role="img" aria-label="Walking into Nallur Kandaswamy Kovil, Jaffna"></canvas>
     <div class="t-top" id="tTop"></div>
+    <div class="t-scrim" id="tScrim"></div>
     <div class="t-shade" id="tShade"></div>
     <div id="petals"></div>
     <div class="story" id="st1"><h3>Some journeys <i>feel like prayer</i></h3></div>
@@ -437,7 +443,7 @@ var DEMO = {
   /* ---------- opening: walk into Nallur Kandaswamy Kovil ----------
    * A frame sequence scrubbed by scroll (smoother than seeking a video on phones).
    * Frames load coarse-to-fine so the scroll works almost immediately. */
-  var FLY = { n: 111, w: 640, h: 1138, src: function (i) { return 'img/fly/f' + ('00' + (i + 1)).slice(-3) + '.webp'; }, img: [], cur: -1, drawn: -1 };
+  var FLY = { n: 77, w: 640, h: 1138, src: function (i) { return 'img/fly/f' + ('00' + (i + 1)).slice(-3) + '.webp'; }, img: [], cur: -1, drawn: -1 };
   function clamp(v) { return v < 0 ? 0 : v > 1 ? 1 : v; }
   (function () {
     var order = [], seen = {};
@@ -448,12 +454,12 @@ var DEMO = {
       if (k >= order.length) return;
       var i = order[k++], im = new Image(); live++;
       im.decoding = 'async';
-      im.onload = function () { FLY.img[i] = im; live--; if (i === 0) { $('tLoad').classList.add('done'); } if (FLY.drawn !== FLY.cur) drawFly(); next(); };
+      im.onload = function () { FLY.img[i] = im; live--; if (i === 0) { $('tLoad').classList.add('done'); setTimeout(function () { $('tPin').classList.add('ready'); }, 250); } if (FLY.drawn !== FLY.cur) drawFly(); next(); };
       im.onerror = function () { live--; next(); };
       im.src = FLY.src(i);
     }
     for (var c = 0; c < 6; c++) next();
-    setTimeout(function () { $('tLoad').classList.add('done'); }, 6000);
+    setTimeout(function () { $('tLoad').classList.add('done'); $('tPin').classList.add('ready'); }, 6000);
     var pe = $('petals'), cols = ['#F2B33D', '#E8896B', '#F6D7A0', '#FFF6E6', '#E86A4A'];
     for (var i = 0; i < 22; i++) {
       var p = document.createElement('span'); p.className = 'petal';
@@ -492,7 +498,12 @@ var DEMO = {
     var f = Math.round(clamp(p / .84) * (FLY.n - 1));
     if (f !== FLY.cur) { FLY.cur = f; drawFly(); }
     $('tTop').style.opacity = 1 - clamp((p - .03) / .12);
-    $('tOpen').style.opacity = 1 - clamp((p - .03) / .1);
+    var o = clamp(p / .12), oe = o * o * (3 - 2 * o);
+    $('tOpen').style.opacity = 1 - oe;
+    $('tOpen').style.transform = 'translateY(calc(-52% - ' + (oe * 40).toFixed(1) + 'px))';
+    $('tScrim').style.opacity = 1 - oe;
+    var sat = clamp(p / .16), se = sat * sat * (3 - 2 * sat);
+    $('fly').style.filter = 'saturate(' + (.18 + .82 * se).toFixed(3) + ') brightness(' + (.9 + .1 * se).toFixed(3) + ') contrast(' + (.94 + .06 * se).toFixed(3) + ')';
     $('cue').style.opacity = 1 - clamp(p / .05);
     var e = clamp((p - .82) / .1);
     $('tShade').style.opacity = clamp((p - .72) / .16);
