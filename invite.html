@@ -417,7 +417,7 @@ var DEMO = {
       var fout = next ? 1 - clamp((p - next.at[0]) / FADE) : 1;
       img.style.opacity = Math.min(fin, fout);
       // a touch of motion blur as we push through
-      img.style.filter = next && p > next.at[0] - .03 ? 'blur(' + (clamp((p - next.at[0] + .03) / FADE) * 3).toFixed(1) + "px)"' : 'none';
+      img.style.filter = next && p > next.at[0] - .03 ? 'blur(' + (clamp((p - next.at[0] + .03) / FADE) * 3).toFixed(1) + 'px)' : 'none';
       img.style.zIndex = i;
     });
     $('tTop').style.opacity = 1 - clamp(p / .12);
