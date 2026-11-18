@@ -2690,7 +2690,9 @@
     if (!$('mgTop')) return;
     var H = mgHouseholds(), Nw = H.Nw, Nr = H.Nr;
     var projected = projectedTotal(), gifts = 0, attendees = 0;
-    H.list.forEach(function (h) { gifts += giftFor(h.type) * h.f; attendees += Math.max(h.ew, h.er); });
+    // unique guests = everyone at the ceremony + people coming only to the reception
+    var fr = H.Lr ? Nr / H.Lr : 0;
+    attendees = Nw; H.list.forEach(function (h) { gifts += giftFor(h.type) * h.f; attendees += Math.max(0, h.r - h.w) * fr; });
     var net = projected - gifts, cover = projected ? gifts / projected : 0;
     var sgn = function (v) { return (v >= 0 ? '+' : '−') + money(Math.round(Math.abs(v))); };
     // 1) where you stand
