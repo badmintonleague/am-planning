@@ -2276,6 +2276,7 @@
     events: ['Ceremony', 'Reception', 'Pre-wedding'],
     stages: ['Quote only', 'Considering', 'Booked', 'Paid in full', 'Not going ahead'],
     pricing: ['Flat', 'Per guest', 'Flat + extra guests'],
+    kinds: ['Vendor', 'Package'],
     paid: ['No', 'Yes'],
     forWho: ['Bride', 'Groom', 'Bridal party', 'Family', 'Guests', 'Other'],
     types: ['Clothing', 'Jewellery', 'Accessories', 'Gifts & favours', 'DIY decor', 'Other'],
@@ -2285,15 +2286,16 @@
   var TYPE_ICON = { 'Clothing': 'CL', 'Jewellery': 'JW', 'Accessories': 'AC', 'Gifts & favours': 'GF', 'DIY decor': 'DY', 'Other': '•' };
   function isBought(p) { return p.status === 'Bought' || p.status === 'Ordered'; }
   function shopCost(p) { return num(p.actual); }
-  function bOpt(k) { if (k === 'pricing' || k === 'events') return BUD_DEFAULTS[k]; var o = bud.options && bud.options[k]; o = o && o.length ? o : BUD_DEFAULTS[k]; if (k === 'stages') { o = o.filter(function (x) { return x !== 'Quoted'; }); if (o.indexOf('Quote only') === -1) o = ['Quote only'].concat(o); } return o; }
+  function bOpt(k) { if (k === 'pricing' || k === 'events' || k === 'kinds') return BUD_DEFAULTS[k]; var o = bud.options && bud.options[k]; o = o && o.length ? o : BUD_DEFAULTS[k]; if (k === 'stages') { o = o.filter(function (x) { return x !== 'Quoted'; }); if (o.indexOf('Quote only') === -1) o = ['Quote only'].concat(o); } return o; }
   var CAT_ICON = { 'Venue': 'VN', 'Catering': 'CT', 'Photo & Video': 'PV', 'Decor & Mandap': 'DM', 'Priest & Music': 'PM',
                    'Attire & Beauty': 'AB', 'Rentals': 'RN', 'Stationery & Favours': 'SF', 'Other': '•' };
 
   var BFORM = {
     bookings: { noun: 'booking', addShort: 'Add vendor', addTitle: 'Add a vendor', key: 'name', need: 'Add a name first.',
-      defaults: function () { var par = bud.newParent ? bookingByRow(bud.newParent) : null; return { category: bud.cat || 'Other', stage: par ? par.stage : 'Quote only', event: par ? par.event : '', pricing: 'Flat', tax: '13', parent: par ? par.row : '', name: par ? par.name + ' – ' : '' }; },
+      defaults: function () { var par = bud.newParent ? bookingByRow(bud.newParent) : null; return { category: bud.cat || 'Other', stage: par ? par.stage : 'Quote only', event: par ? par.event : '', pricing: 'Flat', tax: '13', parent: par ? par.row : '', name: par ? par.name + ' – ' : '', kind: 'Vendor' }; },
       groups: [
-        [{ k: 'name', l: 'What / who', t: 'text', ph: 'e.g. Nantha Catering' },
+        [{ k: 'kind', l: 'Type', t: 'seg', o: 'kinds', hint: '' },
+         { k: 'name', l: 'What / who', t: 'text', ph: 'e.g. Nantha Catering' },
          { k: 'category', l: 'Category', t: 'select', o: 'categories', req: 1 },
          { k: 'event', l: 'For', t: 'mseg', o: 'events' }, { k: 'parent', l: 'Part of a package', t: 'pkg' }],
         [{ k: 'stage', l: 'Status', t: 'select', o: 'stages', req: 1 }, { k: 'pricing', l: 'Pricing', t: 'seg', o: 'pricing' },
@@ -2444,6 +2446,20 @@
       var t = effCost(c, guestsFor(el.dataset.ev));
       el.querySelector('.evp-tot').textContent = el.classList.contains('on') && t ? money(Math.round(t)) : '';
     });
+  }
+  /** A package holds the contact + payments; its price comes from its parts. */
+  function kindVis() {
+    var wrap = $('bFields'), seg = wrap && wrap.querySelector('#b_kind'); if (!seg) return;
+    var pkg = seg.dataset.value === 'Package';
+    ['category', 'event', 'pricing', 'cost', 'included', 'rate', 'tax', 'evPricing', 'parent'].forEach(function (k) { var el = wrap.querySelector('[data-k="' + k + '"]'); if (el) el.style.display = pkg ? 'none' : ''; });
+    var nm = $('b_name'); if (nm) nm.placeholder = pkg ? 'e.g. Mardi Gras' : 'e.g. Nantha Catering';
+    var h = seg.parentNode.querySelector('.fhint') || seg.parentNode.appendChild(Object.assign(document.createElement('p'), { className: 'fhint' }));
+    h.textContent = pkg ? 'Add each service as a part (catering, priest, decor…). Payments go on the package.' : '';
+    if (!pkg) { splitVis(); }
+    var pays = $('bPays');
+    if (pays && bud.editing) { var bb = bud.editing.row && bookingByRow(bud.editing.row);
+      if (pkg && !(bb && bb._pkg)) pays.innerHTML = (bud.editing.row ? '<div class="group-title">Parts</div><p class="bp-empty">Parts show up here once this is saved as a package.</p>' : '') + bookingPaymentsHtml0(bud.editing.row);
+    }
   }
   function pricingVis() {
     var wrap = $('bFields'); if (!wrap) return;
@@ -2634,7 +2650,7 @@
       (kids[p] = kids[p] || []).push(b); b._parentRow = p;
     });
     bud.bookings.forEach(function (b) {
-      if (kids[b.row]) { b._pkg = true; b._kids = kids[b.row]; }
+      if (kids[b.row] || b.kind === 'Package') { b._pkg = true; b._kids = kids[b.row] || []; }
       if (!b._parentRow) b.paid = b._own;
     });
     bud.bookings.forEach(function (b) {
@@ -2914,6 +2930,8 @@
       };
       var sections = {};
       rows.forEach(function (b) { var k = listSection(b); (sections[k] = sections[k] || []).push(b); });
+      var emptyPk = bud.ev || bud.cat ? [] : bud.bookings.filter(function (b) { return b._pkg && !b._kids.length && bMatches(b) && passesStage(b); });
+      if (emptyPk.length && !sections[LAST_SECTION]) sections[LAST_SECTION] = [];
       html = '<div class="list-head"><span>Vendor</span><span>Stage</span><span class="r">Cost</span><span class="r">Paid</span><span class="r">Still owed</span></div>';
       SECTION_ORDER.slice(0, -1).concat(Object.keys(sections).filter(function (k) { return SECTION_ORDER.indexOf(k) === -1; }), [LAST_SECTION]).forEach(function (sec) {
         var rs = sections[sec]; if (!rs) return;
@@ -2927,9 +2945,10 @@
             html += pkgHead(par);
             pk[par.row].sort(byCat).forEach(function (b) { html += rowHtml(b, ' part', (b.category || 'Other') + ((sec === 'Both events' || sec === LAST_SECTION) && evList(b).length ? ' · ' + evList(b).map(function (e) { return EV_SECTION[e] || e; }).join(' + ') : '')); });
           });
+        if (sec === LAST_SECTION) emptyPk.forEach(function (par) { html += pkgHead(par); });
         solo.sort(byCat).forEach(function (b) { html += rowHtml(b, '', (b.category || 'Other') + ((sec === 'Both events' || sec === LAST_SECTION) && evList(b).length ? ' · ' + evList(b).map(function (e) { return EV_SECTION[e] || e; }).join(' + ') : '')); });
       });
-      if (!rows.length) html = '<div class="empty"><b>' + (bud.q || bud.cat || bud.ev || bud.filter !== 'all' ? 'Nothing matches' : 'No vendors yet') + '</b>' +
+      if (!rows.length && !emptyPk.length) html = '<div class="empty"><b>' + (bud.q || bud.cat || bud.ev || bud.filter !== 'all' ? 'Nothing matches' : 'No vendors yet') + '</b>' +
         '</div>';
     } else {
       var today = todayIso();
@@ -2970,6 +2989,7 @@
     var o = f.o ? bOpt(f.o) : [];
     var id = 'b_' + f.k, val = v === undefined || v === null ? '' : v;
     if (f.k === 'pricing' && !val) val = 'Flat';
+    if (f.k === 'kind') val = val === 'Package' ? 'Package' : 'Vendor';
     var label = '<label for="' + id + '">' + esc(f.l) + '</label>';
     if (f.t === 'seg') {
       var opts = o.slice(); if (val && opts.indexOf(val) === -1) opts.push(val);
@@ -2983,12 +3003,12 @@
         so.map(function (x) { return '<option' + (x === val ? ' selected' : '') + '>' + esc(x) + '</option>'; }).join('') + '</select></div>';
     }
     if (f.t === 'pkg') {
-      var me = bud.editing && bud.editing.row, mine = me && bookingByRow(me);
-      if (mine && mine._pkg) return '<input type="hidden" id="' + id + '" value="">';
-      var opts = bud.bookings.filter(function (b) { return b.row !== me && !b._parentRow && b.stage !== 'Not going ahead'; })
-        .sort(function (a, b) { return (b._pkg ? 1 : 0) - (a._pkg ? 1 : 0) || String(a.name).localeCompare(b.name); });
+      var me = bud.editing && bud.editing.row;
+      var opts = bud.bookings.filter(function (b) { return b.row !== me && b._pkg; }).sort(function (a, b) { return String(a.name).localeCompare(b.name); });
+      if (val && !opts.some(function (b) { return String(b.row) === String(val); })) { var cur = bookingByRow(val); if (cur) opts.unshift(cur); }
       return '<div class="field" data-k="parent">' + label + '<select id="' + id + '"><option value="">Not part of a package</option>' +
-        opts.map(function (b) { return '<option value="' + b.row + '"' + (String(b.row) === String(val) ? ' selected' : '') + '>' + esc(b.name) + (b._pkg ? ' (package)' : '') + '</option>'; }).join('') + '</select></div>';
+        opts.map(function (b) { return '<option value="' + b.row + '"' + (String(b.row) === String(val) ? ' selected' : '') + '>' + esc(b.name) + '</option>'; }).join('') + '</select>' +
+        (opts.length ? '' : '<p class="fhint">No packages yet. Add one with “Add vendor” → Package.</p>') + '</div>';
     }
     if (f.t === 'booking') {
       var list = bud.bookings.filter(function (b) { return (b.stage !== 'Not going ahead' && !b._parentRow) || String(b.row) === String(val); })
@@ -3039,7 +3059,7 @@
   function packagePartsHtml(b) {
     var t = pkgTotals(b);
     return '<div class="group-title">Parts <span class="hint">' + money(t.cost) + ' total</span></div><div class="group bp">' +
-      b._kids.slice().sort(function (x, y) { return vendorCost(y) - vendorCost(x); }).map(function (k) {
+      (b._kids || []).slice().sort(function (x, y) { return vendorCost(y) - vendorCost(x); }).map(function (k) {
         return '<button type="button" class="bp-row" data-part="' + k.row + '"><span><b>' + esc(k.name) + '</b><small>' + esc([k.category, evList(k).map(function (e) { return EV_SECTION[e] || e; }).join(' + '), k.stage === 'Quote only' ? 'Quote' : k.stage].filter(Boolean).join(' · ')) + '</small></span>' +
           '<span class="bp-right"><span class="bp-amt' + (k.stage === 'Not going ahead' ? ' dim' : '') + '">' + money(vendorCost(k)) + '</span></span></button>';
       }).join('') + '<button type="button" class="bp-add" data-addpart="' + b.row + '">+ Add a part</button></div>';
@@ -3051,7 +3071,7 @@
       return '<div class="group-title">Payments</div><p class="bp-empty">Paid through the <b>' + esc(par ? par.name : 'package') + '</b> package. Its payments are shared across its parts by cost' +
         (num(bb.paid) ? ' — this part’s share so far is ' + money(bb.paid) : '') + '.</p><div class="group bp"><button type="button" class="bp-add" data-part="' + bb._parentRow + '">Open ' + esc(par ? par.name : 'package') + '</button></div>';
     }
-    var partsHtml = bb && bb._pkg ? packagePartsHtml(bb) : (bb ? '<div class="group bp pkg-make"><button type="button" class="bp-add" data-addpart="' + bb.row + '">+ Split into parts (package)</button></div>' : '');
+    var partsHtml = bb && bb._pkg ? packagePartsHtml(bb) : '';
     return partsHtml + bookingPaymentsHtml0(row);
   }
   function bookingPaymentsHtml0(row) {
@@ -3100,8 +3120,8 @@
       return '<div class="group' + (half ? ' counts' : '') + '">' + g.map(function (f) { return bField(f, data[f.k]); }).join('') + '</div>';
     }).join('') + (t === 'bookings' ? '<div id="bPays">' + bookingPaymentsHtml(row ? row.row : null) + '</div>' : '');
     pricingVis(); splitVis();
+    if (t === 'bookings') kindVis();
     if (t === 'bookings' && row && row._pkg) {
-      ['category', 'event', 'pricing', 'cost', 'included', 'rate', 'tax', 'evPricing'].forEach(function (k) { var el = $('bFields').querySelector('[data-k="' + k + '"]'); if (el) el.style.display = 'none'; });
       $('bSub').textContent = 'Package · ' + pkgTotals(row).parts + ' parts · ' + money(pkgTotals(row).cost) + (pkgTotals(row).committed ? ' · ' + money(pkgTotals(row).owed) + ' still owed' : '');
     }
     $('bErr').textContent = '';
@@ -3185,7 +3205,9 @@
           if ($('bTitle').textContent === F.addTitle) $('bTitle').textContent = t === 'installments' ? (res.item.forName || 'Payment') : t === 'purchases' ? res.item.item : res.item.name;
           if (t === 'bookings' && isNew && $('bPays')) $('bPays').innerHTML = bookingPaymentsHtml(res.row);
         }
-        syncEnd(true); renderBudget(); refreshBudgetQuiet(); done(true);
+        syncEnd(true); renderBudget();
+        if (t === 'bookings' && ctx.ref.isOpen() && $('bPays')) { $('bPays').innerHTML = bookingPaymentsHtml(res.row); kindVis(); }
+        refreshBudgetQuiet(); done(true);
       }, function (err) {
         var j = local._tmp ? budgetIndexTmp(t, local._tmp) : budgetIndex(t, local.row);
         if (j !== -1) { if (isNew) bud[t].splice(j, 1); else if (prev) bud[t][j] = prev; }
@@ -3251,7 +3273,7 @@
     else fn();
   }
 
-  $('bFields').addEventListener('click', function (e) { if (e.target.closest('#b_pricing [data-v], #b_event [data-v]')) setTimeout(function () { pricingVis(); splitVis(); }, 0); });
+  $('bFields').addEventListener('click', function (e) { if (e.target.closest('#b_pricing [data-v], #b_event [data-v]')) setTimeout(function () { pricingVis(); splitVis(); }, 0); if (e.target.closest('#b_kind [data-v]')) setTimeout(kindVis, 0); });
   $('bFields').addEventListener('input', function () { splitVis(); });
   $('bFields').addEventListener('click', function (e) {
     var b = e.target.closest('.mseg [data-v]'); if (!b) return;
@@ -3559,7 +3581,7 @@
       fields: { name: 'Booking', category: 'Category', event: 'Event', stage: 'Stage', cost: 'Cost (CAD)',
         paid: 'Paid (CAD)', owed: 'Still owed (CAD)', payer: 'Paid by', contact: 'Contact Name', phone: 'Phone', email: 'Email', notes: 'Notes', row: 'Booking #',
         pricing: 'Pricing', rate: 'Per guest (CAD)', included: 'Guests included', tax: 'Tax %',
-        splitCer: 'Ceremony share (CAD)', splitRec: 'Reception share (CAD)', splitPre: 'Pre-wedding share (CAD)', evPricing: 'Pricing by event', parent: 'Part of package' },
+        splitCer: 'Ceremony share (CAD)', splitRec: 'Reception share (CAD)', splitPre: 'Pre-wedding share (CAD)', evPricing: 'Pricing by event', parent: 'Part of package', kind: 'Vendor or package' },
       readOnly: ['paid', 'owed', 'row'], money: ['cost', 'paid', 'owed', 'rate', 'splitCer', 'splitRec', 'splitPre'], dates: [] },
     installments: { key: 'booking', match: ['Booking #', 'Payment', 'Amount (CAD)'],
       fields: { booking: 'Booking #', forName: 'For', label: 'Payment', amount: 'Amount (CAD)', due: 'Due Date',
@@ -3667,7 +3689,7 @@
       } else out[k] = str(v, 1000);
     });
     if (cfg === BUDGET.purchases || cfg === BUDGET.bookings) out.payer = normPayer(out.payer);
-    if (cfg === BUDGET.bookings) { out.parent = Number(out.parent) || ''; if (out.parent && Number(d.row) === out.parent) out.parent = ''; }
+    if (cfg === BUDGET.bookings) { out.kind = out.kind === 'Package' ? 'Package' : ''; out.parent = out.kind ? '' : (Number(out.parent) || ''); if (out.parent && Number(d.row) === out.parent) out.parent = ''; }
     if (cfg === BUDGET.installments) {
       out.booking = Number(out.booking) || '';
       if (!out.booking) throw new Error('Pick which booking this payment is for.');
