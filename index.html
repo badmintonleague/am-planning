@@ -447,6 +447,10 @@
   .bp-amt.dim{color:var(--muted);text-decoration:line-through}
   .ftotal{margin:8px 0 0;font-size:13.5px;font-weight:500;color:var(--ink)}
   .ftotal:empty{display:none}
+  .pfx-in{display:flex;align-items:baseline;gap:0}
+  .pfx-in .pfx{flex:none;color:var(--muted);white-space:pre;font-size:16px;margin-right:.3em}
+  .pfx-in .pfx:empty{display:none}
+  .pfx-in input{flex:1;min-width:0}
   .evp-addtax{margin-top:8px;border:1px dashed var(--line);background:none;border-radius:999px;padding:6px 12px;font-size:12.5px;cursor:pointer;color:var(--ink2)}
   .evp-addtax.on{border-style:solid;border-color:var(--ink);color:var(--ink)}
   .grp+.item{border-top:0}
@@ -2461,11 +2465,18 @@
     });
   }
   /** A package holds the contact + payments; its price comes from its parts. */
+  function namePrefix() {
+    var p = $('b_pfx'); if (!p) return;
+    var par = ($('b_parent') || {}).value, kind = ($('b_kind') || { dataset: {} }).dataset.value;
+    var pk = kind !== 'Package' && par && bookingByRow(par);
+    p.textContent = pk ? pk.name + ' – ' : '';
+    var nm = $('b_name'); if (nm) nm.placeholder = pk ? 'e.g. Catering' : kind === 'Package' ? 'e.g. Mardi Gras' : 'e.g. Nantha Catering';
+  }
   function kindVis() {
     var wrap = $('bFields'), seg = wrap && wrap.querySelector('#b_kind'); if (!seg) return;
     var pkg = seg.dataset.value === 'Package';
     ['category', 'event', 'pricing', 'cost', 'included', 'rate', 'tax', 'fee', 'flatTax', 'evPricing', 'parent'].forEach(function (k) { var el = wrap.querySelector('[data-k="' + k + '"]'); if (el) el.style.display = pkg ? 'none' : ''; });
-    var nm = $('b_name'); if (nm) nm.placeholder = pkg ? 'e.g. Mardi Gras' : 'e.g. Nantha Catering';
+    namePrefix();
     var h = seg.parentNode.querySelector('.fhint') || seg.parentNode.appendChild(Object.assign(document.createElement('p'), { className: 'fhint' }));
     h.textContent = pkg ? 'Add each service as a part (catering, priest, decor…). Payments go on the package.' : '';
     if (!pkg) { splitVis(); }
@@ -2540,7 +2551,7 @@
       '<div class="pg-row"><span>Family</span><b>' + money(Math.round(fam)) + ' paid' + (famDue ? ' · ' + money(Math.round(famDue)) + ' to come' : '') + '</b></div>' +
       (noneDue ? '<div class="pg-row muted"><span>Not decided</span><b>' + money(Math.round(noneDue)) + ' to come</b></div>' : '') + '</div></div>';
     // biggest vendors
-    var big = costRows().filter(counted).map(function (b) { return [b.name, isCommitted(b) ? Math.max(b._eff, num(b.paid)) : b._eff, isCommitted(b) ? '' : 'soft2', isCommitted(b) ? '' : 'considering']; })
+    var big = costRows().filter(counted).map(function (b) { return [shownName(b), isCommitted(b) ? Math.max(b._eff, num(b.paid)) : b._eff, isCommitted(b) ? '' : 'soft2', isCommitted(b) ? '' : 'considering']; })
       .sort(function (a, b) { return b[1] - a[1]; }).slice(0, 6);
     if (big.length) h += '<div class="ins-card"><h3>Biggest costs</h3>' + bar(big) + '</div>';
     return h + '</div>';
@@ -2698,6 +2709,7 @@
     var par = parentRow && bookingByRow(parentRow), n = String(name || '').trim(); if (!par || !n) return n;
     return stripPkg(n, parentRow) === n ? par.name + ' – ' + n : n;
   }
+  function shownName(b) { return b && b._parentRow ? (stripPkg(b.name, b._parentRow) || b.name) : (b ? b.name : ''); }
   function costRows() { return bud.bookings.filter(function (b) { return !b._pkg; }); }
   function pkgTotals(b) {
     var t = { cost: 0, committed: 0, paid: b._own || 0, parts: 0 };
@@ -3069,6 +3081,8 @@
     }
     if (f.t === 'date') return '<div class="field" data-k="' + f.k + '">' + label + '<input id="' + id + '" type="date" value="' + esc(val) + '"></div>';
     if (f.t === 'area') return '<div class="field" data-k="' + f.k + '">' + label + '<textarea id="' + id + '" maxlength="1000" placeholder="' + esc(f.ph || '') + '">' + esc(val) + '</textarea></div>';
+    if (f.k === 'name' && bud.editing && bud.editing.table === 'bookings')
+      return '<div class="field" data-k="name">' + label + '<div class="pfx-in"><span class="pfx" id="b_pfx"></span><input id="' + id + '" type="text" maxlength="300" placeholder="' + esc(f.ph || '') + '" value="' + esc(val) + '"></div></div>';
     return '<div class="field" data-k="' + f.k + '">' + label + '<input id="' + id + '" type="' + f.t + '" maxlength="300" placeholder="' + esc(f.ph || '') + '" value="' + esc(val) + '"></div>';
   }
   function isRefundable(p) { return /refundable/i.test(p.label || ''); }
@@ -3307,6 +3321,7 @@
 
   $('bFields').addEventListener('click', function (e) { if (e.target.closest('#b_pricing [data-v], #b_event [data-v]')) setTimeout(function () { pricingVis(); splitVis(); }, 0); if (e.target.closest('#b_kind [data-v]')) setTimeout(kindVis, 0); });
   $('bFields').addEventListener('input', function () { splitVis(); pricingVis(); });
+  $('bFields').addEventListener('change', function (e) { if (e.target.id === 'b_parent') namePrefix(); });
   $('bFields').addEventListener('click', function (e) {
     var t = e.target.closest('.evp-addtax'); if (t) { t.classList.toggle('on'); t.textContent = t.classList.contains('on') ? '✓ Tax added to price' : '+ Add tax to price'; splitVis(); if (bAuto) bAuto.schedule(250); }
     if (e.target.closest('#b_flatTax [data-v]')) setTimeout(pricingVis, 0);
