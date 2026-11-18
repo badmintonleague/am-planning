@@ -2298,7 +2298,7 @@
 
   var BFORM = {
     bookings: { noun: 'booking', addShort: 'Add vendor', addTitle: 'Add a vendor', key: 'name', need: 'Add a name first.',
-      defaults: function () { var par = bud.newParent ? bookingByRow(bud.newParent) : null; return { category: bud.cat || 'Other', stage: par ? par.stage : 'Quote only', event: par ? par.event : '', pricing: 'Flat', tax: '13', parent: par ? par.row : '', name: par ? par.name + ' – ' : '', kind: 'Vendor' }; },
+      defaults: function () { var par = bud.newParent ? bookingByRow(bud.newParent) : null; return { category: bud.cat || 'Other', stage: par ? par.stage : 'Quote only', event: par ? par.event : '', pricing: 'Flat', tax: '13', parent: par ? par.row : '', name: '', kind: 'Vendor' }; },
       groups: [
         [{ k: 'kind', l: 'Type', t: 'seg', o: 'kinds', hint: '' },
          { k: 'name', l: 'What / who', t: 'text', ph: 'e.g. Nantha Catering' },
@@ -2687,6 +2687,17 @@
       });
     });
   }
+  /** Part names are stored as "Package – Part" but shown as just "Part". */
+  function stripPkg(name, parentRow) {
+    var par = parentRow && bookingByRow(parentRow), n = String(name || ''); if (!par) return n;
+    var pn = String(par.name || '');
+    if (pn && n.toLowerCase().indexOf(pn.toLowerCase()) === 0) { var rest = n.slice(pn.length).replace(/^[\s\-–—:·|]+/, ''); return rest; }
+    return n;
+  }
+  function withPkg(name, parentRow) {
+    var par = parentRow && bookingByRow(parentRow), n = String(name || '').trim(); if (!par || !n) return n;
+    return stripPkg(n, parentRow) === n ? par.name + ' – ' + n : n;
+  }
   function costRows() { return bud.bookings.filter(function (b) { return !b._pkg; }); }
   function pkgTotals(b) {
     var t = { cost: 0, committed: 0, paid: b._own || 0, parts: 0 };
@@ -2918,12 +2929,7 @@
         if (nQ) bits.push(nQ + (nQ === 1 ? ' quote' : ' quotes'));
         return bits.join(' · ') || '–';
       };
-      var partName = function (b) {
-        var par = b._parentRow && bookingByRow(b._parentRow); if (!par) return b.name;
-        var n = String(b.name), pn = String(par.name);
-        if (n.toLowerCase().indexOf(pn.toLowerCase()) === 0) { var rest = n.slice(pn.length).replace(/^[\s\-–—:·|]+/, ''); if (rest) return rest; }
-        return n;
-      };
+      var partName = function (b) { return stripPkg(b.name, b._parentRow) || b.name; };
       var rowHtml = function (b, cls, sub) {
         var cat = b.category || 'Other';
         var hasCost = b.cost !== '' || b._eff > 0, committedNow = isCommitted(b);
@@ -3084,7 +3090,7 @@
     var t = pkgTotals(b);
     return '<div class="group-title">Parts <span class="hint">' + money(t.cost) + ' total</span></div><div class="group bp">' +
       (b._kids || []).slice().sort(function (x, y) { return vendorCost(y) - vendorCost(x); }).map(function (k) {
-        return '<button type="button" class="bp-row" data-part="' + k.row + '"><span><b>' + esc(k.name) + '</b><small>' + esc([k.category, evList(k).map(function (e) { return EV_SECTION[e] || e; }).join(' + '), k.stage === 'Quote only' ? 'Quote' : k.stage].filter(Boolean).join(' · ')) + '</small></span>' +
+        return '<button type="button" class="bp-row" data-part="' + k.row + '"><span><b>' + esc(stripPkg(k.name, b.row) || k.name) + '</b><small>' + esc([k.category, evList(k).map(function (e) { return EV_SECTION[e] || e; }).join(' + '), k.stage === 'Quote only' ? 'Quote' : k.stage].filter(Boolean).join(' · ')) + '</small></span>' +
           '<span class="bp-right"><span class="bp-amt' + (k.stage === 'Not going ahead' ? ' dim' : '') + '">' + money(vendorCost(k)) + '</span></span></button>';
       }).join('') + '<button type="button" class="bp-add" data-addpart="' + b.row + '">+ Add a part</button></div>';
   }
@@ -3125,6 +3131,7 @@
   function openBudgetForm(row, table) {
     var t = table || bud.tab, F = BFORM[t], isNew = !row;
     var data = row ? JSON.parse(JSON.stringify(row)) : F.defaults();
+    if (t === 'bookings' && Number(data.parent) && data.kind !== 'Package') { data.name = stripPkg(data.name, data.parent) || data.name; }
     var display = t === 'installments' ? ((data.label || 'Payment') + (data.forName ? ' · ' + data.forName : '')) : (data.name || '');
     bud.editing = { table: t, row: row ? row.row : null, original: row ? String(row[F.key]) : '', display: display };
     var bRef = bud.editing; closeBudgetForm._ok = false;
@@ -3173,6 +3180,7 @@
       var el = $('b_' + f.k);
       out[f.k] = f.t === 'evpricing' ? readEvp() : (f.t === 'seg' || f.t === 'mseg') ? (el.dataset.value || '') : el.value.trim();
     }); });
+    if (t === 'bookings' && Number(out.parent) && out.kind !== 'Package') out.name = withPkg(out.name, out.parent);
     return out;
   }
   function setBBusy(b, label) {
