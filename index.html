@@ -434,6 +434,17 @@
   .grp span+span{letter-spacing:0;text-transform:none;font-weight:400;color:var(--muted);font-size:12.5px}
   .list .grp:first-child,.list .list-head+.grp{padding-top:12px}
   .item+.grp{border-top:1px solid var(--line)}
+  .grp.sec{padding-top:22px}
+  .grp.sec>span:first-child{font-family:var(--serif);font-size:19px;font-weight:400;letter-spacing:0;text-transform:none;color:var(--ink)}
+  .item.pkg-head{background:linear-gradient(90deg,rgba(184,146,58,.08),transparent 70%)}
+  .item.pkg-head .n{font-weight:600}
+  .avatar.cat.pkg{background:var(--ink);color:#fff}
+  .tag.pkgtag{background:rgba(184,146,58,.16);color:#7A5A12}
+  .item.part .who{padding-left:26px;position:relative}
+  .item.part .who:before{content:"";position:absolute;left:12px;top:-14px;bottom:50%;width:10px;border-left:1.5px solid var(--line);border-bottom:1.5px solid var(--line);border-bottom-left-radius:6px}
+  .item.part .avatar{width:30px;height:30px;font-size:13px}
+  .pkg-make{margin-bottom:6px}
+  .bp-amt.dim{color:var(--muted);text-decoration:line-through}
   .grp+.item{border-top:0}
   .avatar.cat{background:var(--gold-soft);color:#8A6A22;font-size:12px;letter-spacing:.5px}
   .item.dropped{opacity:.55}
@@ -2280,11 +2291,11 @@
 
   var BFORM = {
     bookings: { noun: 'booking', addShort: 'Add vendor', addTitle: 'Add a vendor', key: 'name', need: 'Add a name first.',
-      defaults: function () { return { category: bud.cat || 'Other', stage: 'Quote only', event: '', pricing: 'Flat', tax: '13' }; },
+      defaults: function () { var par = bud.newParent ? bookingByRow(bud.newParent) : null; return { category: bud.cat || 'Other', stage: par ? par.stage : 'Quote only', event: par ? par.event : '', pricing: 'Flat', tax: '13', parent: par ? par.row : '', name: par ? par.name + ' – ' : '' }; },
       groups: [
         [{ k: 'name', l: 'What / who', t: 'text', ph: 'e.g. Nantha Catering' },
          { k: 'category', l: 'Category', t: 'select', o: 'categories', req: 1 },
-         { k: 'event', l: 'For', t: 'mseg', o: 'events' }],
+         { k: 'event', l: 'For', t: 'mseg', o: 'events' }, { k: 'parent', l: 'Part of a package', t: 'pkg' }],
         [{ k: 'stage', l: 'Status', t: 'select', o: 'stages', req: 1 }, { k: 'pricing', l: 'Pricing', t: 'seg', o: 'pricing' },
          { k: 'cost', l: 'Quote / price', t: 'money' }, { k: 'included', l: 'Guests included', t: 'number' },
          { k: 'rate', l: 'Per extra guest', t: 'money' }, { k: 'tax', l: 'Tax %', t: 'number' },
@@ -2367,7 +2378,7 @@
   /** What one event costs (counted vendors only) if that event had n guests. */
   function eventCostAt(ev, n) {
     var t = 0, ov = {}; ov[ev] = n;
-    bud.bookings.forEach(function (b) {
+    costRows().forEach(function (b) {
       if (!counted(b)) return;
       var o = evpOf(b), L = evList(b), e = 0;
       if (o) { if (o[ev] && L.indexOf(ev) !== -1) e = effCost(o[ev], n); }
@@ -2381,7 +2392,7 @@
   function counted(b) { return isCommitted(b) || SHORTLIST.indexOf(b.stage) !== -1; }
   function projectedAt(n) {                 // committed + considering, if n people came
     var t = bud.fixedOther || 0;
-    bud.bookings.forEach(function (b) { if (!counted(b)) return; var e = effCost(b, n); t += isCommitted(b) ? Math.max(e, num(b.paid)) : e; });
+    costRows().forEach(function (b) { if (!counted(b)) return; var e = effCost(b, n); t += isCommitted(b) ? Math.max(e, num(b.paid)) : e; });
     return t;
   }
   var EV_NAMES = ['Ceremony', 'Reception', 'Pre-wedding'];
@@ -2459,7 +2470,8 @@
   }
   function insightsHtml() {
     var committed = 0, considering = 0, paid = 0, unsched = 0, H = planGuests();
-    bud.bookings.forEach(function (b) {
+    bud.bookings.forEach(function (b) { if (b._pkg && pkgTotals(b).committed) { var u = unscheduledOf(b); if (u > 0) unsched += u; } });
+    costRows().forEach(function (b) {
       if (isCommitted(b)) { committed += Math.max(b._eff, num(b.paid)); paid += num(b.paid); var u = unscheduledOf(b); if (u > 0) unsched += u; }
       else if (SHORTLIST.indexOf(b.stage) !== -1) considering += b._eff;
     });
@@ -2477,7 +2489,7 @@
     h += '<div class="ins-card" id="bPer"></div>';
     h += '<div class="ins-card" id="bGift"></div>';
     // where the money goes
-    var cats = {}; bud.bookings.forEach(function (b) { if (!counted(b)) return; var c = b.category || 'Other'; cats[c] = (cats[c] || 0) + (isCommitted(b) ? Math.max(b._eff, num(b.paid)) : b._eff); });
+    var cats = {}; costRows().forEach(function (b) { if (!counted(b)) return; var c = b.category || 'Other'; cats[c] = (cats[c] || 0) + (isCommitted(b) ? Math.max(b._eff, num(b.paid)) : b._eff); });
     if (shop + shopPlan) cats['Shopping'] = (cats['Shopping'] || 0) + shop + shopPlan;
     var ck = Object.keys(cats).sort(function (a, b) { return cats[b] - cats[a]; });
     h += '<div class="ins-card"><h3>Where the money goes</h3>' + (ck.length ? bar(ck.map(function (c) { return [c, cats[c], '', Math.round(cats[c] / projected * 100) + '%']; })) : '<p class="ins-none">No costs yet</p>') + '</div>';
@@ -2490,7 +2502,7 @@
       '<div class="pg-row"><span>Family</span><b>' + money(Math.round(fam)) + ' paid' + (famDue ? ' · ' + money(Math.round(famDue)) + ' to come' : '') + '</b></div>' +
       (noneDue ? '<div class="pg-row muted"><span>Not decided</span><b>' + money(Math.round(noneDue)) + ' to come</b></div>' : '') + '</div></div>';
     // biggest vendors
-    var big = bud.bookings.filter(counted).map(function (b) { return [b.name, isCommitted(b) ? Math.max(b._eff, num(b.paid)) : b._eff, isCommitted(b) ? '' : 'soft2', isCommitted(b) ? '' : 'considering']; })
+    var big = costRows().filter(counted).map(function (b) { return [b.name, isCommitted(b) ? Math.max(b._eff, num(b.paid)) : b._eff, isCommitted(b) ? '' : 'soft2', isCommitted(b) ? '' : 'considering']; })
       .sort(function (a, b) { return b[1] - a[1]; }).slice(0, 6);
     if (big.length) h += '<div class="ins-card"><h3>Biggest costs</h3>' + bar(big) + '</div>';
     return h + '</div>';
@@ -2498,7 +2510,7 @@
   function renderEvents() {
     var el = $('bEvents'); if (!el) return;
     var tot = {}, order = ['Ceremony', 'Reception', 'Pre-wedding', 'Not split', 'No event'];
-    bud.bookings.forEach(function (b) {
+    costRows().forEach(function (b) {
       if (!counted(b)) return;
       var eff = isCommitted(b) ? Math.max(b._eff, num(b.paid)) : b._eff, parts = byEvent(b, eff);
       Object.keys(parts).forEach(function (k) { tot[k] = (tot[k] || 0) + parts[k]; });
@@ -2546,12 +2558,12 @@
         '<span class="gf-c"><small>Costs</small>' + money(Math.round(cost)) + '</span><span class="gf-c"><small>Gift</small>' + (gift ? money(Math.round(gift)) : '–') + '</span>' +
         '<span class="gf-c gf-net ' + (!gift ? '' : net >= 0 ? 'ok' : 'bad') + '"><small>' + (!gift ? '' : net >= 0 ? 'Covers itself' : 'Costs you') + '</small>' + (gift ? (net >= 0 ? '+' : '−') + money(Math.round(Math.abs(net))) : '–') + '</span></div>';
     }).join('');
-    var projected = 0; bud.bookings.forEach(function (b) { if (counted(b)) projected += isCommitted(b) ? Math.max(b._eff, num(b.paid)) : b._eff; });
+    var projected = 0; costRows().forEach(function (b) { if (counted(b)) projected += isCommitted(b) ? Math.max(b._eff, num(b.paid)) : b._eff; });
     bud.purchases.forEach(function (p) { projected += num(p.actual); });
     out.innerHTML = '<p class="gf-note">Each extra guest costs about <b>' + money(Math.round(perPerson)) + '</b> right now' +
       '.' + (function () {
         var R = planFor('Reception'), ks = [];
-        bud.bookings.forEach(function (b) { if (!counted(b)) return; var o = evpOf(b), L = evList(b), pc = o ? o.Reception : ((L.length === 1 && L[0] === 'Reception') || !L.length ? b : null);
+        costRows().forEach(function (b) { if (!counted(b)) return; var o = evpOf(b), L = evList(b), pc = o ? o.Reception : ((L.length === 1 && L[0] === 'Reception') || !L.length ? b : null);
           if (pc && pricingOf(pc) === 'Flat + extra guests' && num(pc.included) > R) ks.push(num(pc.included)); });
         if (!ks.length) return '';
         var k = Math.min.apply(null, ks), after = marginal('Ceremony') + eventCostAt('Reception', k + 1) - eventCostAt('Reception', k);
@@ -2563,13 +2575,13 @@
   function renderPer() {
     var el = $('bPer'); if (!el) return;
     var evs = ['Ceremony', 'Reception'];
-    if (bud.bookings.some(function (b) { return counted(b) && evList(b).indexOf('Pre-wedding') !== -1; })) evs.push('Pre-wedding');
+    if (costRows().some(function (b) { return counted(b) && evList(b).indexOf('Pre-wedding') !== -1; })) evs.push('Pre-wedding');
     var ev = evs.indexOf(bud.perEv) !== -1 ? bud.perEv : 'Reception'; bud.perEv = ev;
     var p = bud.plan || {}, own = setv(p[ev]) || setv(p.guests), listN = listCount(ev), H = planFor(ev);
     var tot = eventCostAt(ev, H), per = H ? tot / H : 0;
     // pricing pieces that depend on this event's headcount (for the chart's kinks)
     var kinks = [], perGuest = false;
-    bud.bookings.forEach(function (b) {
+    costRows().forEach(function (b) {
       if (!counted(b)) return; var o = evpOf(b), L = evList(b), pc = o ? o[ev] : ((L.length === 1 && L[0] === ev) || (!L.length && ev === 'Reception') ? b : null);
       if (!pc || pricingOf(pc) === 'Flat') return; perGuest = true;
       if (pricingOf(pc) === 'Flat + extra guests' && kinks.indexOf(num(pc.included)) === -1 && num(pc.included) > 0) kinks.push(num(pc.included));
@@ -2609,6 +2621,45 @@
     if (rs) rs.addEventListener('click', function () { bud.plan = Object.assign({}, bud.plan || {}); bud.plan[ev] = ''; delete bud.plan.guests; renderBudget(); google.script.run.withSuccessHandler(function () {}).withFailureHandler(function () {}).saveBudgetPlanning(bud.plan); });
     el.querySelectorAll('[data-perev]').forEach(function (b) { b.addEventListener('click', function () { bud.perEv = b.dataset.perev; renderPer(); }); });
   }
+  /* ---------- packages ----------
+   * A vendor can be "part of" another (e.g. Mardi Gras → catering, priest, garlands, decor).
+   * The package itself only holds the contact + payment schedule; its cost is the sum of its parts,
+   * and what's been paid to it is spread over the parts by cost so every category gets its share. */
+  function prepPackages() {
+    var kids = {};
+    bud.bookings.forEach(function (b) { if (b._own === undefined) b._own = num(b.paid); b._pkg = false; b._parentRow = 0; b._kids = null; });
+    bud.bookings.forEach(function (b) {
+      var p = Number(b.parent) || 0; if (!p || p === b.row) return;
+      var par = bookingByRow(p); if (!par || Number(par.parent)) return;
+      (kids[p] = kids[p] || []).push(b); b._parentRow = p;
+    });
+    bud.bookings.forEach(function (b) {
+      if (kids[b.row]) { b._pkg = true; b._kids = kids[b.row]; }
+      if (!b._parentRow) b.paid = b._own;
+    });
+    bud.bookings.forEach(function (b) {
+      if (!b._pkg) return;
+      b._kids.forEach(function (k) { k._eff0 = vendorCost(k); });
+      var live = b._kids.filter(function (k) { return k.stage !== 'Not going ahead'; });
+      var base = live.filter(function (k) { return COMMITTED.indexOf(k.stage) !== -1; }); if (!base.length) base = live.length ? live : b._kids;
+      var tot = 0; base.forEach(function (k) { tot += k._eff0; });
+      b._kids.forEach(function (k) {
+        var share = base.indexOf(k) === -1 ? 0 : tot ? b._own * k._eff0 / tot : b._own / base.length;
+        k.paid = k._own + Math.round(share * 100) / 100;
+      });
+    });
+  }
+  function costRows() { return bud.bookings.filter(function (b) { return !b._pkg; }); }
+  function pkgTotals(b) {
+    var t = { cost: 0, committed: 0, paid: b._own || 0, parts: 0 };
+    (b._kids || []).forEach(function (k) { if (k.stage === 'Not going ahead') return; t.parts++; var e = vendorCost(k); t.cost += e; if (isCommitted(k)) t.committed += Math.max(e, num(k.paid)); });
+    t.owed = Math.max(0, t.committed - t.paid);
+    return t;
+  }
+  var EV_SECTION = { Ceremony: 'Wedding', Reception: 'Reception', 'Pre-wedding': 'Pre-wedding' };
+  function evSection(b) { var L = evList(b); return !L.length ? 'No event set' : L.length > 1 ? 'Both events' : (EV_SECTION[L[0]] || L[0]); }
+  var SECTION_ORDER = ['Wedding', 'Reception', 'Pre-wedding', 'Both events', 'No event set'];
+
   function isCommitted(b) { return COMMITTED.indexOf(b.stage) !== -1 || (num(b.paid) > 0 && b.stage !== 'Not going ahead'); }
   function bookingByRow(r) { r = Number(r); for (var i = 0; i < bud.bookings.length; i++) if (bud.bookings[i].row === r) return bud.bookings[i]; return null; }
   function paymentsOf(r) { return bud.installments.filter(function (p) { return Number(p.booking) === Number(r); }); }
@@ -2646,8 +2697,10 @@
     var today = todayIso(), soon = isoPlusDays(60), cats = {};
     bOpt('categories').forEach(function (c) { cats[c] = { committed: 0, paid: 0, shortlist: 0, n: 0 }; });
     var H = planGuests();
+    prepPackages();
     bud.bookings.forEach(function (b) { b._eff = vendorCost(b); b._owed = isCommitted(b) ? Math.max(0, b._eff - num(b.paid)) : 0; });
-    bud.bookings.forEach(function (b) {
+    bud.bookings.forEach(function (b) { if (b._pkg) { var pt = pkgTotals(b); b._eff = pt.cost; b._owed = pt.owed; } });
+    costRows().forEach(function (b) {
       var c = b.category || 'Other'; if (!cats[c]) cats[c] = { committed: 0, paid: 0, shortlist: 0, n: 0 };
       var cost = b._eff; cats[c].n++;
       paid += num(b.paid); cats[c].paid += num(b.paid);
@@ -2662,7 +2715,7 @@
       else { shopPlanned += shopCost(p); fors[f].planned += shopCost(p); }
     });
     committed += shopBought; paid += shopBought;
-    var countedNow = 0; bud.bookings.forEach(function (b) { if (counted(b)) countedNow += isCommitted(b) ? Math.max(b._eff, num(b.paid)) : b._eff; });
+    var countedNow = 0; costRows().forEach(function (b) { if (counted(b)) countedNow += isCommitted(b) ? Math.max(b._eff, num(b.paid)) : b._eff; });
     bud.fixedOther = committed + shortlist - countedNow;
     renderPer(H); renderEvents();
     var upcoming = bud.installments.filter(function (p) { return !isPaid(p.paid); });
@@ -2720,7 +2773,7 @@
         '<span class="cat-amt">' + (x.bought + x.planned ? shortMoney(x.bought + x.planned) : '<em>–</em>') + '</span></button>';
     }).join('');
 
-    $('tcB').textContent = bud.bookings.length; $('tcP').textContent = bud.installments.length; $('tcS').textContent = bud.purchases.length;
+    $('tcB').textContent = costRows().length; $('tcP').textContent = bud.installments.length; $('tcS').textContent = bud.purchases.length;
     document.querySelectorAll('#bTabs button').forEach(function (b) { b.classList.toggle('on', b.dataset.t === bud.tab); });
     renderBudgetList();
   }
@@ -2794,7 +2847,8 @@
       $('bPills').innerHTML = (bud.ev ? '<button type="button" class="pill on" data-clearev="1">' + esc(bud.ev) + ' ✕</button>' : '') +
         (bud.cat ? '<button type="button" class="pill on" data-clearcat="1">' + esc(bud.cat) + ' ✕</button>' : '') +
         STAGE_FILTERS.map(function (f) { return '<button type="button" class="pill' + (bud.filter === f[0] ? ' on' : '') + '" data-filter="' + f[0] + '">' + f[1] + '</button>'; }).join('');
-      var rows = bud.bookings.filter(function (b) { return bMatches(b) && passesStage(b) && (!bud.cat || (b.category || 'Other') === bud.cat); });
+      var pkgHit = function (b) { var par = b._parentRow ? bookingByRow(b._parentRow) : null; return par && bMatches(par); };
+      var rows = costRows().filter(function (b) { return (bMatches(b) || pkgHit(b)) && passesStage(b) && (!bud.cat || (b.category || 'Other') === bud.cat); });
       if (bud.ev) {                       // only vendors for this event, showing just that event's share of each cost
         rows = rows.map(function (b) {
           var share = byEvent(b, b._eff)[bud.ev]; if (share === undefined) return null;
@@ -2803,44 +2857,75 @@
         }).filter(Boolean);
       }
       var order = bOpt('categories'), stageOrder = ['Considering', 'Quote only', 'Not going ahead'];
-      rows.sort(function (a, b) {
+      var byCat = function (a, b) {
         var ca = order.indexOf(a.category || 'Other'), cb = order.indexOf(b.category || 'Other');
         if (ca !== cb) return (ca === -1 ? 99 : ca) - (cb === -1 ? 99 : cb);
         var sa = isCommitted(a) ? 0 : stageOrder.indexOf(a.stage) + 1, sb = isCommitted(b) ? 0 : stageOrder.indexOf(b.stage) + 1;
         return sa - sb || b._eff - a._eff || String(a.name).localeCompare(b.name);
-      });
+      };
       var tot = 0; rows.forEach(function (b) { tot += b._eff; });
       $('bCount').textContent = rows.length + (rows.length === 1 ? ' vendor · ' : ' vendors · ') + money(tot);
-      var lastCat = null;
-      html = '<div class="list-head"><span>Vendor</span><span>Stage</span><span class="r">Cost</span><span class="r">Paid</span><span class="r">Still owed</span></div>';
-      rows.forEach(function (b) {
+      var secBits = function (list) {
+        var cc = 0, cons = 0, nCons = 0, nQ = 0;
+        list.forEach(function (x) {
+          if (isCommitted(x)) { cc += Math.max(x._eff, num(x.paid)); return; }
+          if (x.stage === 'Not going ahead') return;
+          if (x.stage === 'Considering') { cons += x._eff; nCons++; } else nQ++;
+        });
+        var bits = [];
+        if (cc) bits.push(money(cc) + ' booked');
+        if (nCons) bits.push(shortMoney(cons) + ' considering');
+        if (nQ) bits.push(nQ + (nQ === 1 ? ' quote' : ' quotes'));
+        return bits.join(' · ') || '–';
+      };
+      var partName = function (b) {
+        var par = b._parentRow && bookingByRow(b._parentRow); if (!par) return b.name;
+        var n = String(b.name), pn = String(par.name);
+        if (n.toLowerCase().indexOf(pn.toLowerCase()) === 0) { var rest = n.slice(pn.length).replace(/^[\s\-–—:·|]+/, ''); if (rest) return rest; }
+        return n;
+      };
+      var rowHtml = function (b, cls, sub) {
         var cat = b.category || 'Other';
-        if (cat !== lastCat) {
-          var inCat = rows.filter(function (x) { return (x.category || 'Other') === cat; }), cc = 0;
-          inCat.forEach(function (x) { if (isCommitted(x)) cc += Math.max(x._eff, num(x.paid)); });
-          var cons = 0, nCons = 0, nQ = 0;
-          inCat.forEach(function (x) { if (isCommitted(x) || x.stage === 'Not going ahead') return; if (x.stage === 'Considering') { cons += x._eff; nCons++; } else nQ++; });
-          var bits = [];
-          if (cc) bits.push(money(cc) + ' booked');
-          if (nCons) bits.push(shortMoney(cons) + ' considering');
-          if (nQ) bits.push(nQ + (nQ === 1 ? ' quote' : ' quotes'));
-          html += '<div class="grp"><span>' + esc(cat) + '</span><span>' + (bits.join(' · ') || '–') + '</span></div>';
-          lastCat = cat;
-        }
         var hasCost = b.cost !== '' || b._eff > 0, committedNow = isCommitted(b);
         var tag = '<span class="tag ' + stageTone(b.stage) + '">' + esc(b.stage === 'Quote only' ? 'Quote' : b.stage) + '</span>';
-        var sub = evList(b).join(' + ');
-        var right = committedNow
-          ? (b._owed > 0 ? money(b._owed) + ' owed' : hasCost ? 'paid' : '')
-          : '';
-        html += '<div class="item' + (b._pending ? ' pending' : '') + (b.stage === 'Not going ahead' ? ' dropped' : '') + '" data-t="bookings" data-row="' + b.row + '">' +
-          '<div class="who"><div class="avatar cat">' + esc(CAT_ICON[cat] || initials(b.name)) + '</div>' +
-          '<div class="meta"><div class="n">' + esc(b.name) + '</div>' + (evList(b).length ? '<div class="d-sub">' + esc(evList(b).join(' + ')) + '</div>' : '') + '<div class="s">' + tag + esc(sub) + (committedNow && unscheduledOf(b) > 0.5 ? '<span class="unsched">' + money(unscheduledOf(b)) + ' not scheduled</span>' : '') + '</div></div></div>' +
+        var right = committedNow ? (b._owed > 0 ? money(b._owed) + ' owed' : hasCost ? 'paid' : '') : '';
+        var un = committedNow && unscheduledOf(b) > 0.5 ? '<span class="unsched">' + money(unscheduledOf(b)) + ' not scheduled</span>' : '';
+        return '<div class="item' + (cls || '') + (b._pending ? ' pending' : '') + (b.stage === 'Not going ahead' ? ' dropped' : '') + '" data-t="bookings" data-row="' + b.row + '">' +
+          '<div class="who"><div class="avatar cat">' + esc(CAT_ICON[cat] || initials(cls === ' part' ? partName(b) : b.name)) + '</div>' +
+          '<div class="meta"><div class="n">' + esc(cls === ' part' ? partName(b) : b.name) + '</div><div class="d-sub">' + esc(sub) + '</div><div class="s">' + tag + esc(sub) + un + '</div></div></div>' +
           '<div class="bcol">' + tag + '</div>' +
           '<div class="bcol bnum' + (hasCost ? '' : ' dim') + '">' + (hasCost ? money(b._eff) : '–') + '</div>' +
           '<div class="bcol bnum' + (num(b.paid) ? '' : ' dim') + '">' + (num(b.paid) ? money(b.paid) : '–') + '</div>' +
-          '<div class="bcol bnum' + (committedNow && b._owed ? '' : ' dim') + '">' + (committedNow ? money(b._owed) : '–') + (committedNow && unscheduledOf(b) > 0.5 ? '<span class="unsched">' + money(unscheduledOf(b)) + ' not scheduled</span>' : '') + '</div>' +
+          '<div class="bcol bnum' + (committedNow && b._owed ? '' : ' dim') + '">' + (committedNow ? money(b._owed) : '–') + un + '</div>' +
           '<div class="amt"><b>' + (hasCost ? money(b._eff) : '–') + '</b><span>' + right + '</span></div></div>';
+      };
+      var pkgHead = function (par) {
+        var t = pkgTotals(par);
+        return '<div class="item pkg-head' + (par._pending ? ' pending' : '') + '" data-t="bookings" data-row="' + par.row + '">' +
+          '<div class="who"><div class="avatar cat pkg">' + esc(initials(par.name)) + '</div>' +
+          '<div class="meta"><div class="n">' + esc(par.name) + '</div><div class="d-sub">' + t.parts + (t.parts === 1 ? ' part' : ' parts') + ' · one payment schedule</div><div class="s"><span class="tag pkgtag">Package</span>' + t.parts + (t.parts === 1 ? ' part' : ' parts') + (t.paid ? ' · ' + money(t.paid) + ' paid' : '') + '</div></div></div>' +
+          '<div class="bcol"><span class="tag pkgtag">Package</span></div>' +
+          '<div class="bcol bnum">' + money(t.cost) + '</div>' +
+          '<div class="bcol bnum' + (t.paid ? '' : ' dim') + '">' + (t.paid ? money(t.paid) : '–') + '</div>' +
+          '<div class="bcol bnum' + (t.owed ? '' : ' dim') + '">' + (t.committed ? money(t.owed) : '–') + '</div>' +
+          '<div class="amt"><b>' + money(t.cost) + '</b><span>' + (t.committed ? (t.owed ? money(t.owed) + ' owed' : 'paid') : 'whole package') + '</span></div></div>';
+      };
+      var sections = {};
+      rows.forEach(function (b) { var k = evSection(b); (sections[k] = sections[k] || []).push(b); });
+      html = '<div class="list-head"><span>Vendor</span><span>Stage</span><span class="r">Cost</span><span class="r">Paid</span><span class="r">Still owed</span></div>';
+      SECTION_ORDER.concat(Object.keys(sections).filter(function (k) { return SECTION_ORDER.indexOf(k) === -1; })).forEach(function (sec) {
+        var rs = sections[sec]; if (!rs) return;
+        var secTot = 0; rs.forEach(function (x) { if (x.stage !== 'Not going ahead') secTot += x._eff; });
+        html += '<div class="grp sec"><span>' + esc(sec) + '</span><span>' + secBits(rs) + '</span></div>';
+        var pk = {}, solo = [];
+        rs.forEach(function (b) { if (b._parentRow) (pk[b._parentRow] = pk[b._parentRow] || []).push(b); else solo.push(b); });
+        Object.keys(pk).map(function (r) { return bookingByRow(r); }).filter(Boolean)
+          .sort(function (a, b) { return String(a.name).localeCompare(b.name); })
+          .forEach(function (par) {
+            html += pkgHead(par);
+            pk[par.row].sort(byCat).forEach(function (b) { html += rowHtml(b, ' part', (b.category || 'Other') + (sec === 'Both events' ? ' · ' + evList(b).join(' + ') : '')); });
+          });
+        solo.sort(byCat).forEach(function (b) { html += rowHtml(b, '', (b.category || 'Other') + (sec === 'Both events' ? ' · ' + evList(b).join(' + ') : '')); });
       });
       if (!rows.length) html = '<div class="empty"><b>' + (bud.q || bud.cat || bud.ev || bud.filter !== 'all' ? 'Nothing matches' : 'No vendors yet') + '</b>' +
         '</div>';
@@ -2895,8 +2980,16 @@
       return '<div class="field" data-k="' + f.k + '">' + label + '<select id="' + id + '">' + (f.req ? '' : '<option value="">Not set</option>') +
         so.map(function (x) { return '<option' + (x === val ? ' selected' : '') + '>' + esc(x) + '</option>'; }).join('') + '</select></div>';
     }
+    if (f.t === 'pkg') {
+      var me = bud.editing && bud.editing.row, mine = me && bookingByRow(me);
+      if (mine && mine._pkg) return '<input type="hidden" id="' + id + '" value="">';
+      var opts = bud.bookings.filter(function (b) { return b.row !== me && !b._parentRow && b.stage !== 'Not going ahead'; })
+        .sort(function (a, b) { return (b._pkg ? 1 : 0) - (a._pkg ? 1 : 0) || String(a.name).localeCompare(b.name); });
+      return '<div class="field" data-k="parent">' + label + '<select id="' + id + '"><option value="">Not part of a package</option>' +
+        opts.map(function (b) { return '<option value="' + b.row + '"' + (String(b.row) === String(val) ? ' selected' : '') + '>' + esc(b.name) + (b._pkg ? ' (package)' : '') + '</option>'; }).join('') + '</select></div>';
+    }
     if (f.t === 'booking') {
-      var list = bud.bookings.filter(function (b) { return b.stage !== 'Not going ahead' || String(b.row) === String(val); })
+      var list = bud.bookings.filter(function (b) { return (b.stage !== 'Not going ahead' && !b._parentRow) || String(b.row) === String(val); })
         .slice().sort(function (a, b) { return String(a.name).localeCompare(b.name); });
       return '<div class="field" data-k="' + f.k + '">' + label + '<select id="' + id + '"><option value="">Choose a booking…</option>' +
         list.map(function (b) { return '<option value="' + b.row + '"' + (String(b.row) === String(val) ? ' selected' : '') + '>' + esc(b.name) + '</option>'; }).join('') + '</select></div>';
@@ -2929,9 +3022,9 @@
   function isRefundable(p) { return /refundable/i.test(p.label || ''); }
   /** Price not yet covered by any scheduled payment (refundable deposits don't count toward the price). */
   function unscheduledOf(b) {
-    if (!b) return 0;
+    if (!b || b._parentRow) return 0;          // parts are paid through their package
     var sched = 0; paymentsOf(b.row).forEach(function (p) { if (!isRefundable(p)) sched += num(p.amount); });
-    var eff = b._eff !== undefined ? b._eff : num(b.cost);
+    var eff = b._pkg ? (pkgTotals(b).committed || pkgTotals(b).cost) : b._eff !== undefined ? b._eff : num(b.cost);
     return Math.round((eff - sched) * 100) / 100;
   }
   function extraGuestNote(b) {
@@ -2941,7 +3034,25 @@
     var extra = Math.max(0, H - num(b.included));
     return extra ? 'Extra guests: ' + extra + ' × ' + money(Math.round(rate * 100) / 100) : '';
   }
+  function packagePartsHtml(b) {
+    var t = pkgTotals(b);
+    return '<div class="group-title">Parts <span class="hint">' + money(t.cost) + ' total</span></div><div class="group bp">' +
+      b._kids.slice().sort(function (x, y) { return vendorCost(y) - vendorCost(x); }).map(function (k) {
+        return '<button type="button" class="bp-row" data-part="' + k.row + '"><span><b>' + esc(k.name) + '</b><small>' + esc([k.category, evList(k).map(function (e) { return EV_SECTION[e] || e; }).join(' + '), k.stage === 'Quote only' ? 'Quote' : k.stage].filter(Boolean).join(' · ')) + '</small></span>' +
+          '<span class="bp-right"><span class="bp-amt' + (k.stage === 'Not going ahead' ? ' dim' : '') + '">' + money(vendorCost(k)) + '</span></span></button>';
+      }).join('') + '<button type="button" class="bp-add" data-addpart="' + b.row + '">+ Add a part</button></div>';
+  }
   function bookingPaymentsHtml(row) {
+    var bb = row ? bookingByRow(row) : null;
+    if (bb && bb._parentRow) {
+      var par = bookingByRow(bb._parentRow);
+      return '<div class="group-title">Payments</div><p class="bp-empty">Paid through the <b>' + esc(par ? par.name : 'package') + '</b> package. Its payments are shared across its parts by cost' +
+        (num(bb.paid) ? ' — this part’s share so far is ' + money(bb.paid) : '') + '.</p><div class="group bp"><button type="button" class="bp-add" data-part="' + bb._parentRow + '">Open ' + esc(par ? par.name : 'package') + '</button></div>';
+    }
+    var partsHtml = bb && bb._pkg ? packagePartsHtml(bb) : (bb ? '<div class="group bp pkg-make"><button type="button" class="bp-add" data-addpart="' + bb.row + '">+ Split into parts (package)</button></div>' : '');
+    return partsHtml + bookingPaymentsHtml0(row);
+  }
+  function bookingPaymentsHtml0(row) {
     if (!row) return '<div class="group-title">Payments</div><p class="bp-empty">Give it a name first, then add deposits and instalments here.</p>';
     var ps = paymentsOf(row).slice().sort(function (a, b) { return (a.due || '9999') < (b.due || '9999') ? -1 : 1; });
     var b = bookingByRow(row), paidSum = 0; ps.forEach(function (p) { if (isPaid(p.paid)) paidSum += num(p.amount); });
@@ -2987,6 +3098,10 @@
       return '<div class="group' + (half ? ' counts' : '') + '">' + g.map(function (f) { return bField(f, data[f.k]); }).join('') + '</div>';
     }).join('') + (t === 'bookings' ? '<div id="bPays">' + bookingPaymentsHtml(row ? row.row : null) + '</div>' : '');
     pricingVis(); splitVis();
+    if (t === 'bookings' && row && row._pkg) {
+      ['category', 'event', 'pricing', 'cost', 'included', 'rate', 'tax', 'evPricing'].forEach(function (k) { var el = $('bFields').querySelector('[data-k="' + k + '"]'); if (el) el.style.display = 'none'; });
+      $('bSub').textContent = 'Package · ' + pkgTotals(row).parts + ' parts · ' + money(pkgTotals(row).cost) + (pkgTotals(row).committed ? ' · ' + money(pkgTotals(row).owed) + ' still owed' : '');
+    }
     $('bErr').textContent = '';
     $('bDel').style.display = isNew ? 'none' : '';
     $('bDel').textContent = t === 'bookings' ? 'Remove vendor' : t === 'purchases' ? 'Remove item' : 'Remove payment';
@@ -3040,7 +3155,7 @@
     });
     if (t === 'bookings') {
       var prev = o.row ? bookingByRow(o.row) : null;
-      o.paid = prev ? prev.paid : 0;
+      o.paid = prev ? (prev._own !== undefined ? prev._own : prev.paid) : 0;
       o.owed = o.cost === '' ? '' : Math.max(0, o.cost - num(o.paid));
     } else if (t === 'installments') {
       o.booking = Number(o.booking) || ''; var bk = bookingByRow(o.booking); o.forName = bk ? bk.name : '';
@@ -3262,6 +3377,9 @@
     var p = e.target.closest('[data-pay]'), a = e.target.closest('[data-addpay]');
     if (p) { var pr = p.dataset.pay; switchToPayment(function () { openPayment(pr); }); }
     if (a) { var br = a.dataset.addpay; switchToPayment(function () { bud.newFor = br; openBudgetForm(null, 'installments'); bud.newFor = ''; }); }
+    var pt = e.target.closest('[data-part]'), ap = e.target.closest('[data-addpart]');
+    if (pt) { var pr2 = pt.dataset.part; switchToPayment(function () { var bk = bookingByRow(pr2); if (bk) openBudgetForm(bk, 'bookings'); }); }
+    if (ap) { var par = ap.dataset.addpart; switchToPayment(function () { bud.newParent = par; openBudgetForm(null, 'bookings'); bud.newParent = ''; }); }
   });
   $('bq').addEventListener('input', function (e) { bud.q = e.target.value.trim().toLowerCase(); renderBudgetList(); });
   $('bList').addEventListener('click', function (e) {
@@ -3439,7 +3557,7 @@
       fields: { name: 'Booking', category: 'Category', event: 'Event', stage: 'Stage', cost: 'Cost (CAD)',
         paid: 'Paid (CAD)', owed: 'Still owed (CAD)', payer: 'Paid by', contact: 'Contact Name', phone: 'Phone', email: 'Email', notes: 'Notes', row: 'Booking #',
         pricing: 'Pricing', rate: 'Per guest (CAD)', included: 'Guests included', tax: 'Tax %',
-        splitCer: 'Ceremony share (CAD)', splitRec: 'Reception share (CAD)', splitPre: 'Pre-wedding share (CAD)', evPricing: 'Pricing by event' },
+        splitCer: 'Ceremony share (CAD)', splitRec: 'Reception share (CAD)', splitPre: 'Pre-wedding share (CAD)', evPricing: 'Pricing by event', parent: 'Part of package' },
       readOnly: ['paid', 'owed', 'row'], money: ['cost', 'paid', 'owed', 'rate', 'splitCer', 'splitRec', 'splitPre'], dates: [] },
     installments: { key: 'booking', match: ['Booking #', 'Payment', 'Amount (CAD)'],
       fields: { booking: 'Booking #', forName: 'For', label: 'Payment', amount: 'Amount (CAD)', due: 'Due Date',
@@ -3547,6 +3665,7 @@
       } else out[k] = str(v, 1000);
     });
     if (cfg === BUDGET.purchases || cfg === BUDGET.bookings) out.payer = normPayer(out.payer);
+    if (cfg === BUDGET.bookings) { out.parent = Number(out.parent) || ''; if (out.parent && Number(d.row) === out.parent) out.parent = ''; }
     if (cfg === BUDGET.installments) {
       out.booking = Number(out.booking) || '';
       if (!out.booking) throw new Error('Pick which booking this payment is for.');
