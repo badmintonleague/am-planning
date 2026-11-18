@@ -445,6 +445,10 @@
   .item.part .avatar{width:30px;height:30px;font-size:13px}
   .pkg-make{margin-bottom:6px}
   .bp-amt.dim{color:var(--muted);text-decoration:line-through}
+  .ftotal{margin:8px 0 0;font-size:13.5px;font-weight:500;color:var(--ink)}
+  .ftotal:empty{display:none}
+  .evp-addtax{margin-top:8px;border:1px dashed var(--line);background:none;border-radius:999px;padding:6px 12px;font-size:12.5px;cursor:pointer;color:var(--ink2)}
+  .evp-addtax.on{border-style:solid;border-color:var(--ink);color:var(--ink)}
   .grp+.item{border-top:0}
   .avatar.cat{background:var(--gold-soft);color:#8A6A22;font-size:12px;letter-spacing:.5px}
   .item.dropped{opacity:.55}
@@ -2272,11 +2276,12 @@
   var COMMITTED = ['Booked', 'Paid in full'];
   var SHORTLIST = ['Considering'];             // counted in the plan; 'Quote only' is just a price on file, not counted
   var BUD_DEFAULTS = {
-    categories: ['Venue', 'Catering', 'Photo & Video', 'Decor & Mandap', 'Priest & Music', 'Attire & Beauty', 'Rentals', 'Stationery & Favours', 'Other'],
+    categories: ['Venue', 'Catering', 'Staffing', 'Photo & Video', 'Decor & Mandap', 'Priest & Music', 'Attire & Beauty', 'Rentals', 'Stationery & Favours', 'Other'],
     events: ['Ceremony', 'Reception', 'Pre-wedding'],
     stages: ['Quote only', 'Considering', 'Booked', 'Paid in full', 'Not going ahead'],
     pricing: ['Flat', 'Per guest', 'Flat + extra guests'],
     kinds: ['Vendor', 'Package'],
+    flatTax: ['No', 'Yes'],
     paid: ['No', 'Yes'],
     forWho: ['Bride', 'Groom', 'Bridal party', 'Family', 'Guests', 'Other'],
     types: ['Clothing', 'Jewellery', 'Accessories', 'Gifts & favours', 'DIY decor', 'Other'],
@@ -2286,8 +2291,9 @@
   var TYPE_ICON = { 'Clothing': 'CL', 'Jewellery': 'JW', 'Accessories': 'AC', 'Gifts & favours': 'GF', 'DIY decor': 'DY', 'Other': '•' };
   function isBought(p) { return p.status === 'Bought' || p.status === 'Ordered'; }
   function shopCost(p) { return num(p.actual); }
-  function bOpt(k) { if (k === 'pricing' || k === 'events' || k === 'kinds') return BUD_DEFAULTS[k]; var o = bud.options && bud.options[k]; o = o && o.length ? o : BUD_DEFAULTS[k]; if (k === 'stages') { o = o.filter(function (x) { return x !== 'Quoted'; }); if (o.indexOf('Quote only') === -1) o = ['Quote only'].concat(o); } return o; }
-  var CAT_ICON = { 'Venue': 'VN', 'Catering': 'CT', 'Photo & Video': 'PV', 'Decor & Mandap': 'DM', 'Priest & Music': 'PM',
+  function bOpt(k) { if (k === 'pricing' || k === 'events' || k === 'kinds' || k === 'flatTax') return BUD_DEFAULTS[k]; var o = bud.options && bud.options[k]; o = o && o.length ? o : BUD_DEFAULTS[k];
+    if (k === 'categories' && o.indexOf('Staffing') === -1) { o = o.slice(); var ci = o.indexOf('Catering'); o.splice(ci === -1 ? o.length - 1 : ci + 1, 0, 'Staffing'); } if (k === 'stages') { o = o.filter(function (x) { return x !== 'Quoted'; }); if (o.indexOf('Quote only') === -1) o = ['Quote only'].concat(o); } return o; }
+  var CAT_ICON = { 'Venue': 'VN', 'Catering': 'CT', 'Staffing': 'ST', 'Photo & Video': 'PV', 'Decor & Mandap': 'DM', 'Priest & Music': 'PM',
                    'Attire & Beauty': 'AB', 'Rentals': 'RN', 'Stationery & Favours': 'SF', 'Other': '•' };
 
   var BFORM = {
@@ -2300,7 +2306,8 @@
          { k: 'event', l: 'For', t: 'mseg', o: 'events' }, { k: 'parent', l: 'Part of a package', t: 'pkg' }],
         [{ k: 'stage', l: 'Status', t: 'select', o: 'stages', req: 1 }, { k: 'pricing', l: 'Pricing', t: 'seg', o: 'pricing' },
          { k: 'cost', l: 'Quote / price', t: 'money' }, { k: 'included', l: 'Guests included', t: 'number' },
-         { k: 'rate', l: 'Per extra guest', t: 'money' }, { k: 'tax', l: 'Tax %', t: 'number' },
+         { k: 'rate', l: 'Per extra guest', t: 'money' }, { k: 'fee', l: 'Admin / service fee %', t: 'number' },
+         { k: 'flatTax', l: 'Tax', t: 'seg', o: 'flatTax', labels: { No: 'Price includes tax', Yes: 'Add tax' } }, { k: 'tax', l: 'Tax %', t: 'number' },
          { k: 'evPricing', l: 'Pricing by event', t: 'evpricing' }],
         [{ k: 'contact', l: 'Contact name', t: 'text' }, { k: 'phone', l: 'Phone', t: 'tel' },
          { k: 'email', l: 'Email', t: 'email' }, { k: 'notes', l: 'Notes', t: 'area' }]
@@ -2344,9 +2351,12 @@
     var o = evpOf(b);
     if (o) { var t = 0, L = evList(b); Object.keys(o).forEach(function (ev) { if (L.indexOf(ev) !== -1) t += effCost(o[ev], guestsFor(ev)); }); return t; }
     var pr = pricingOf(b), tax = 1 + (b.tax === '' || b.tax === undefined ? 0 : num(b.tax)) / 100, rate = num(b.rate);
-    if (pr === 'Per guest') return Math.round(rate * n * tax * 100) / 100;
-    if (pr === 'Flat + extra guests') return num(b.cost) + Math.round(Math.max(0, n - num(b.included)) * rate * tax * 100) / 100;
-    return num(b.cost);
+    var fee = 1 + num(b.fee) / 100;                       // admin / service fee, on the whole price
+    var baseTax = b.flatTax === 'Yes' ? tax : 1;          // flat prices: tax only when "Add tax" is on
+    var r2 = function (x) { return Math.round(x * 100) / 100; };
+    if (pr === 'Per guest') return r2(rate * n * fee * tax);
+    if (pr === 'Flat + extra guests') return r2(num(b.cost) * fee * baseTax) + r2(Math.max(0, n - num(b.included)) * rate * fee * tax);
+    return r2(num(b.cost) * fee * baseTax);
   }
   function guestListCount() {
     if (typeof state === 'undefined' || !state.guests) return 0;
@@ -2424,6 +2434,7 @@
       if (sel.indexOf(el.dataset.ev) === -1) return;
       var c = { pricing: el.querySelector('.evp-pr').dataset.value || 'Flat' };
       el.querySelectorAll('input[data-f]').forEach(function (i) { var v = i.value.trim(); if (v !== '') c[i.dataset.f] = v; });
+      if (el.querySelector('.evp-addtax.on')) c.flatTax = 'Yes';
       out[el.dataset.ev] = c;
     });
     return Object.keys(out).length ? JSON.stringify(out) : '';
@@ -2432,7 +2443,7 @@
     var wrap = $('bFields'); if (!wrap) return;
     var ev = wrap.querySelector('#b_event'); if (!ev) return;
     var sel = evList(ev.dataset.value), multi = sel.length > 1;
-    ['pricing', 'cost', 'included', 'rate', 'tax'].forEach(function (k) { var f = wrap.querySelector('.field[data-k="' + k + '"]'); if (f && multi) f.style.display = 'none'; });
+    ['pricing', 'cost', 'included', 'rate', 'tax', 'fee', 'flatTax'].forEach(function (k) { var f = wrap.querySelector('.field[data-k="' + k + '"]'); if (f && multi) f.style.display = 'none'; });
     var box = wrap.querySelector('.field[data-k="evPricing"]'); if (!box) return;
     box.style.display = multi ? '' : 'none';
     if (!multi) { pricingVis(); return; }
@@ -2441,8 +2452,10 @@
       var pr = el.querySelector('.evp-pr').dataset.value || 'Flat';
       var show = function (k, on, lab) { var f = el.querySelector('.evp-f[data-f="' + k + '"]'); f.style.display = on ? '' : 'none'; if (lab) f.querySelector('span').textContent = lab; };
       show('cost', pr !== 'Per guest', pr === 'Flat + extra guests' ? 'Base price' : 'Price');
-      show('included', pr === 'Flat + extra guests'); show('rate', pr !== 'Flat', pr === 'Per guest' ? 'Per guest' : 'Per extra guest'); show('tax', pr !== 'Flat');
-      var c = { pricing: pr }; el.querySelectorAll('input[data-f]').forEach(function (i) { c[i.dataset.f] = i.value.trim(); });
+      var at = el.querySelector('.evp-addtax'), addT = at.classList.contains('on');
+      show('included', pr === 'Flat + extra guests'); show('rate', pr !== 'Flat', pr === 'Per guest' ? 'Per guest' : 'Per extra guest'); show('tax', pr !== 'Flat' || addT);
+      at.style.display = pr === 'Per guest' ? 'none' : '';
+      var c = { pricing: pr, flatTax: addT ? 'Yes' : 'No' }; el.querySelectorAll('input[data-f]').forEach(function (i) { c[i.dataset.f] = i.value.trim(); });
       var t = effCost(c, guestsFor(el.dataset.ev));
       el.querySelector('.evp-tot').textContent = el.classList.contains('on') && t ? money(Math.round(t)) : '';
     });
@@ -2451,7 +2464,7 @@
   function kindVis() {
     var wrap = $('bFields'), seg = wrap && wrap.querySelector('#b_kind'); if (!seg) return;
     var pkg = seg.dataset.value === 'Package';
-    ['category', 'event', 'pricing', 'cost', 'included', 'rate', 'tax', 'evPricing', 'parent'].forEach(function (k) { var el = wrap.querySelector('[data-k="' + k + '"]'); if (el) el.style.display = pkg ? 'none' : ''; });
+    ['category', 'event', 'pricing', 'cost', 'included', 'rate', 'tax', 'fee', 'flatTax', 'evPricing', 'parent'].forEach(function (k) { var el = wrap.querySelector('[data-k="' + k + '"]'); if (el) el.style.display = pkg ? 'none' : ''; });
     var nm = $('b_name'); if (nm) nm.placeholder = pkg ? 'e.g. Mardi Gras' : 'e.g. Nantha Catering';
     var h = seg.parentNode.querySelector('.fhint') || seg.parentNode.appendChild(Object.assign(document.createElement('p'), { className: 'fhint' }));
     h.textContent = pkg ? 'Add each service as a part (catering, priest, decor…). Payments go on the package.' : '';
@@ -2473,7 +2486,16 @@
     show('cost', pr !== 'Per guest', pr === 'Flat + extra guests' ? 'Base price' : 'Quote / price');
     show('included', pr === 'Flat + extra guests');
     show('rate', pr !== 'Flat', pr === 'Per guest' ? 'Per guest' : 'Per extra guest');
-    show('tax', pr !== 'Flat');
+    var ft = wrap.querySelector('#b_flatTax'), addTax = ft && ft.dataset.value === 'Yes';
+    show('flatTax', pr !== 'Per guest', pr === 'Flat + extra guests' ? 'Tax on base price' : 'Tax');
+    show('tax', pr !== 'Flat' || addTax);
+    show('fee', true);
+    // running total so the fee + tax maths is visible
+    var feeF = wrap.querySelector('.field[data-k="fee"]'); if (!feeF) return;
+    var c = { pricing: pr, cost: ($('b_cost') || {}).value, included: ($('b_included') || {}).value, rate: ($('b_rate') || {}).value, tax: ($('b_tax') || {}).value, fee: ($('b_fee') || {}).value, flatTax: addTax ? 'Yes' : 'No' };
+    var evs2 = evList((wrap.querySelector('#b_event') || { dataset: {} }).dataset.value || ''), n = guestsFor(evs2[0] || 'Reception');
+    var tot = effCost(c, n), h = feeF.querySelector('.ftotal') || feeF.appendChild(Object.assign(document.createElement('p'), { className: 'ftotal' }));
+    h.textContent = tot && (num(c.fee) || addTax || pr !== 'Flat') ? 'Total ' + money(tot) + (pr !== 'Flat' ? ' at ' + n + ' guests' : '') : '';
   }
   /* ---------- Insights ---------- */
   var WED = new Date(2027, 8, 5);
@@ -2990,6 +3012,7 @@
     var id = 'b_' + f.k, val = v === undefined || v === null ? '' : v;
     if (f.k === 'pricing' && !val) val = 'Flat';
     if (f.k === 'kind') val = val === 'Package' ? 'Package' : 'Vendor';
+    if (f.k === 'flatTax') val = val === 'Yes' ? 'Yes' : 'No';
     var label = '<label for="' + id + '">' + esc(f.l) + '</label>';
     if (f.t === 'seg') {
       var opts = o.slice(); if (val && opts.indexOf(val) === -1) opts.push(val);
@@ -3030,7 +3053,8 @@
         return '<div class="evp-ev' + (on ? ' on' : '') + '" data-ev="' + ev + '"><button type="button" class="evp-tog">' + ev + '<b class="evp-tot"></b></button>' +
           '<div class="evp-body"><div class="seg evp-pr" data-value="' + esc(c.pricing || 'Flat') + '">' + BUD_DEFAULTS.pricing.map(function (x) {
             return '<button type="button" class="' + (x === (c.pricing || 'Flat') ? 'on' : '') + '" data-v="' + esc(x) + '">' + esc(x) + '</button>'; }).join('') + '</div>' +
-          '<div class="evp-grid">' + inp('cost', 'Price', 1) + inp('included', 'Guests included') + inp('rate', 'Per guest', 1) + inp('tax', 'Tax %') + '</div></div></div>';
+          '<div class="evp-grid">' + inp('cost', 'Price', 1) + inp('included', 'Guests included') + inp('rate', 'Per guest', 1) + inp('fee', 'Fee %') + inp('tax', 'Tax %') + '</div>' +
+          '<button type="button" class="evp-addtax' + (c.flatTax === 'Yes' ? ' on' : '') + '">' + (c.flatTax === 'Yes' ? '✓ Tax added to price' : '+ Add tax to price') + '</button></div></div>';
       }).join('') + '</div>';
     }
     if (f.t === 'money') {
@@ -3111,7 +3135,7 @@
     $('bTitle').textContent = isNew ? F.addTitle : (t === 'installments' ? (row.forName || 'Payment') : t === 'purchases' ? row.item : row.name);
     if (t === 'purchases') bud.editing.display = data.item || '';
     var sub = '';
-    if (!isNew && t === 'bookings') sub = [row.category, row.cost !== '' ? money(row.cost) + (isCommitted(row) ? ' · ' + money(row.owed) + ' still owed' : '') : 'No cost yet'].filter(Boolean).join(' · ');
+    if (!isNew && t === 'bookings') sub = [row.category, row.cost !== '' || row._eff ? money(row._eff !== undefined ? row._eff : row.cost) + (isCommitted(row) ? ' · ' + money(row._owed !== undefined ? row._owed : row.owed) + ' still owed' : '') : 'No cost yet'].filter(Boolean).join(' · ');
     if (!isNew && t === 'purchases') sub = [row.forWho ? 'For ' + row.forWho : '', row.status || 'To buy', row.actual !== '' ? money(row.actual) : ''].filter(Boolean).join(' · ');
     if (!isNew && t === 'installments') sub = (row.label || 'Payment') + ' · ' + money(row.amount) + (row.due ? ' · due ' + fmtDate(row.due) : '');
     $('bSub').textContent = isNew ? 'Changes save automatically as you type.' : sub;
@@ -3274,7 +3298,11 @@
   }
 
   $('bFields').addEventListener('click', function (e) { if (e.target.closest('#b_pricing [data-v], #b_event [data-v]')) setTimeout(function () { pricingVis(); splitVis(); }, 0); if (e.target.closest('#b_kind [data-v]')) setTimeout(kindVis, 0); });
-  $('bFields').addEventListener('input', function () { splitVis(); });
+  $('bFields').addEventListener('input', function () { splitVis(); pricingVis(); });
+  $('bFields').addEventListener('click', function (e) {
+    var t = e.target.closest('.evp-addtax'); if (t) { t.classList.toggle('on'); t.textContent = t.classList.contains('on') ? '✓ Tax added to price' : '+ Add tax to price'; splitVis(); if (bAuto) bAuto.schedule(250); }
+    if (e.target.closest('#b_flatTax [data-v]')) setTimeout(pricingVis, 0);
+  });
   $('bFields').addEventListener('click', function (e) {
     var b = e.target.closest('.mseg [data-v]'); if (!b) return;
     e.stopImmediatePropagation(); e.stopPropagation();
@@ -3552,7 +3580,7 @@
     receptionRsvp: RSVP_OPTIONS,
     dietary: ['Non-veg', 'Vegetarian', 'Vegan', 'Other (see notes)'],
     budget: {
-      categories: ['Venue', 'Catering', 'Photo & Video', 'Decor & Mandap', 'Priest & Music', 'Attire & Beauty',
+      categories: ['Venue', 'Catering', 'Staffing', 'Photo & Video', 'Decor & Mandap', 'Priest & Music', 'Attire & Beauty',
                    'Rentals', 'Stationery & Favours', 'Other'],
       events: ['Ceremony', 'Reception', 'Both', 'Pre-wedding'],
       stages: ['Quote only', 'Considering', 'Booked', 'Paid in full', 'Not going ahead'],
@@ -3580,7 +3608,7 @@
     bookings: { key: 'name', match: ['Booking', 'Category', 'Stage'],
       fields: { name: 'Booking', category: 'Category', event: 'Event', stage: 'Stage', cost: 'Cost (CAD)',
         paid: 'Paid (CAD)', owed: 'Still owed (CAD)', payer: 'Paid by', contact: 'Contact Name', phone: 'Phone', email: 'Email', notes: 'Notes', row: 'Booking #',
-        pricing: 'Pricing', rate: 'Per guest (CAD)', included: 'Guests included', tax: 'Tax %',
+        pricing: 'Pricing', rate: 'Per guest (CAD)', included: 'Guests included', tax: 'Tax %', fee: 'Admin fee %', flatTax: 'Add tax to flat price',
         splitCer: 'Ceremony share (CAD)', splitRec: 'Reception share (CAD)', splitPre: 'Pre-wedding share (CAD)', evPricing: 'Pricing by event', parent: 'Part of package', kind: 'Vendor or package' },
       readOnly: ['paid', 'owed', 'row'], money: ['cost', 'paid', 'owed', 'rate', 'splitCer', 'splitRec', 'splitPre'], dates: [] },
     installments: { key: 'booking', match: ['Booking #', 'Payment', 'Amount (CAD)'],
