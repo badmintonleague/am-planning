@@ -2658,7 +2658,9 @@
   }
   var EV_SECTION = { Ceremony: 'Wedding', Reception: 'Reception', 'Pre-wedding': 'Pre-wedding' };
   function evSection(b) { var L = evList(b); return !L.length ? 'No event set' : L.length > 1 ? 'Both events' : (EV_SECTION[L[0]] || L[0]); }
-  var SECTION_ORDER = ['Wedding', 'Reception', 'Pre-wedding', 'Both events', 'No event set'];
+  var LAST_SECTION = 'Quotes & no event set';
+  var SECTION_ORDER = ['Wedding', 'Reception', 'Pre-wedding', 'Both events', LAST_SECTION];
+  function listSection(b) { return b.stage === 'Quote only' || !evList(b).length ? LAST_SECTION : evSection(b); }
 
   function isCommitted(b) { return COMMITTED.indexOf(b.stage) !== -1 || (num(b.paid) > 0 && b.stage !== 'Not going ahead'); }
   function bookingByRow(r) { r = Number(r); for (var i = 0; i < bud.bookings.length; i++) if (bud.bookings[i].row === r) return bud.bookings[i]; return null; }
@@ -2911,9 +2913,9 @@
           '<div class="amt"><b>' + money(t.cost) + '</b><span>' + (t.committed ? (t.owed ? money(t.owed) + ' owed' : 'paid') : 'whole package') + '</span></div></div>';
       };
       var sections = {};
-      rows.forEach(function (b) { var k = evSection(b); (sections[k] = sections[k] || []).push(b); });
+      rows.forEach(function (b) { var k = listSection(b); (sections[k] = sections[k] || []).push(b); });
       html = '<div class="list-head"><span>Vendor</span><span>Stage</span><span class="r">Cost</span><span class="r">Paid</span><span class="r">Still owed</span></div>';
-      SECTION_ORDER.concat(Object.keys(sections).filter(function (k) { return SECTION_ORDER.indexOf(k) === -1; })).forEach(function (sec) {
+      SECTION_ORDER.slice(0, -1).concat(Object.keys(sections).filter(function (k) { return SECTION_ORDER.indexOf(k) === -1; }), [LAST_SECTION]).forEach(function (sec) {
         var rs = sections[sec]; if (!rs) return;
         var secTot = 0; rs.forEach(function (x) { if (x.stage !== 'Not going ahead') secTot += x._eff; });
         html += '<div class="grp sec"><span>' + esc(sec) + '</span><span>' + secBits(rs) + '</span></div>';
@@ -2923,9 +2925,9 @@
           .sort(function (a, b) { return String(a.name).localeCompare(b.name); })
           .forEach(function (par) {
             html += pkgHead(par);
-            pk[par.row].sort(byCat).forEach(function (b) { html += rowHtml(b, ' part', (b.category || 'Other') + (sec === 'Both events' ? ' · ' + evList(b).join(' + ') : '')); });
+            pk[par.row].sort(byCat).forEach(function (b) { html += rowHtml(b, ' part', (b.category || 'Other') + ((sec === 'Both events' || sec === LAST_SECTION) && evList(b).length ? ' · ' + evList(b).map(function (e) { return EV_SECTION[e] || e; }).join(' + ') : '')); });
           });
-        solo.sort(byCat).forEach(function (b) { html += rowHtml(b, '', (b.category || 'Other') + (sec === 'Both events' ? ' · ' + evList(b).join(' + ') : '')); });
+        solo.sort(byCat).forEach(function (b) { html += rowHtml(b, '', (b.category || 'Other') + ((sec === 'Both events' || sec === LAST_SECTION) && evList(b).length ? ' · ' + evList(b).map(function (e) { return EV_SECTION[e] || e; }).join(' + ') : '')); });
       });
       if (!rows.length) html = '<div class="empty"><b>' + (bud.q || bud.cat || bud.ev || bud.filter !== 'all' ? 'Nothing matches' : 'No vendors yet') + '</b>' +
         '</div>';
