@@ -525,6 +525,37 @@
   .ib-bar i.bad{background:var(--no)}.ib-bar i.soft{background:#D9C79B}.ib-bar i.soft2{background:#E7D9B3}
   .ib-row b{font-weight:500;white-space:nowrap}
   .gf-in{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+  .mg-sub{font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:20px 0 8px}
+  .mg-head{display:flex;align-items:flex-end;justify-content:space-between;gap:10px}
+  .mg-head .seg{margin:0 0 6px} .mg-head .seg button,.mg-ev button{padding:6px 11px;font-size:12.5px}
+  .mg-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .mg-kpis>div{background:var(--bg);border-radius:12px;padding:10px 12px;min-width:0}
+  .mg-kpis small{display:block;font-size:11.5px;color:var(--muted)}
+  .mg-kpis b{font-size:17px;font-weight:600;white-space:nowrap}
+  .mg-kpis.wi{margin-top:4px}
+  .mg-note{font-size:12.5px;color:var(--muted);margin:8px 0 0}
+  .mg-note b{color:var(--ink)}
+  .mg-row{display:grid;grid-template-columns:minmax(0,1.5fr) repeat(3,minmax(0,1fr));gap:6px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+  .mg-n b{display:block;font-weight:600;font-size:14px} .mg-n small{font-size:12px;color:var(--muted)}
+  .mg-be{grid-column:1/-1;font-size:11.5px;color:var(--muted);margin-top:-2px}
+  .mg-row .gf-c{display:flex;flex-direction:column;align-items:flex-start;text-align:left;font-size:15px;font-weight:600;white-space:nowrap}
+  .mg-row .gf-c small{font-size:11.5px;font-weight:400;color:var(--muted)}
+  .mg-row .gf-net.ok{color:#2F7D4F} .mg-row .gf-net.bad{color:#B3261E}
+  .mg-head .seg{display:inline-flex;flex-wrap:nowrap;flex:none}
+  .mg-sl{margin-bottom:10px}
+  .mg-sl-h{display:flex;justify-content:space-between;font-size:13.5px}
+  .mg-sl-h b{font-weight:600}
+  .mg-sl input[type=range]{width:100%;accent-color:var(--ink);margin:6px 0 2px}
+  .mg-step{font-size:12px;color:var(--muted);margin:0}
+  .mg-step b{color:var(--ink);font-weight:600}
+  .mg-reset{border:0;background:none;padding:0;color:var(--ink);text-decoration:underline;cursor:pointer;font:inherit}
+  .mg-add{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+  .mg-num{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:999px;padding:3px}
+  .mg-num button{width:30px;height:30px;border-radius:50%;border:0;background:var(--bg);font-size:17px;cursor:pointer}
+  .mg-num b{min-width:22px;text-align:center}
+  .mg-ev{margin:0}
+  b.ok{color:#2F7D4F} b.bad{color:#B3261E}
+  @media (max-width:520px){ .mg-kpis{grid-template-columns:repeat(2,1fr)} .mg-row{grid-template-columns:repeat(3,minmax(0,1fr))} .mg-n{grid-column:1/-1} .mg-n b{display:inline;margin-right:6px} .mg-head{flex-direction:column;align-items:flex-start;gap:0} .mg-head .mg-sub{margin-bottom:6px} }
   .gf-in label{display:flex;flex-direction:column;font-size:12px;color:var(--muted);position:relative}
   .gf-in input{border:1px solid var(--line);border-radius:10px;height:40px;box-sizing:border-box;padding:0 10px 0 22px;font:inherit;font-size:15px;color:var(--ink);margin-top:4px;width:100%}
   .gf-in i{position:absolute;left:10px;bottom:0;height:40px;line-height:40px;font-style:normal;color:var(--muted);font-size:15px}
@@ -2575,12 +2606,66 @@
   function hhPeople(g) { return Math.max(num(g.weddingAdults) + num(g.weddingKids), num(g.receptionAdults) + num(g.receptionKids)); }
   function hhType(n) { return n <= 1 ? 'Individual' : n === 2 ? 'Couple' : 'Family'; }
   function marginal(ev) { var n = planFor(ev); return eventCostAt(ev, n + 1) - eventCostAt(ev, n); }
+  /* ---------- Margins: gifts vs what guests add to the bill ----------
+   * Costs are "what these guests add" = cost at today's count minus cost without them,
+   * so contract minimums (e.g. 350 at Willow Springs) are handled: guests under a minimum add ~$0. */
+  var MG_INV = ['Both', 'Ceremony only', 'Reception only'];
+  function mgHouseholds() {
+    var out = [], Lw = 0, Lr = 0;
+    (typeof state !== 'undefined' && state.guests ? state.guests : []).forEach(function (g) {
+      var w = g.weddingRsvp === 'Declined' ? 0 : num(g.weddingAdults) + num(g.weddingKids);
+      var r = g.receptionRsvp === 'Declined' ? 0 : num(g.receptionAdults) + num(g.receptionKids);
+      if (!w && !r) return;
+      Lw += w; Lr += r;
+      out.push({ w: w, r: r, size: Math.max(w, r), type: hhType(Math.max(w, r)), inv: w && r ? 'Both' : w ? 'Ceremony only' : 'Reception only' });
+    });
+    var Nw = planFor('Ceremony'), Nr = planFor('Reception'), fw = Lw ? Nw / Lw : 0, fr = Lr ? Nr / Lr : 0;
+    out.forEach(function (h) { h.ew = h.w * fw; h.er = h.r * fr; h.f = (h.ew + h.er) / (h.w + h.r); });
+    return { list: out, Nw: Nw, Nr: Nr, Lw: Lw, Lr: Lr };
+  }
+  function giftFor(type) { var g = (bud.plan && bud.plan.gifts) || {}; return num(g[type]); }
+  function addsCost(kw, kr, Nw, Nr) {
+    return (eventCostAt('Ceremony', Nw) - eventCostAt('Ceremony', Math.max(0, Nw - kw))) + (eventCostAt('Reception', Nr) - eventCostAt('Reception', Math.max(0, Nr - kr)));
+  }
+  function projectedTotal() {
+    var t = 0; costRows().forEach(function (b) { if (counted(b)) t += isCommitted(b) ? Math.max(b._eff, num(b.paid)) : b._eff; });
+    bud.purchases.forEach(function (p) { t += num(p.actual); });
+    return t;
+  }
+  function stepNote(ev, n) {
+    var m = function (k) { return eventCostAt(ev, k + 1) - eventCostAt(ev, k); };
+    var now = m(n), k = n + 1, lim = n + 400;
+    while (k < lim && Math.abs(m(k) - now) < 0.5) k++;
+    var txt = (now < 0.5 ? 'Next guests add <b>nothing</b>' : 'Each extra guest adds <b>' + money(Math.round(now)) + '</b>');
+    if (k < lim) txt += ' until ' + k + ', then <b>' + money(Math.round(m(k))) + '</b> each';
+    return txt;
+  }
   function renderGifts() {
     var el = $('bGift'); if (!el) return;
     var g = (bud.plan && bud.plan.gifts) || {};
-    el.innerHTML = '<h3>Gifts vs cost</h3><div class="gf-in">' + GTYPES.map(function (t) {
-      return '<label><span>' + t[0] + '</span><i>$</i><input data-gift="' + t[0] + '" inputmode="decimal" placeholder="0" value="' + (setv(g[t[0]]) ? num(g[t[0]]) : '') + '"></label>';
-    }).join('') + '</div><div id="bGiftOut"></div>';
+    if (!bud.mgBy) bud.mgBy = 'inv';
+    var H = mgHouseholds();
+    if (!bud.wi) bud.wi = { w: H.Nw, r: H.Nr };
+    var maxN = Math.max(500, Math.ceil(Math.max(H.Lw, H.Lr, H.Nw, H.Nr) * 1.4 / 10) * 10);
+    el.innerHTML = '<h3>Margins</h3>' +
+      '<div id="mgTop"></div>' +
+      '<div class="mg-sub">Typical gift per household</div><div class="gf-in">' + GTYPES.map(function (t) {
+        return '<label><span>' + t[0] + '</span><i>$</i><input data-gift="' + t[0] + '" inputmode="decimal" placeholder="0" value="' + (setv(g[t[0]]) ? num(g[t[0]]) : '') + '"></label>';
+      }).join('') + '</div>' +
+      '<div class="mg-head"><div class="mg-sub">Who costs what</div><div class="seg mg-by">' +
+        [['inv', 'By invite'], ['size', 'By household']].map(function (x) { return '<button type="button" class="' + (bud.mgBy === x[0] ? 'on' : '') + '" data-mgby="' + x[0] + '">' + x[1] + '</button>'; }).join('') + '</div></div>' +
+      '<div id="mgTable"></div>' +
+      '<div class="mg-sub">What if</div>' +
+      ['w', 'r'].map(function (k) {
+        var lab = k === 'w' ? 'Ceremony' : 'Reception';
+        return '<div class="mg-sl"><div class="mg-sl-h"><span>' + lab + '</span><b id="mgv_' + k + '">' + bud.wi[k] + '</b></div>' +
+          '<input type="range" min="0" max="' + maxN + '" step="1" value="' + bud.wi[k] + '" data-wi="' + k + '"><p class="mg-step" id="mgs_' + k + '"></p></div>';
+      }).join('') +
+      '<div id="mgWi"></div>' +
+      '<div class="mg-sub">Add guests</div>' +
+      '<div class="mg-add"><div class="mg-num"><button type="button" data-addn="-1">−</button><b id="mgAddN">' + (bud.mgAdd || 2) + '</b><button type="button" data-addn="1">+</button></div>' +
+        '<div class="seg mg-ev">' + MG_INV.map(function (x) { return '<button type="button" class="' + ((bud.mgAddEv || 'Both') === x ? 'on' : '') + '" data-addev="' + x + '">' + x.replace(' only', '') + '</button>'; }).join('') + '</div></div>' +
+      '<div id="mgAddOut"></div>';
     el.querySelectorAll('[data-gift]').forEach(function (inp) {
       inp.addEventListener('input', function () {
         bud.plan = Object.assign({}, bud.plan || {}); bud.plan.gifts = Object.assign({}, bud.plan.gifts || {});
@@ -2590,36 +2675,64 @@
         renderGifts._t = setTimeout(function () { google.script.run.withSuccessHandler(function () {}).withFailureHandler(function () {}).saveBudgetPlanning(bud.plan); }, 600);
       });
     });
+    el.querySelectorAll('[data-wi]').forEach(function (inp) {
+      inp.addEventListener('input', function () { bud.wi[inp.dataset.wi] = Number(inp.value); $('mgv_' + inp.dataset.wi).textContent = inp.value; giftOut(); });
+    });
+    el.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-mgby]'); if (b) { bud.mgBy = b.dataset.mgby; el.querySelectorAll('[data-mgby]').forEach(function (x) { x.classList.toggle('on', x === b); }); giftOut(); }
+      var n = e.target.closest('[data-addn]'); if (n) { bud.mgAdd = Math.max(1, Math.min(20, (bud.mgAdd || 2) + Number(n.dataset.addn))); $('mgAddN').textContent = bud.mgAdd; giftOut(); }
+      var a = e.target.closest('[data-addev]'); if (a) { bud.mgAddEv = a.dataset.addev; el.querySelectorAll('[data-addev]').forEach(function (x) { x.classList.toggle('on', x === a); }); giftOut(); }
+      if (e.target.closest('[data-wireset]')) { bud.wi = null; renderGifts(); }
+    });
     giftOut();
   }
   function giftOut() {
-    var out = $('bGiftOut'); if (!out) return;
-    var g = (bud.plan && bud.plan.gifts) || {}, perPerson = marginal('Ceremony') + marginal('Reception');
-    var st = {}; GTYPES.forEach(function (t) { st[t[0]] = { n: 0, ppl: 0 }; });
-    (typeof state !== 'undefined' && state.guests ? state.guests : []).forEach(function (h) {
-      if (h.weddingRsvp === 'Declined' && h.receptionRsvp === 'Declined') return;
-      var p = hhPeople(h); if (!p) return; var t = hhType(p); st[t].n++; st[t].ppl += p;
-    });
-    var gifts = 0, rows = GTYPES.map(function (t) {
-      var x = st[t[0]], avg = x.n ? x.ppl / x.n : t[1], cost = avg * perPerson, gift = num(g[t[0]]), net = gift - cost;
-      gifts += gift * x.n;
-      return '<div class="gf-row"><span><b>' + t[0] + '</b><small>' + x.n + ' on the list' + (t[0] === 'Family' ? ' · avg ' + (Math.round(avg * 10) / 10) + ' people' : '') + '</small></span>' +
-        '<span class="gf-c"><small>Costs</small>' + money(Math.round(cost)) + '</span><span class="gf-c"><small>Gift</small>' + (gift ? money(Math.round(gift)) : '–') + '</span>' +
-        '<span class="gf-c gf-net ' + (!gift ? '' : net >= 0 ? 'ok' : 'bad') + '"><small>' + (!gift ? '' : net >= 0 ? 'Covers itself' : 'Costs you') + '</small>' + (gift ? (net >= 0 ? '+' : '−') + money(Math.round(Math.abs(net))) : '–') + '</span></div>';
+    if (!$('mgTop')) return;
+    var H = mgHouseholds(), Nw = H.Nw, Nr = H.Nr;
+    var projected = projectedTotal(), gifts = 0, attendees = 0;
+    H.list.forEach(function (h) { gifts += giftFor(h.type) * h.f; attendees += Math.max(h.ew, h.er); });
+    var net = projected - gifts, cover = projected ? gifts / projected : 0;
+    var sgn = function (v) { return (v >= 0 ? '+' : '−') + money(Math.round(Math.abs(v))); };
+    // 1) where you stand
+    $('mgTop').innerHTML = '<div class="mg-kpis">' +
+      '<div><small>Total cost</small><b>' + money(Math.round(projected)) + '</b></div>' +
+      '<div><small>Expected gifts</small><b>' + (gifts ? money(Math.round(gifts)) : '–') + '</b></div>' +
+      '<div><small>Net cost</small><b>' + money(Math.round(net)) + '</b></div>' +
+      '<div><small>Gifts cover</small><b>' + (gifts ? Math.round(cover * 100) + '%' : '–') + '</b></div></div>' +
+      '<p class="mg-note">' + Math.round(attendees) + ' guests expected (' + Nw + ' ceremony · ' + Nr + ' reception) · <b>' + money(Math.round(attendees ? net / attendees : 0)) + '</b> per guest after gifts</p>';
+    // 2) who costs what
+    var groups = bud.mgBy === 'size' ? GTYPES.map(function (t) { return t[0]; }) : MG_INV;
+    var rows = groups.map(function (gk) {
+      var hs = H.list.filter(function (h) { return (bud.mgBy === 'size' ? h.type : h.inv) === gk; });
+      if (!hs.length) return '';
+      var kw = 0, kr = 0, gi = 0, ppl = 0; hs.forEach(function (h) { kw += h.ew; kr += h.er; gi += giftFor(h.type) * h.f; ppl += h.size; });
+      var c = addsCost(kw, kr, Nw, Nr), m = gi - c, per = hs.length ? c / hs.length : 0;
+      return '<div class="mg-row"><span class="mg-n"><b>' + gk + '</b><small>' + hs.length + (hs.length === 1 ? ' household' : ' households') + ' · ' + ppl + ' people</small></span>' +
+        '<span class="gf-c"><small>Adds</small>' + money(Math.round(c)) + '</span>' +
+        '<span class="gf-c"><small>Gifts</small>' + (gi ? money(Math.round(gi)) : '–') + '</span>' +
+        '<span class="gf-c gf-net ' + (!gi ? '' : m >= 0 ? 'ok' : 'bad') + '"><small>' + (!gi ? 'Margin' : m >= 0 ? 'Covers itself' : 'Costs you') + '</small>' + (gi ? sgn(m) : '–') + '</span>' +
+        '<span class="mg-be">Break-even gift ' + money(Math.round(per)) + ' per household</span></div>';
     }).join('');
-    var projected = 0; costRows().forEach(function (b) { if (counted(b)) projected += isCommitted(b) ? Math.max(b._eff, num(b.paid)) : b._eff; });
-    bud.purchases.forEach(function (p) { projected += num(p.actual); });
-    out.innerHTML = '<p class="gf-note">Each extra guest costs about <b>' + money(Math.round(perPerson)) + '</b> right now' +
-      '.' + (function () {
-        var R = planFor('Reception'), ks = [];
-        costRows().forEach(function (b) { if (!counted(b)) return; var o = evpOf(b), L = evList(b), pc = o ? o.Reception : ((L.length === 1 && L[0] === 'Reception') || !L.length ? b : null);
-          if (pc && pricingOf(pc) === 'Flat + extra guests' && num(pc.included) > R) ks.push(num(pc.included)); });
-        if (!ks.length) return '';
-        var k = Math.min.apply(null, ks), after = marginal('Ceremony') + eventCostAt('Reception', k + 1) - eventCostAt('Reception', k);
-        return ' Past ' + k + ' reception guests it goes up to <b>' + money(Math.round(after)) + '</b>.';
-      })() + '</p>' + rows +
-      (gifts ? '<div class="pg-rows" style="margin-top:6px"><div class="pg-row"><span>Expected gifts from the list</span><b>' + money(Math.round(gifts)) + '</b></div>' +
-        '<div class="pg-row"><span>Net cost after gifts</span><b>' + money(Math.round(projected - gifts)) + '</b></div></div>' : '');
+    $('mgTable').innerHTML = rows || '<p class="mg-note">Add guests to see who costs what.</p>';
+    // 3) what if
+    var W = bud.wi.w, R = bud.wi.r;
+    var costW = projected - eventCostAt('Ceremony', Nw) - eventCostAt('Reception', Nr) + eventCostAt('Ceremony', W) + eventCostAt('Reception', R);
+    var scale = (Nw + Nr) ? (W + R) / (Nw + Nr) : 0, giftsW = gifts * scale, netW = costW - giftsW, attW = attendees * scale;
+    var d = netW - net;
+    $('mgs_w').innerHTML = stepNote('Ceremony', W); $('mgs_r').innerHTML = stepNote('Reception', R);
+    $('mgWi').innerHTML = '<div class="mg-kpis wi">' +
+      '<div><small>Total cost</small><b>' + money(Math.round(costW)) + '</b></div>' +
+      '<div><small>Gifts</small><b>' + (gifts ? money(Math.round(giftsW)) : '–') + '</b></div>' +
+      '<div><small>Net cost</small><b>' + money(Math.round(netW)) + '</b></div>' +
+      '<div><small>vs now</small><b class="' + (Math.abs(d) < 1 ? '' : d > 0 ? 'bad' : 'ok') + '">' + (Math.abs(d) < 1 ? '–' : (d > 0 ? '+' : '−') + money(Math.round(Math.abs(d)))) + '</b></div></div>' +
+      '<p class="mg-note">' + money(Math.round(attW ? netW / attW : 0)) + ' per guest after gifts' + (W !== Nw || R !== Nr ? ' · <button type="button" class="mg-reset" data-wireset="1">Back to ' + Nw + ' / ' + Nr + '</button>' : '') + '</p>';
+    // 4) add guests
+    var n = bud.mgAdd || 2, ev = bud.mgAddEv || 'Both';
+    var add = (ev !== 'Reception only' ? eventCostAt('Ceremony', W + n) - eventCostAt('Ceremony', W) : 0) + (ev !== 'Ceremony only' ? eventCostAt('Reception', R + n) - eventCostAt('Reception', R) : 0);
+    var t = hhType(n), gft = giftFor(t), net2 = gft - add;
+    $('mgAddOut').innerHTML = '<div class="pg-rows"><div class="pg-row"><span>Adds to the bill</span><b>' + money(Math.round(add)) + '</b></div>' +
+      '<div class="pg-row"><span>Likely gift (' + t.toLowerCase() + ')</span><b>' + (gft ? money(Math.round(gft)) : '–') + '</b></div>' +
+      '<div class="pg-row"><span>' + (!gft ? 'Net' : net2 >= 0 ? 'Covers itself' : 'Costs you') + '</span><b class="' + (!gft ? '' : net2 >= 0 ? 'ok' : 'bad') + '">' + (gft ? sgn(net2) : money(Math.round(add))) + '</b></div></div>';
   }
   function renderPer() {
     var el = $('bPer'); if (!el) return;
