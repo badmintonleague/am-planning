@@ -2053,7 +2053,7 @@
     $('vWalkHint').textContent = touch ? 'Left thumb to walk · drag to look' : 'WASD or arrows to walk · drag to look · Shift to hurry';
     $('vWalkHint').style.opacity = 1;
     setTimeout(function () { $('vWalkHint').style.opacity = 0; }, 5000);
-    import('./vendor/walk.js?v=7').then(function (m) {
+    import('./vendor/walk.js?v=8').then(function (m) {
       if ($('vWalk').hidden) return;
       if (window.__presence && !presUnsub) {
         presUnsub = window.__presence.listen(function (docs) { presDocs = docs; pushOthers(); });
