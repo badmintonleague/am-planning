@@ -2053,13 +2053,13 @@
     $('vWalkHint').textContent = touch ? 'Left thumb to walk · drag to look' : 'WASD or arrows to walk · drag to look · Shift to hurry';
     $('vWalkHint').style.opacity = 1;
     setTimeout(function () { $('vWalkHint').style.opacity = 0; }, 5000);
-    import('./vendor/walk.js?v=6').then(function (m) {
+    import('./vendor/walk.js?v=7').then(function (m) {
       if ($('vWalk').hidden) return;
       if (window.__presence && !presUnsub) {
         presUnsub = window.__presence.listen(function (docs) { presDocs = docs; pushOthers(); });
         presTimer = setInterval(pushOthers, 4000);                 // drop people who stopped walking
       }
-      walker = m.startWalk($('vWalkStage'), 'venue-scene.glb?v=29', {
+      walker = m.startWalk($('vWalkStage'), 'venue-scene.glb?v=31', {
         start: WALK_SPOTS.entrance[0], yaw: WALK_SPOTS.entrance[1], nub: $('vWalkNub'), base: $('vWalkBase'),
         hidden: vprefs.hidden.concat(vprefs.umb === 'market' ? ['umbrellas'] : ['umbrellas2']).concat(vprefs.hidden.indexOf('umbrellas') !== -1 ? ['umbrellas2'] : []), chairColor: vprefs.chairs,
         onReady: function () { $('vWalkLoad').hidden = true; },
@@ -2088,17 +2088,18 @@
   var vprefs = (function () { try { return JSON.parse(localStorage.getItem('am.venue3d') || '{}'); } catch (e) { return {}; } })();
   vprefs.hidden = vprefs.hidden || []; vprefs.chairs = vprefs.chairs || 'brown'; vprefs.umb = vprefs.umb || 'fringe';
   function saveVprefs() { try { localStorage.setItem('am.venue3d', JSON.stringify(vprefs)); } catch (e) {} }
-  var vOrig = null;
+  var vOrig = null, vAlpha = null;
   function applyLayers() {
     var mv = $('vModel'); if (!mv || !mv.model) return;
-    if (!vOrig) { vOrig = mv.model.materials.map(function (m) { return m.pbrMetallicRoughness.baseColorFactor.slice(); }); }
+    if (!vOrig) { vOrig = mv.model.materials.map(function (m) { return m.pbrMetallicRoughness.baseColorFactor.slice(); });
+                  vAlpha = mv.model.materials.map(function (m) { return m.getAlphaMode ? m.getAlphaMode() : 'OPAQUE'; }); }
     mv.model.materials.forEach(function (m, i) {
       var layer = String(m.name || '').split(':')[0], hide = vprefs.hidden.indexOf(layer === 'umbrellas2' ? 'umbrellas' : layer) !== -1;
       if (layer === 'umbrellas' && vprefs.umb === 'market') hide = true;
       if (layer === 'umbrellas2' && vprefs.umb !== 'market') hide = true;
       var c = vOrig[i].slice();
       if (/chair_wood$/.test(m.name || '') && vprefs.chairs === 'white') c = [0.86, 0.86, 0.84, 1];
-      if (hide) { m.setAlphaMode('BLEND'); c[3] = 0; } else m.setAlphaMode('OPAQUE');
+      if (hide) { m.setAlphaMode('BLEND'); c[3] = 0; } else m.setAlphaMode(vAlpha[i] || 'OPAQUE');
       m.pbrMetallicRoughness.setBaseColorFactor(c);
     });
   }
@@ -2135,7 +2136,7 @@
     document.head.appendChild(sc);
     customElements.whenDefined('model-viewer').then(function () {
       customElements.get('model-viewer').meshoptDecoderLocation = 'vendor/meshopt_decoder.js';
-      mv.setAttribute('src', 'venue-scene.glb?v=29');
+      mv.setAttribute('src', 'venue-scene.glb?v=31');
     });
   }
   $('vViews').addEventListener('click', function (e) {
